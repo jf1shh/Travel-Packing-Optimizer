@@ -168,7 +168,7 @@ const PALETTES = {
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', activities = {}) => {
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', activities = {}) => {
   let allItems = [];
   let combinations = [];
 
@@ -314,6 +314,28 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
     if (name) addItem({ category, id: k, name, vol: data.vol, weight: data.weight, priority: data.priority, isEssential: data.isEssential, fold: data.fold });
   });
+
+  // Travel Mode Injections
+  if (travelMode === 'driving') {
+    addItem({ category: 'tech', id: 'tm1', name: 'Car USB Charger', vol: 100, weight: 50, priority: 10, isEssential: true });
+    addItem({ category: 'tech', id: 'tm2', name: 'Emergency Road Kit', vol: 3000, weight: 2000, priority: 8, isEssential: true });
+    addItem({ category: 'toiletries', id: 'tm3', name: 'Road Trip Snacks', vol: 1500, weight: 500, priority: 8, isEssential: false });
+  } else if (travelMode === 'train') {
+    addItem({ category: 'clothes', id: 'tm4', name: 'Neck Pillow', vol: 2000, weight: 300, priority: 8, isEssential: false, fold: 'bundle' });
+    addItem({ category: 'tech', id: 'tm5', name: 'Entertainment (Book/Tablet)', vol: 800, weight: 500, priority: 9, isEssential: true });
+  } else if (travelMode === 'biking') {
+    addItem({ category: 'clothes', id: 'tm6', name: 'Bike Helmet', vol: 3000, weight: 400, priority: 10, isEssential: true });
+    addItem({ category: 'tech', id: 'tm7', name: 'U-Lock / Bike Lock', vol: 1000, weight: 1500, priority: 10, isEssential: true });
+    addItem({ category: 'tech', id: 'tm8', name: 'Portable Pump & Patch Kit', vol: 500, weight: 300, priority: 10, isEssential: true });
+    addItem({ category: 'toiletries', id: 'tm9', name: 'Water Bottle (Full)', vol: 1000, weight: 1000, priority: 10, isEssential: true });
+    
+    // Penalize heavy/bulky items for bikers
+    allItems.forEach(item => {
+      if (item.weight > 800 || item.vol > 1500) {
+        if (!item.isEssential) item.priority -= 2;
+      }
+    });
+  }
 
   // VOLUME OPTIMIZATION
   let currentVolume = allItems.reduce((sum, item) => sum + item.vol, 0);

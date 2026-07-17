@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CapacityBar = ({ currentVolume, currentWeight, maxVolume }) => {
+const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode }) => {
   if (!maxVolume || maxVolume <= 0) return null;
 
   const percentage = Math.min(100, Math.round((currentVolume / maxVolume) * 100));
@@ -15,7 +15,7 @@ const CapacityBar = ({ currentVolume, currentWeight, maxVolume }) => {
   
   // Weight logic (10,000g = 10kg limit)
   const weightKg = (currentWeight / 1000).toFixed(1);
-  const weightWarning = currentWeight >= 10000;
+  const weightWarning = currentWeight >= 10000 && travelMode === 'flying';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>

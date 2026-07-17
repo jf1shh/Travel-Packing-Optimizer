@@ -22,6 +22,7 @@ function App() {
   const [suitcaseVolume, setSuitcaseVolume] = useState(0);
   const [outfits, setOutfits] = useState(null);
   const [activePalette, setActivePalette] = useState('quiet-luxury');
+  const [activeTravelMode, setActiveTravelMode] = useState('flying');
   const [tempUnit, setTempUnit] = useState('C');
   const [lengthUnit, setLengthUnit] = useState('cm');
 
@@ -38,6 +39,7 @@ function App() {
         if (parsed.currentWeight) setCurrentWeight(parsed.currentWeight);
         if (parsed.suitcaseVolume) setSuitcaseVolume(parsed.suitcaseVolume);
         if (parsed.activePalette) setActivePalette(parsed.activePalette);
+        if (parsed.activeTravelMode) setActiveTravelMode(parsed.activeTravelMode);
         if (parsed.tempUnit) setTempUnit(parsed.tempUnit);
         if (parsed.lengthUnit) setLengthUnit(parsed.lengthUnit);
       } catch (e) {
@@ -57,11 +59,12 @@ function App() {
         currentWeight,
         suitcaseVolume,
         activePalette,
+        activeTravelMode,
         tempUnit,
         lengthUnit
       }));
     }
-  }, [packingList, outfits, weatherDataArray, currentVolume, currentWeight, suitcaseVolume, activePalette, tempUnit, lengthUnit]);
+  }, [packingList, outfits, weatherDataArray, currentVolume, currentWeight, suitcaseVolume, activePalette, activeTravelMode, tempUnit, lengthUnit]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -79,7 +82,7 @@ function App() {
     setLengthUnit(prev => prev === 'cm' ? 'in' : 'cm');
   };
 
-  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, activities, suitcaseVolume }) => {
+  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, activities, suitcaseVolume }) => {
     setIsLoading(true);
     setError(null);
     setWeatherDataArray(null);
@@ -87,6 +90,7 @@ function App() {
     setOutfits(null);
     setSuitcaseVolume(suitcaseVolume);
     setActivePalette(palette);
+    setActiveTravelMode(travelMode);
     
     try {
       // Calculate duration in days (inclusive)
@@ -110,7 +114,7 @@ function App() {
 
       setWeatherDataArray(allWeatherData);
 
-      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, activities);
+      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, activities);
       
       setPackingList(result.list);
       setCurrentVolume(result.currentVolume);
@@ -170,7 +174,7 @@ function App() {
         )}
 
         {suitcaseVolume > 0 && packingList && (
-          <CapacityBar currentVolume={currentVolume} currentWeight={currentWeight} maxVolume={suitcaseVolume} />
+          <CapacityBar currentVolume={currentVolume} currentWeight={currentWeight} maxVolume={suitcaseVolume} travelMode={activeTravelMode} />
         )}
 
         {packingList && (

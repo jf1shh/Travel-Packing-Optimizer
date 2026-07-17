@@ -13,6 +13,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
   
   const [gender, setGender] = useState('other');
   const [palette, setPalette] = useState('quiet-luxury');
+  const [travelMode, setTravelMode] = useState('flying');
   
   // Activities
   const [activities, setActivities] = useState({
@@ -62,6 +63,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         endDate,
         gender,
         palette,
+        travelMode,
         activities,
         suitcaseVolume: (parseFloat(length) || 0) * (parseFloat(width) || 0) * (parseFloat(height) || 0) 
       });
@@ -120,6 +122,17 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
             />
           </div>
         </div>
+      </div>
+
+      {/* Travel Mode */}
+      <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label htmlFor="travelMode" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Travel Mode</label>
+        <select id="travelMode" value={travelMode} onChange={(e) => setTravelMode(e.target.value)}>
+          <option value="flying">✈️ Flying (Strict Airline Limits)</option>
+          <option value="driving">🚗 Driving / Road Trip</option>
+          <option value="train">🚂 Train / Bus</option>
+          <option value="biking">🚴 Biking / Backpacking</option>
+        </select>
       </div>
 
       {/* Bag Selection */}
