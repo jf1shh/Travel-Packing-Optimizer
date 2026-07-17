@@ -96,7 +96,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <label htmlFor="startDate" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Start Date</label>
             <input 
@@ -144,7 +144,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
           <option value="custom">Custom Dimensions</option>
         </select>
         
-        <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', width: '100%', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>L</span>
             <input 

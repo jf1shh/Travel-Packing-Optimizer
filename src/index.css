@@ -84,6 +84,13 @@ input, select, button {
   transition: all 0.2s ease;
 }
 
+input, select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
 input:focus, select:focus {
   outline: none;
   border-color: var(--accent-color);
