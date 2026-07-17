@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
-  const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard' });
+  const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard', material: 'cotton' });
 
   if (!isOpen) return null;
 
@@ -26,6 +26,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
       name: newItem.name,
       category: newItem.category,
       bulkiness: newItem.bulkiness,
+      material: newItem.material,
       vol: stats.vol,
       weight: stats.weight
     };
@@ -59,6 +60,14 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         if (lower.match(/(bulky|heavy|thick|winter|puffer)/)) bulk = 'bulky';
         else if (lower.match(/(light|thin|summer|breezy)/)) bulk = 'light';
 
+        let mat = 'cotton';
+        if (lower.match(/(linen)/)) mat = 'linen';
+        else if (lower.match(/(merino|wool|cashmere)/)) mat = 'wool';
+        else if (lower.match(/(denim|jean)/)) mat = 'denim';
+        else if (lower.match(/(leather|suede)/)) mat = 'leather';
+        else if (lower.match(/(polyester|nylon|synthetic|gore-tex|spandex)/)) mat = 'synthetic';
+        else if (lower.match(/(silk|satin)/)) mat = 'silk';
+
         const stats = getBulkStats(cat, bulk);
         
         newItems.push({
@@ -66,6 +75,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
           name: line.replace(/^[-*•\s]+/, ''), // remove bullet points
           category: cat,
           bulkiness: bulk,
+          material: mat,
           vol: stats.vol,
           weight: stats.weight
         });
@@ -118,6 +128,18 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
                 <option value="bulky">Bulky</option>
               </select>
             </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Material</label>
+              <select value={newItem.material} onChange={e => setNewItem({...newItem, material: e.target.value})} style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
+                <option value="cotton">Cotton</option>
+                <option value="linen">Linen</option>
+                <option value="wool">Wool / Merino</option>
+                <option value="denim">Denim</option>
+                <option value="leather">Leather</option>
+                <option value="synthetic">Synthetic</option>
+                <option value="silk">Silk</option>
+              </select>
+            </div>
           </div>
           <button type="submit" style={{ padding: '0.75rem', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
             Add to Closet
@@ -140,7 +162,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
                 <div>
                   <div style={{ fontWeight: 'bold' }}>{item.name}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    {item.category.toUpperCase()} • {item.bulkiness} ({item.weight}g)
+                    {item.category.toUpperCase()} • {item.material} • {item.bulkiness} ({item.weight}g)
                   </div>
                 </div>
                 <button onClick={() => handleDelete(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.2rem' }}>
