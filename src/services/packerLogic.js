@@ -87,6 +87,30 @@ export const ACTIVITY_GEAR = {
       { id: 'act-hike-2', category: 'clothes', name: 'Trail Shoes', weight: 800, vol: 2000, priority: 10, isEssential: true, fold: 'shoes' },
       { id: 'act-hike-3', category: 'toiletries', name: 'Water Bottle & Bug Spray', weight: 300, vol: 500, priority: 10, isEssential: true }
     ]
+  },
+  ski: {
+    outfit: { top: 'Thermal Base Layer', bottom: 'Snow Pants', shoe: 'Snow Boots', outer: 'Ski Jacket' },
+    items: [
+      { id: 'act-ski-1', category: 'clothes', name: 'Snow Pants', weight: 800, vol: 2000, priority: 10, isEssential: true, fold: 'bundle' },
+      { id: 'act-ski-2', category: 'clothes', name: 'Thermal Base Layer', weight: 250, vol: 600, priority: 10, isEssential: true, fold: 'ranger' },
+      { id: 'act-ski-3', category: 'clothes', name: 'Ski Jacket', weight: 1200, vol: 3000, priority: 10, isEssential: true, fold: 'bundle' },
+      { id: 'act-ski-4', category: 'clothes', name: 'Snow Boots', weight: 1500, vol: 4000, priority: 10, isEssential: true, fold: 'shoes' },
+      { id: 'act-ski-5', category: 'clothes', name: 'Waterproof Gloves / Beanie', weight: 200, vol: 500, priority: 10, isEssential: true, fold: 'stuff' }
+    ]
+  },
+  business: {
+    outfit: { top: 'Dress Shirt / Blouse', bottom: 'Slacks / Pencil Skirt', shoe: 'Oxfords / Heels', outer: 'Suit Jacket' },
+    items: [
+      { id: 'act-biz-1', category: 'clothes', name: 'Suit / Business Attire', weight: 800, vol: 2000, priority: 10, isEssential: true, fold: 'bundle' },
+      { id: 'act-biz-2', category: 'clothes', name: 'Dress Shoes / Heels', weight: 700, vol: 1500, priority: 10, isEssential: true, fold: 'shoes' }
+    ]
+  },
+  nightout: {
+    outfit: { top: 'Going-out Top / Shirt', bottom: 'Dark Denim / Skirt', shoe: 'Stylish Shoes', outer: 'Leather / Evening Jacket' },
+    items: [
+      { id: 'act-night-1', category: 'clothes', name: 'Evening Outfit', weight: 400, vol: 1000, priority: 9, isEssential: true, fold: 'konmari' },
+      { id: 'act-night-2', category: 'clothes', name: 'Evening Jacket', weight: 900, vol: 1800, priority: 8, isEssential: false, fold: 'bundle' }
+    ]
   }
 };
 

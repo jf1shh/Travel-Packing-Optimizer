@@ -93,6 +93,9 @@ const CapsuleVisualizer = ({ outfits, palette, onActivityChange }) => {
                 <option value="gym">Gym / Workout</option>
                 <option value="beach">Beach / Pool</option>
                 <option value="hike">Hiking / Trail</option>
+                <option value="ski">Skiing / Snowboarding</option>
+                <option value="business">Business / Meeting</option>
+                <option value="nightout">Night Out / Clubbing</option>
               </select>
             </div>
           </div>
