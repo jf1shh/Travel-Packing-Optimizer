@@ -30,6 +30,11 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
     if (val === 'away-carry') { setLength('55'); setWidth('34.8'); setHeight('22.8'); }
     else if (val === 'rimowa-cabin') { setLength('55'); setWidth('40'); setHeight('23'); }
     else if (val === 'samsonite-check') { setLength('75'); setWidth('51'); setHeight('31'); }
+    else if (val === 'monos-carry') { setLength('55.9'); setWidth('35.6'); setHeight('22.9'); }
+    else if (val === 'travelpro-21') { setLength('59.7'); setWidth('36.8'); setHeight('22.9'); }
+    else if (val === 'beis-roller') { setLength('58'); setWidth('40'); setHeight('25.4'); }
+    else if (val === 'osprey-40') { setLength('55'); setWidth('35'); setHeight('23'); }
+    else if (val === 'peak-45') { setLength('56'); setWidth('33'); setHeight('24'); }
   };
 
   const getDuration = () => {
@@ -150,7 +155,12 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
 
         <select value={preset} onChange={handlePresetChange} style={{ marginBottom: '1rem' }}>
           <option value="away-carry">Away: The Carry-On {lengthUnit === 'in' ? '(21.7 x 13.7 x 9.0)' : '(55 x 34.8 x 22.8)'}</option>
+          <option value="monos-carry">Monos: Carry-On {lengthUnit === 'in' ? '(22 x 14 x 9)' : '(55.9 x 35.6 x 22.9)'}</option>
+          <option value="beis-roller">BÉIS: Carry-On Roller {lengthUnit === 'in' ? '(22.8 x 15.7 x 10)' : '(58 x 40 x 25.4)'}</option>
+          <option value="travelpro-21">Travelpro: Platinum Elite 21" {lengthUnit === 'in' ? '(23.5 x 14.5 x 9)' : '(59.7 x 36.8 x 22.9)'}</option>
           <option value="rimowa-cabin">Rimowa: Cabin {lengthUnit === 'in' ? '(21.7 x 15.7 x 9.1)' : '(55 x 40 x 23)'}</option>
+          <option value="osprey-40">Osprey: Farpoint 40L Backpack {lengthUnit === 'in' ? '(21.7 x 13.8 x 9.1)' : '(55 x 35 x 23)'}</option>
+          <option value="peak-45">Peak Design: Travel Backpack 45L {lengthUnit === 'in' ? '(22 x 13 x 9.5)' : '(56 x 33 x 24)'}</option>
           <option value="samsonite-check">Samsonite: Check-In Large {lengthUnit === 'in' ? '(29.5 x 20.1 x 12.2)' : '(75 x 51 x 31)'}</option>
           <option value="custom">Custom Dimensions</option>
         </select>
