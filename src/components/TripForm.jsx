@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { geocodeLocation, fetchWeather } from '../services/api';
 
-const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
+const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit = 'C', toggleTempUnit }) => {
   const [destinations, setDestinations] = useState(['']);
   
   const todayStr = new Date().toISOString().split('T')[0];
@@ -247,68 +247,108 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         </div>
       </div>
 
-      {/* Daily Itinerary */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.75rem' }}>Daily Itinerary</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-          {Array.from({ length: duration }).map((_, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap' }}>Day {i + 1}</span>
-                {(() => {
-                  const dest = dailyDestinations[i] || destinations[0];
-                  const weatherObj = formWeatherData[dest];
-                  if (!weatherObj || !weatherObj.temperature_2m_max) return null;
-                  const maxTemp = weatherObj.temperature_2m_max[i];
-                  const rain = weatherObj.precipitation_sum[i];
-                  if (maxTemp === undefined) return null;
-                  
-                  const isRain = rain > 2;
-                  return (
-                    <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', background: 'var(--bg-color)', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-                      {Math.round(maxTemp)}°C {isRain ? '🌧️' : '☀️'}
-                    </span>
-                  );
-                })()}
-              </div>
+      {/* Daily Itinerary & Forecast Carousel */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <label style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>Itinerary & Forecast</label>
+          {toggleTempUnit && (
+            <button 
+              type="button"
+              className="theme-toggle" 
+              onClick={toggleTempUnit}
+              style={{ fontSize: '1rem', fontWeight: 'bold', padding: '0.25rem 0.5rem' }}
+              title="Toggle Temperature Unit"
+            >
+              °{tempUnit}
+            </button>
+          )}
+        </div>
+        
+        <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', scrollSnapType: 'x mandatory' }}>
+          {Array.from({ length: duration }).map((_, i) => {
+            const dest = dailyDestinations[i] || destinations[0] || 'Unknown';
+            const weatherObj = formWeatherData[dest];
+            
+            const dDate = new Date(startDate);
+            dDate.setDate(dDate.getDate() + i);
+            const dateStr = dDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            
+            let maxTempC = null;
+            let minTempC = null;
+            let rain = 0;
+            let icon = '⛅';
 
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {destinations.filter(d => d.trim() !== '').length > 1 && (
-                  <select
-                    value={dailyDestinations[i] || destinations[0]}
+            if (weatherObj && weatherObj.temperature_2m_max && weatherObj.temperature_2m_max[i] !== undefined) {
+              maxTempC = Math.round(weatherObj.temperature_2m_max[i]);
+              minTempC = Math.round(weatherObj.temperature_2m_min[i]);
+              rain = weatherObj.precipitation_sum[i];
+              
+              if (rain > 5) icon = '🌧️';
+              else if (maxTempC < 15) icon = '❄️';
+              else if (maxTempC > 25) icon = '☀️';
+            }
+
+            const max = maxTempC !== null ? (tempUnit === 'F' ? Math.round(maxTempC * 9/5 + 32) : maxTempC) : '--';
+            const min = minTempC !== null ? (tempUnit === 'F' ? Math.round(minTempC * 9/5 + 32) : minTempC) : '--';
+
+            return (
+              <div key={i} className="glass" style={{ minWidth: '160px', flex: '0 0 auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', scrollSnapAlign: 'start', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day {i + 1}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{dateStr}</span>
+                </div>
+                
+                <div style={{ textAlign: 'center', margin: '0.5rem 0' }}>
+                  <div style={{ fontSize: '2.5rem', lineHeight: '1' }}>{icon}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'baseline', marginTop: '0.5rem' }}>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{max}°</span>
+                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{min}°</span>
+                  </div>
+                  {rain > 0 ? (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>{rain.toFixed(1)}mm rain</div>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>0mm rain</div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto' }}>
+                  {destinations.filter(d => d.trim() !== '').length > 1 && (
+                    <select
+                      value={dailyDestinations[i] || destinations[0]}
+                      onChange={(e) => {
+                        const newD = [...dailyDestinations];
+                        newD[i] = e.target.value;
+                        setDailyDestinations(newD);
+                      }}
+                      style={{ padding: '0.35rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', width: '100%' }}
+                    >
+                      {destinations.map((d, idx) => d.trim() !== '' && (
+                        <option key={idx} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
+                  <select 
+                    value={dailyActivities[i] || ''} 
                     onChange={(e) => {
-                      const newD = [...dailyDestinations];
-                      newD[i] = e.target.value;
-                      setDailyDestinations(newD);
+                      const newArr = [...dailyActivities];
+                      newArr[i] = e.target.value;
+                      setDailyActivities(newArr);
                     }}
-                    style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', maxWidth: '100px' }}
+                    style={{ padding: '0.35rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', width: '100%' }}
                   >
-                    {destinations.map((d, idx) => d.trim() !== '' && (
-                      <option key={idx} value={d}>{d}</option>
-                    ))}
+                    <option value="">Casual / Standard</option>
+                    <option value="formal">Formal / Dinner</option>
+                    <option value="gym">Gym / Workout</option>
+                    <option value="beach">Beach / Pool</option>
+                    <option value="hike">Hiking / Trail</option>
+                    <option value="ski">Skiing / Snowboarding</option>
+                    <option value="business">Business / Meeting</option>
+                    <option value="nightout">Night Out / Clubbing</option>
                   </select>
-                )}
-                <select 
-                  value={dailyActivities[i] || ''} 
-                  onChange={(e) => {
-                    const newArr = [...dailyActivities];
-                    newArr[i] = e.target.value;
-                    setDailyActivities(newArr);
-                  }}
-                  style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', maxWidth: '140px' }}
-                >
-                <option value="">Casual / Standard</option>
-                <option value="formal">Formal / Dinner</option>
-                <option value="gym">Gym / Workout</option>
-                <option value="beach">Beach / Pool</option>
-                <option value="hike">Hiking / Trail</option>
-                <option value="ski">Skiing / Snowboarding</option>
-                <option value="business">Business / Meeting</option>
-                <option value="nightout">Night Out / Clubbing</option>
-              </select>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

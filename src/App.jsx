@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import TripForm from './components/TripForm';
-import WeatherWidget from './components/WeatherWidget';
 import PackingList from './components/PackingList';
 import CapacityBar from './components/CapacityBar';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
@@ -248,16 +247,19 @@ function App() {
       <Header theme={theme} toggleTheme={toggleTheme} onOpenWardrobe={() => setIsWardrobeOpen(true)} />
       
       <main>
-        <TripForm onSubmit={handleGenerateList} isLoading={isLoading} lengthUnit={lengthUnit} toggleLengthUnit={toggleLengthUnit} />
+        <TripForm 
+          onSubmit={handleGenerateList} 
+          isLoading={isLoading} 
+          lengthUnit={lengthUnit} 
+          toggleLengthUnit={toggleLengthUnit} 
+          tempUnit={tempUnit}
+          toggleTempUnit={toggleTempUnit}
+        />
         
         {error && (
           <div className="glass animate-slide-up" style={{ padding: '1rem', color: '#ef4444', marginBottom: '1rem', border: '1px solid #ef4444' }}>
             {error}
           </div>
-        )}
-
-        {weatherDataArray && (
-          <WeatherWidget weatherDataArray={weatherDataArray} tempUnit={tempUnit} toggleTempUnit={toggleTempUnit} />
         )}
 
         {outfits && (
