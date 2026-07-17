@@ -6,25 +6,25 @@ const FOLD_TIPS = {
     title: 'The Ranger Roll',
     description: 'A military technique where you fold the clothes into a tight cylinder. This minimizes wrinkles and saves a massive amount of space.',
     icon: '🪖',
-    image: '/ranger_roll.png'
+    image: import.meta.env.BASE_URL + 'ranger_roll.png'
   },
   konmari: {
     title: 'KonMari Fold',
     description: 'Fold clothes into neat little rectangles that stand upright. This allows you to see everything in your suitcase at a glance without digging.',
     icon: '✨',
-    image: '/konmari_fold.png'
+    image: import.meta.env.BASE_URL + 'konmari_fold.png'
   },
   bundle: {
     title: 'Bundle Packing',
     description: 'Wrap clothing around a central core (like a packing cube of underwear) to prevent sharp creases. Essential for business trips.',
     icon: '👔',
-    image: '/bundle_packing.png'
+    image: import.meta.env.BASE_URL + 'bundle_packing.png'
   },
   shoes: {
     title: 'Shoe Stuffing',
     description: 'Your shoes contain valuable empty volume! Stuff your socks and small items inside them to reclaim that space.',
     icon: '👞',
-    image: '/shoe_stuffing.png'
+    image: import.meta.env.BASE_URL + 'shoe_stuffing.png'
   }
 };
 
