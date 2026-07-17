@@ -5,12 +5,17 @@ An intelligent, mathematical packing assistant built with React and Vite. It tak
 ## Features
 
 - **Multi-Destination Weather Forecasting**: Fetches live weather data for multiple destinations over your specific travel dates using the Open-Meteo API.
+- **Unified Itinerary & Forecast Dashboard**: Plan your trip day-by-day with a horizontal carousel of interactive Day Cards. Watch the live weather dynamically update as you switch locations on a specific day.
 - **Dynamic Capacity Engine**: Calculates the exact volume (cm³) and weight (g) of your packing list in real-time. A visual Capacity Bar prevents you from overpacking budget airline carry-ons.
+- **TSA 3-1-1 Liquid Compliance**: Automatically tracks the cumulative volume of your liquid items. Warns you if your carry-on liquids exceed the standard 1-quart (1000cm³) TSA limit.
+- **Packing Strategy Engine**: Choose between Standard or "Extreme Minimalist". The Minimalist algorithm aggressively recycles clothes, slashing your needed tops, bottoms, and socks in half through mid-trip laundry.
+- **Expert Packing Cubes**: Automatically organizes your packing list into visual physical spaces: Base Layer (Shoes), Main Cube, Loose Items, Liquid Bag, Dry Toiletries, and the Tech Dopp Kit.
+- **Tech Consolidation**: Optimizes your "Tech Dopp Kit" by detecting if you pack multiple USB-C devices and automatically suggesting a single GaN 65W fast charger instead of multiple redundant bricks.
 - **Travel Modes**: Packing algorithms adjust based on how you travel (Flying, Driving, Train, Biking). For example, biking penalizes bulky items, while driving suggests car chargers and emergency kits.
-- **Fashion Aesthetics**: Choose from various aesthetics (Quiet Luxury, Gorpcore, Y2K Streetwear, Scandi Minimalist, etc.). The packing list populates with curated items that match the aesthetic.
+- **Fashion Archetypes**: Choose from various aesthetics (Quiet Luxury, Gorpcore, Y2K Streetwear, Scandi Minimalist, etc.). The packing list populates with curated items that match the aesthetic.
 - **Ultra-Minimalist 14-Day Combinatorics**: For long trips, the engine mathematically enforces minimalism. It caps your clothes to a core capsule (e.g. 3 tops, 2 bottoms, 2 shoes, 1 jacket) and permutes them algorithmically so you wear a distinct outfit configuration every single day out of an almost-empty suitcase.
-- **Interactive Capsule Visualizer**: View your daily outfits day-by-day.
-- **Dynamic On-Trip Activity Swapper**: When viewing your Capsule Visualizer, you can change a specific day's activity (e.g., from "Standard" to "Formal/Dinner" or "Hiking/Trail"). The app instantly recalculates the daily outfit and injects the necessary gear (e.g. Dress Shoes or Hiking Boots) directly into your master packing list!
+- **Interactive Outfit Visualizer**: View your daily outfits day-by-day alongside your planned activities.
+- **Dynamic On-Trip Activity Swapper**: Change a specific day's activity (e.g., from "Standard" to "Formal/Dinner" or "Hiking/Trail"). The app instantly recalculates the daily outfit and injects the necessary gear (e.g. Dress Shoes or Hiking Boots) directly into your master packing list!
 - **Digital Wardrobe (My Closet)**: A localized, persistent database where you can log your actual clothes. 
 - **Smart Wardrobe Integration**: When you generate a trip, the packing engine pulls pieces directly from your Digital Wardrobe to build your outfits. It only falls back to generic aesthetic suggestions if your closet is missing essential categories.
 - **Bulk Upload**: Have a text file of your clothes? The bulk uploader parses `.txt` or `.md` files, using heuristic keyword scanning to automatically categorize items (Top, Bottom, Outerwear, Shoe) and calculate mathematical volume/weight properties based on keywords like "bulky" or "lightweight".
