@@ -40,6 +40,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
   if (!packingList) return null;
 
   const categories = [
+    { key: 'plane', label: '✈️ Worn on Travel Day (Not in Suitcase)' },
     { key: 'clothes', label: '👕 Clothes & Shoes' },
     { key: 'toiletries', label: '🧴 Toiletries' },
     { key: 'tech', label: '💻 Electronics' },

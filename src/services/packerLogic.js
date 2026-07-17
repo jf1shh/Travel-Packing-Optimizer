@@ -145,14 +145,36 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     allItems.push({ ...item, checked: false });
   };
 
-  // Base Layers
-  const baseLayerCount = Math.min(tripDuration, 7); 
-  addItem({ category: 'clothes', id: 'w1', name: `${baseLayerCount}x Pairs of Underwear`, vol: 150 * baseLayerCount, weight: 50 * baseLayerCount, priority: 10, isEssential: true, fold: 'ranger' });
-  addItem({ category: 'clothes', id: 'w2', name: `${baseLayerCount}x Pairs of Socks`, vol: 100 * baseLayerCount, weight: 40 * baseLayerCount, priority: 10, isEssential: true, fold: 'shoes' });
-  
-  if (tripDuration > 7) {
+  // 2. Versatility Scoring
+  const getVersatilityScore = (item) => {
+    let score = 0;
+    const name = item.name.toLowerCase();
+    const mat = item.material ? item.material.toLowerCase() : '';
+    if (name.match(/(black|white|gray|grey|navy|beige|neutral|cream|tan|charcoal)/)) score += 5;
+    if (mat.match(/(denim|leather|wool|merino)/)) score += 3;
+    if (name.match(/(jeans|t-shirt|tee|sneaker|boot)/)) score += 2;
+    return score;
+  };
+
+  // 1. Prioritize userWardrobe items (sorted by versatility)
+  const userTops = userWardrobe.filter(i => i.category === 'top').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
+  const userBottoms = userWardrobe.filter(i => i.category === 'bottom').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
+  const userShoes = userWardrobe.filter(i => i.category === 'shoe').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
+  const userOuter = userWardrobe.filter(i => i.category === 'outer').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
+
+  // Base Layers & Mid-Trip Laundry Threshold
+  let baseLayerLimit = Math.min(tripDuration, 7);
+  let hasQuickDry = userTops.some(t => t.material === 'merino' || t.material === 'synthetic');
+  if (hasQuickDry && tripDuration > 3) {
+    baseLayerLimit = 3;
+    addItem({ category: 'toiletries', id: 't-laundry', name: 'Travel Laundry Detergent (Sink Wash)', vol: 100, weight: 100, priority: 10, isEssential: true });
+  } else if (tripDuration > 7) {
     addItem({ category: 'toiletries', id: 't-laundry', name: 'Travel Laundry Detergent Packets', vol: 100, weight: 100, priority: 10, isEssential: true });
   }
+
+  const baseLayerCount = baseLayerLimit;
+  addItem({ category: 'clothes', id: 'w1', name: `${baseLayerCount}x Pairs of Underwear`, vol: 150 * baseLayerCount, weight: 50 * baseLayerCount, priority: 10, isEssential: true, fold: 'ranger' });
+  addItem({ category: 'clothes', id: 'w2', name: `${baseLayerCount}x Pairs of Socks`, vol: 100 * baseLayerCount, weight: 40 * baseLayerCount, priority: 10, isEssential: true, fold: 'shoes' });
 
   addItem({ category: 'clothes', id: 'w3', name: 'Pajamas / Sleepwear', vol: 400, weight: 200, priority: 9, isEssential: true, fold: 'konmari' });
 
@@ -164,12 +186,6 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
   const topsNeeded = Math.min(tripDuration, 3); 
   const bottomsNeeded = tripDuration > 3 ? 2 : 1;
-
-  // 1. Prioritize userWardrobe items
-  const userTops = userWardrobe.filter(i => i.category === 'top');
-  const userBottoms = userWardrobe.filter(i => i.category === 'bottom');
-  const userShoes = userWardrobe.filter(i => i.category === 'shoe');
-  const userOuter = userWardrobe.filter(i => i.category === 'outer');
 
   for (let i = 0; i < topsNeeded; i++) {
     if (userTops[i]) selectedTops.push(userTops[i].name);
@@ -229,12 +245,17 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     }
 
     let displayWeather = 'Clear/Mild';
+    let isCold = false;
     if (dailyWeather) {
        const precip = dailyWeather.precipitation_sum[dateIndex];
        const temp = dailyWeather.temperature_2m_max[dateIndex];
        if (precip > 5) displayWeather = 'Rainy';
        else if (temp > 25) displayWeather = 'Sunny';
-       else if (temp < 10) displayWeather = 'Cold';
+       else if (temp < 10) { displayWeather = 'Cold'; isCold = true; }
+    }
+
+    if (isCold && (!act || !ACTIVITY_GEAR[act])) {
+      outfit.outer = 'Fleece + Rain Shell (Layered)';
     }
 
     combinations.push({
@@ -245,6 +266,16 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
       activity: act || '',
       ...outfit
     });
+  }
+
+  // Layering Optimizer Checks
+  let tripHasColdDay = combinations.some(c => c.weather === 'Cold');
+  if (tripHasColdDay) {
+    const hasFleece = userTops.some(t => t.name.toLowerCase().includes('fleece'));
+    if (!hasFleece) addItem({ category: 'clothes', id: 'layer-mid', name: 'Fleece Mid-Layer', vol: 800, weight: 300, priority: 10, isEssential: true, fold: 'ranger' });
+    
+    const hasShell = userOuter.some(o => o.name.toLowerCase().includes('shell') || o.name.toLowerCase().includes('windbreaker') || o.name.toLowerCase().includes('rain'));
+    if (!hasShell) addItem({ category: 'clothes', id: 'layer-shell', name: 'Rain Shell / Windbreaker', vol: 600, weight: 250, priority: 10, isEssential: true, fold: 'bundle' });
   }
 
   // Push Clothes to Packing List
@@ -302,9 +333,26 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     });
   }
 
+  // Worn on Travel Day Subtractor
+  const clothesAndShoes = allItems.filter(i => i.category === 'clothes');
+  const topsInList = clothesAndShoes.filter(i => i.id.startsWith('top') || i.name.toLowerCase().includes('shirt') || i.name.toLowerCase().includes('fleece') || i.name.toLowerCase().includes('base')).sort((a,b) => b.vol - a.vol);
+  const botsInList = clothesAndShoes.filter(i => i.id.startsWith('bot') || i.name.toLowerCase().includes('pant') || i.name.toLowerCase().includes('jeans')).sort((a,b) => b.vol - a.vol);
+  const outersInList = clothesAndShoes.filter(i => i.id.startsWith('out') || i.name.toLowerCase().includes('jacket') || i.name.toLowerCase().includes('shell') || i.name.toLowerCase().includes('coat')).sort((a,b) => b.vol - a.vol);
+  const shoesInList = clothesAndShoes.filter(i => i.id.startsWith('shoe') || i.name.toLowerCase().includes('shoe') || i.name.toLowerCase().includes('boot')).sort((a,b) => b.vol - a.vol);
+
+  const wornItems = [topsInList[0], botsInList[0], outersInList[0], shoesInList[0]].filter(Boolean);
+  
+  wornItems.forEach(wi => {
+    const idx = allItems.findIndex(item => item.id === wi.id);
+    if (idx !== -1) {
+      allItems[idx].category = 'plane';
+      allItems[idx].isWorn = true;
+    }
+  });
+
   // VOLUME OPTIMIZATION
-  let currentVolume = allItems.reduce((sum, item) => sum + item.vol, 0);
-  let currentWeight = allItems.reduce((sum, item) => sum + item.weight, 0);
+  let currentVolume = allItems.filter(i => !i.isWorn).reduce((sum, item) => sum + item.vol, 0);
+  let currentWeight = allItems.filter(i => !i.isWorn).reduce((sum, item) => sum + item.weight, 0);
 
   if (suitcaseVolume > 0 && currentVolume > suitcaseVolume) {
     allItems.sort((a, b) => a.priority - b.priority); 

@@ -31,8 +31,8 @@ function App() {
   });
 
   // Derived State (Dynamic Recalculation)
-  const currentVolume = packingList ? Object.values(packingList).flat().reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
-  const currentWeight = packingList ? Object.values(packingList).flat().reduce((sum, item) => sum + (item.weight || 0), 0) : 0;
+  const currentVolume = packingList ? Object.values(packingList).flat().filter(i => i.category !== 'plane').reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
+  const currentWeight = packingList ? Object.values(packingList).flat().filter(i => i.category !== 'plane').reduce((sum, item) => sum + (item.weight || 0), 0) : 0;
 
   // Load from local storage
   useEffect(() => {
