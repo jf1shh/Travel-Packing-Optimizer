@@ -111,7 +111,7 @@ const BASE_ITEMS = {
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', activities = {}) => {
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', activities = {}, userWardrobe = []) => {
   let allItems = [];
   let combinations = [];
 
@@ -141,14 +141,34 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   const topsNeeded = Math.min(tripDuration, 3); 
   const bottomsNeeded = tripDuration > 3 ? 2 : 1;
 
+  // 1. Prioritize userWardrobe items
+  const userTops = userWardrobe.filter(i => i.category === 'top');
+  const userBottoms = userWardrobe.filter(i => i.category === 'bottom');
+  const userShoes = userWardrobe.filter(i => i.category === 'shoe');
+  const userOuter = userWardrobe.filter(i => i.category === 'outer');
+
   for (let i = 0; i < topsNeeded; i++) {
-    selectedTops.push(p.tops[i % p.tops.length]);
+    if (userTops[i]) selectedTops.push(userTops[i].name);
+    else selectedTops.push(p.tops[i % p.tops.length]);
   }
   for (let i = 0; i < bottomsNeeded; i++) {
-    selectedBottoms.push(p.bottoms[i % p.bottoms.length]);
+    if (userBottoms[i]) selectedBottoms.push(userBottoms[i].name);
+    else selectedBottoms.push(p.bottoms[i % p.bottoms.length]);
+  }
+  
+  if (userOuter.length > 0) {
+    selectedOuter = userOuter[0].name;
+  }
+
+  if (userShoes.length > 0) {
+    selectedShoes[0] = userShoes[0].name;
   }
   if (tripDuration > 3) {
-    selectedShoes.push(p.shoes[1 % p.shoes.length]);
+    if (userShoes.length > 1) {
+      selectedShoes.push(userShoes[1].name);
+    } else {
+      selectedShoes.push(p.shoes[1 % p.shoes.length]);
+    }
   }
 
   const combos = [];
@@ -191,10 +211,23 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   }
 
   // Push Clothes to Packing List
-  selectedTops.forEach((t, i) => addItem({ category: 'clothes', id: `top${i}`, name: t, vol: 300, weight: 150, priority: 9, isEssential: true, fold: 'konmari' }));
-  selectedBottoms.forEach((b, i) => addItem({ category: 'clothes', id: `bot${i}`, name: b, vol: 800, weight: 400, priority: 9, isEssential: true, fold: 'bundle' }));
-  addItem({ category: 'clothes', id: 'out1', name: selectedOuter, vol: 1500, weight: 800, priority: 8, isEssential: false, fold: 'bundle' });
-  selectedShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s, vol: 2500, weight: 1000, priority: 8, isEssential: i === 0 })); 
+  const getSelectedItems = (names, catKey, defVol, defWeight) => {
+    return names.map(n => {
+      const w = userWardrobe.find(item => item.name === n && item.category === catKey);
+      if (w) return { name: n, vol: w.vol, weight: w.weight };
+      return { name: n, vol: defVol, weight: defWeight };
+    });
+  };
+
+  const finalTops = getSelectedItems(selectedTops, 'top', 300, 150);
+  const finalBottoms = getSelectedItems(selectedBottoms, 'bottom', 800, 400);
+  const finalOuter = getSelectedItems([selectedOuter], 'outer', 1500, 800)[0];
+  const finalShoes = getSelectedItems(selectedShoes, 'shoe', 2500, 1000);
+
+  finalTops.forEach((t, i) => addItem({ category: 'clothes', id: `top${i}`, name: t.name, vol: t.vol, weight: t.weight, priority: 9, isEssential: true, fold: 'konmari' }));
+  finalBottoms.forEach((b, i) => addItem({ category: 'clothes', id: `bot${i}`, name: b.name, vol: b.vol, weight: b.weight, priority: 9, isEssential: true, fold: 'bundle' }));
+  addItem({ category: 'clothes', id: 'out1', name: finalOuter.name, vol: finalOuter.vol, weight: finalOuter.weight, priority: 8, isEssential: false, fold: 'bundle' });
+  finalShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s.name, vol: s.vol, weight: s.weight, priority: 8, isEssential: i === 0 })); 
 
   // Activities (Initial configuration)
   Object.keys(activities).forEach(act => {

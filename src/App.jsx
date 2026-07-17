@@ -5,6 +5,7 @@ import WeatherWidget from './components/WeatherWidget';
 import PackingList from './components/PackingList';
 import CapacityBar from './components/CapacityBar';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
+import WardrobeManager from './components/WardrobeManager';
 import { geocodeLocation, fetchWeather } from './services/api';
 import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
 import './index.css';
@@ -23,6 +24,11 @@ function App() {
   const [activeTravelMode, setActiveTravelMode] = useState('flying');
   const [tempUnit, setTempUnit] = useState('C');
   const [lengthUnit, setLengthUnit] = useState('cm');
+  const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
+  const [wardrobe, setWardrobe] = useState(() => {
+    const saved = localStorage.getItem('travelPackerWardrobe');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Derived State (Dynamic Recalculation)
   const currentVolume = packingList ? Object.values(packingList).flat().reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
@@ -63,6 +69,10 @@ function App() {
       }));
     }
   }, [packingList, outfits, weatherDataArray, suitcaseVolume, activePalette, activeTravelMode, tempUnit, lengthUnit]);
+
+  useEffect(() => {
+    localStorage.setItem('travelPackerWardrobe', JSON.stringify(wardrobe));
+  }, [wardrobe]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -111,7 +121,7 @@ function App() {
 
       setWeatherDataArray(allWeatherData);
 
-      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, activities);
+      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, activities, wardrobe);
       
       setPackingList(result.list);
       setOutfits(result.outfitCombinations);
@@ -231,7 +241,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header theme={theme} toggleTheme={toggleTheme} />
+      <Header theme={theme} toggleTheme={toggleTheme} onOpenWardrobe={() => setIsWardrobeOpen(true)} />
       
       <main>
         <TripForm onSubmit={handleGenerateList} isLoading={isLoading} lengthUnit={lengthUnit} toggleLengthUnit={toggleLengthUnit} />
@@ -279,6 +289,13 @@ function App() {
             </div>
           </div>
         )}
+
+        <WardrobeManager 
+          wardrobe={wardrobe} 
+          setWardrobe={setWardrobe} 
+          isOpen={isWardrobeOpen} 
+          onClose={() => setIsWardrobeOpen(false)} 
+        />
       </main>
     </div>
   );

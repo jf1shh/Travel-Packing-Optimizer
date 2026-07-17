@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Header = ({ theme, toggleTheme }) => {
+const Header = ({ theme, toggleTheme, onOpenWardrobe }) => {
   return (
     <header>
       <div>
@@ -10,6 +10,13 @@ const Header = ({ theme, toggleTheme }) => {
         </p>
       </div>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <button 
+          onClick={onOpenWardrobe}
+          className="animate-slide-up"
+          style={{ animationDelay: '0.2s', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--surface-color)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          My Closet 👕
+        </button>
         <button 
           className="theme-toggle animate-slide-up" 
           onClick={toggleTheme}
