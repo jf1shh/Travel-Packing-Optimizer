@@ -134,7 +134,7 @@ const BASE_ITEMS = {
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed') => {
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = []) => {
   let allItems = [];
   let combinations = [];
 
@@ -242,7 +242,9 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   }
 
   for (let d = 0; d < tripDuration; d++) {
-    const dailyWeather = weatherDataArray[d % weatherDataArray.length]?.weather;
+    const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
+    const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
+    const dailyWeather = destWeatherObj?.weather;
     const dateIndex = d % (dailyWeather?.time?.length || 1);
     
     const comboIndex = d % combos.length;

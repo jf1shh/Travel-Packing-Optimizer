@@ -90,7 +90,7 @@ function App() {
     setLengthUnit(prev => prev === 'cm' ? 'in' : 'cm');
   };
 
-  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, packingStrategy, techPorts, suitcaseVolume }) => {
+  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, dailyDestinations, formWeatherData, packingStrategy, techPorts, suitcaseVolume }) => {
     setIsLoading(true);
     setError(null);
     setWeatherDataArray(null);
@@ -108,10 +108,14 @@ function App() {
       let allWeatherData = [];
 
       for (let i = 0; i < destinations.length; i++) {
-        const location = await geocodeLocation(destinations[i]);
-        const weather = await fetchWeather(location.latitude, location.longitude, startDate, endDate);
-        
-        const locName = [location.name, location.country].filter(Boolean).join(', ');
+        const dest = destinations[i];
+        let weather = formWeatherData[dest];
+        let locName = dest;
+        if (!weather) {
+          const location = await geocodeLocation(dest);
+          weather = await fetchWeather(location.latitude, location.longitude, startDate, endDate);
+          locName = [location.name, location.country].filter(Boolean).join(', ');
+        }
         
         allWeatherData.push({
           locationName: locName,
@@ -121,7 +125,7 @@ function App() {
 
       setWeatherDataArray(allWeatherData);
 
-      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts);
+      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts, dailyDestinations, destinations);
       
       setPackingList(result.list);
       setOutfits(result.outfitCombinations);

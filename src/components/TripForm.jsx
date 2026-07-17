@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { geocodeLocation, fetchWeather } from '../services/api';
 
 const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
   const [destinations, setDestinations] = useState(['']);
@@ -17,6 +18,35 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
   
   // Activities
   const [dailyActivities, setDailyActivities] = useState(Array(30).fill(''));
+  
+  // Daily Destinations & Weather
+  const [dailyDestinations, setDailyDestinations] = useState(Array(30).fill(''));
+  const [formWeatherData, setFormWeatherData] = useState({});
+  const [isFetchingWeather, setIsFetchingWeather] = useState(false);
+
+  useEffect(() => {
+    const validDests = destinations.filter(d => d.trim().length > 2);
+    if (validDests.length === 0) return;
+
+    const fetchAll = async () => {
+      setIsFetchingWeather(true);
+      const newWeatherData = {};
+      try {
+        for (let dest of validDests) {
+          const loc = await geocodeLocation(dest);
+          const w = await fetchWeather(loc.latitude, loc.longitude, startDate, endDate);
+          newWeatherData[dest] = w;
+        }
+        setFormWeatherData(newWeatherData);
+      } catch (e) {
+        console.error("Form weather fetch failed", e);
+      }
+      setIsFetchingWeather(false);
+    };
+
+    const debounceId = setTimeout(fetchAll, 1000);
+    return () => clearTimeout(debounceId);
+  }, [destinations, startDate, endDate]);
   
   // Suitcase states
   const [preset, setPreset] = useState('away-carry');
@@ -70,6 +100,8 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         palette,
         travelMode,
         dailyActivities: dailyActivities.slice(0, duration),
+        dailyDestinations: dailyDestinations.slice(0, duration),
+        formWeatherData,
         packingStrategy,
         techPorts,
         suitcaseVolume: (parseFloat(length) || 0) * (parseFloat(width) || 0) * (parseFloat(height) || 0) 
@@ -220,17 +252,51 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.75rem' }}>Daily Itinerary</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
           {Array.from({ length: duration }).map((_, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Day {i + 1}</span>
-              <select 
-                value={dailyActivities[i] || ''} 
-                onChange={(e) => {
-                  const newArr = [...dailyActivities];
-                  newArr[i] = e.target.value;
-                  setDailyActivities(newArr);
-                }}
-                style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}
-              >
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: '500', whiteSpace: 'nowrap' }}>Day {i + 1}</span>
+                {(() => {
+                  const dest = dailyDestinations[i] || destinations[0];
+                  const weatherObj = formWeatherData[dest];
+                  if (!weatherObj || !weatherObj.temperature_2m_max) return null;
+                  const maxTemp = weatherObj.temperature_2m_max[i];
+                  const rain = weatherObj.precipitation_sum[i];
+                  if (maxTemp === undefined) return null;
+                  
+                  const isRain = rain > 2;
+                  return (
+                    <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', background: 'var(--bg-color)', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                      {Math.round(maxTemp)}°C {isRain ? '🌧️' : '☀️'}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {destinations.filter(d => d.trim() !== '').length > 1 && (
+                  <select
+                    value={dailyDestinations[i] || destinations[0]}
+                    onChange={(e) => {
+                      const newD = [...dailyDestinations];
+                      newD[i] = e.target.value;
+                      setDailyDestinations(newD);
+                    }}
+                    style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', maxWidth: '100px' }}
+                  >
+                    {destinations.map((d, idx) => d.trim() !== '' && (
+                      <option key={idx} value={d}>{d}</option>
+                    ))}
+                  </select>
+                )}
+                <select 
+                  value={dailyActivities[i] || ''} 
+                  onChange={(e) => {
+                    const newArr = [...dailyActivities];
+                    newArr[i] = e.target.value;
+                    setDailyActivities(newArr);
+                  }}
+                  style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', maxWidth: '140px' }}
+                >
                 <option value="">Casual / Standard</option>
                 <option value="formal">Formal / Dinner</option>
                 <option value="gym">Gym / Workout</option>
@@ -240,6 +306,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
                 <option value="business">Business / Meeting</option>
                 <option value="nightout">Night Out / Clubbing</option>
               </select>
+              </div>
             </div>
           ))}
         </div>
