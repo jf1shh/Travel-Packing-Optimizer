@@ -256,7 +256,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="palette" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Capsule Palette</label>
+          <label htmlFor="palette" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Fashion Archetype</label>
           <select id="palette" value={palette} onChange={(e) => setPalette(e.target.value)}>
             <option value="quiet-luxury">Quiet Luxury / Old Money</option>
             <option value="gorpcore">Gorpcore / Techwear</option>
