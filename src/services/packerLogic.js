@@ -26,64 +26,84 @@ const ITEM_DATA = {
 };
 
 const PALETTES = {
-  'navy-grey': {
+  'quiet-luxury': {
     male: {
-      outer: 'Navy Bomber Jacket',
-      bottoms: ['Dark Wash Jeans', 'Grey Chinos'],
-      tops: ['White T-Shirt', 'Grey Henley', 'Navy Sweater'],
-      shoes: ['White Sneakers', 'Comfortable Walkers']
+      outer: 'Unstructured Blazer',
+      bottoms: ['Pleated Wool Trousers', 'Linen Chinos'],
+      tops: ['Cashmere Half-Zip', 'Crisp White Oxford', 'Silk Blend Polo'],
+      shoes: ['Loro Piana Loafers', 'Minimal Leather Sneakers']
     },
     female: {
-      outer: 'Navy Denim Jacket',
-      bottoms: ['Dark Wash Jeans', 'Grey Leggings'],
-      tops: ['White Basic Tee', 'Navy Long Sleeve', 'Grey Cardigan'],
-      shoes: ['White Sneakers', 'Comfortable Walkers']
+      outer: 'Cashmere Wrap Coat',
+      bottoms: ['Tailored Wide-Leg Trousers', 'Silk Midi Skirt'],
+      tops: ['Silk Blouse', 'Merino Wool Turtleneck', 'Cashmere Tee'],
+      shoes: ['Suede Mules', 'Leather Flats']
     },
     other: {
-      outer: 'Navy Bomber Jacket',
-      bottoms: ['Dark Wash Jeans', 'Grey Chinos'],
-      tops: ['White Tee', 'Grey Long Sleeve', 'Navy Sweater'],
-      shoes: ['White Sneakers', 'Comfortable Walkers']
+      outer: 'Unstructured Blazer',
+      bottoms: ['Pleated Wool Trousers', 'Tailored Chinos'],
+      tops: ['Cashmere Half-Zip', 'Silk Blouse', 'Merino Wool Polo'],
+      shoes: ['Suede Loafers', 'Minimal Leather Sneakers']
     }
   },
-  'earth': {
+  'gorpcore': {
     male: {
-      outer: 'Olive Field Jacket',
-      bottoms: ['Khaki Chinos', 'Brown Corduroys'],
-      tops: ['Cream T-Shirt', 'Olive Henley', 'Tan Sweater'],
-      shoes: ['Brown Boots', 'Canvas Sneakers']
+      outer: "Arc'teryx Beta Shell",
+      bottoms: ['Technical Cargo Pants', 'Climbing Trousers'],
+      tops: ['Merino Wool Base', 'Technical Fleece', 'Breathable Trail Shirt'],
+      shoes: ['Salomon XT-6 Sneakers', 'Hoka Trail Shoes']
     },
     female: {
-      outer: 'Olive Utility Jacket',
-      bottoms: ['Beige Chinos', 'Brown Leggings'],
-      tops: ['Cream Tee', 'Olive Long Sleeve', 'Tan Cardigan'],
-      shoes: ['Brown Boots', 'Canvas Sneakers']
+      outer: 'Gore-Tex Anorak',
+      bottoms: ['Utility Parachute Pants', 'Technical Leggings'],
+      tops: ['Merino Wool Base', 'Technical Fleece', 'Performance Crop'],
+      shoes: ['Hoka Trail Shoes', 'Salomon XT-4']
     },
     other: {
-      outer: 'Olive Field Jacket',
-      bottoms: ['Khaki Chinos', 'Brown Pants'],
-      tops: ['Cream Tee', 'Olive Long Sleeve', 'Tan Sweater'],
-      shoes: ['Brown Boots', 'Canvas Sneakers']
+      outer: "Arc'teryx Beta Shell",
+      bottoms: ['Technical Cargo Pants', 'Utility Parachute Pants'],
+      tops: ['Merino Wool Base', 'Technical Fleece', 'Breathable Trail Shirt'],
+      shoes: ['Salomon XT-6 Sneakers', 'Hoka Trail Shoes']
     }
   },
-  'monochrome': {
+  'scandi': {
     male: {
-      outer: 'Black Leather Jacket',
-      bottoms: ['Black Jeans', 'Charcoal Trousers'],
-      tops: ['White T-Shirt', 'Black Long Sleeve', 'Grey Hoodie'],
-      shoes: ['Black Sneakers', 'Black Boots']
+      outer: 'Oversized Topcoat',
+      bottoms: ['Raw Denim', 'Wide-Leg Trousers'],
+      tops: ['Chunky Knit Turtleneck', 'Boxy Heavyweight Tee', 'Minimalist Button-Up'],
+      shoes: ['White Leather Sneakers', 'Chunky Derbies']
     },
     female: {
-      outer: 'Black Moto Jacket',
-      bottoms: ['Black Jeans', 'Charcoal Leggings'],
-      tops: ['White Tee', 'Black Long Sleeve', 'Grey Hoodie'],
-      shoes: ['Black Sneakers', 'Black Boots']
+      outer: 'Tailored Maxi Coat',
+      bottoms: ['Wide-leg Denim', 'Flowy Trousers'],
+      tops: ['Boxy Striped Knit', 'Oversized Button-Up', 'Clean White Tee'],
+      shoes: ['Clean White Sneakers', 'Chunky Loafers']
     },
     other: {
-      outer: 'Black Leather Jacket',
-      bottoms: ['Black Jeans', 'Charcoal Trousers'],
-      tops: ['White Tee', 'Black Long Sleeve', 'Grey Hoodie'],
-      shoes: ['Black Sneakers', 'Black Boots']
+      outer: 'Oversized Topcoat',
+      bottoms: ['Wide-leg Denim', 'Raw Denim'],
+      tops: ['Chunky Knit Turtleneck', 'Boxy Striped Knit', 'Heavyweight Tee'],
+      shoes: ['White Leather Sneakers', 'Chunky Derbies']
+    }
+  },
+  'streetwear': {
+    male: {
+      outer: 'Vintage Racing Jacket',
+      bottoms: ['Baggy Parachute Pants', 'Jorts'],
+      tops: ['Graphic Baby Tee', 'Vintage Hoodie', 'Mesh Long-sleeve'],
+      shoes: ['Chunky Skate Shoes', 'Retro Jordans']
+    },
+    female: {
+      outer: 'Cropped Puffer Jacket',
+      bottoms: ['Low-rise Cargo Pants', 'Baggy Denim'],
+      tops: ['Graphic Baby Tee', 'Mesh Long-sleeve', 'Corset Top'],
+      shoes: ['Platform Boots', 'Chunky Skate Shoes']
+    },
+    other: {
+      outer: 'Vintage Racing Jacket',
+      bottoms: ['Baggy Parachute Pants', 'Baggy Denim'],
+      tops: ['Graphic Baby Tee', 'Mesh Long-sleeve', 'Vintage Hoodie'],
+      shoes: ['Chunky Skate Shoes', 'Platform Boots']
     }
   }
 };

@@ -12,7 +12,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
   const [endDate, setEndDate] = useState(endStr);
   
   const [gender, setGender] = useState('other');
-  const [palette, setPalette] = useState('navy-grey');
+  const [palette, setPalette] = useState('quiet-luxury');
   
   // Activities
   const [activities, setActivities] = useState({
@@ -220,9 +220,10 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label htmlFor="palette" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Capsule Palette</label>
           <select id="palette" value={palette} onChange={(e) => setPalette(e.target.value)}>
-            <option value="navy-grey">Navy & Grey Classic</option>
-            <option value="earth">Earth Tones</option>
-            <option value="monochrome">Monochrome / Neutrals</option>
+            <option value="quiet-luxury">Quiet Luxury / Old Money</option>
+            <option value="gorpcore">Gorpcore / Techwear</option>
+            <option value="scandi">Minimalist Scandi</option>
+            <option value="streetwear">Y2K Streetwear</option>
           </select>
         </div>
       </div>

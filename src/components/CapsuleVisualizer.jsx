@@ -7,23 +7,32 @@ const CapsuleVisualizer = ({ outfits, palette }) => {
 
   const outfit = outfits[currentIndex];
   
-  // Just a visual representation mapping
   const paletteColors = {
-    'navy-grey': { main: '#1e3a8a', sec: '#94a3b8' },
-    'earth': { main: '#4d7c0f', sec: '#d97706' },
-    'monochrome': { main: '#171717', sec: '#737373' }
+    'quiet-luxury': { main: '#d4af37', sec: '#f5deb3' },
+    'gorpcore': { main: '#f97316', sec: '#475569' },
+    'scandi': { main: '#e2e8f0', sec: '#94a3b8' },
+    'streetwear': { main: '#8b5cf6', sec: '#22c55e' }
   };
   
-  const color = paletteColors[palette] || paletteColors['navy-grey'];
+  const color = paletteColors[palette] || paletteColors['quiet-luxury'];
 
   const getItemColor = (itemName, fallbackColor) => {
     if (!itemName) return fallbackColor;
     const lower = itemName.toLowerCase();
-    if (lower.includes('olive')) return '#4d7c0f'; // Earth green
+    
+    // New Aesthetics Keywords
+    if (lower.includes('cashmere') || lower.includes('silk') || lower.includes('polo')) return '#d4af37';
+    if (lower.includes('gore-tex') || lower.includes("arc'teryx") || lower.includes('technical')) return '#f97316';
+    if (lower.includes('denim') || lower.includes('knit') || lower.includes('raw')) return '#64748b';
+    if (lower.includes('vintage') || lower.includes('mesh') || lower.includes('parachute')) return '#8b5cf6';
+    if (lower.includes('leather') || lower.includes('black')) return '#171717';
+
+    // Generic Colors
+    if (lower.includes('olive')) return '#4d7c0f'; 
     if (lower.includes('beige') || lower.includes('tan') || lower.includes('khaki')) return '#d4b886'; 
     if (lower.includes('brown')) return '#78350f';
     if (lower.includes('navy')) return '#1e3a8a';
-    if (lower.includes('black') || lower.includes('charcoal')) return '#171717';
+    if (lower.includes('charcoal')) return '#171717';
     if (lower.includes('grey') || lower.includes('gray')) return '#94a3b8';
     if (lower.includes('white') || lower.includes('cream')) return '#e2e8f0'; 
     return fallbackColor;

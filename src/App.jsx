@@ -20,7 +20,7 @@ function App() {
   const [currentVolume, setCurrentVolume] = useState(0);
   const [suitcaseVolume, setSuitcaseVolume] = useState(0);
   const [outfits, setOutfits] = useState(null);
-  const [activePalette, setActivePalette] = useState('navy-grey');
+  const [activePalette, setActivePalette] = useState('quiet-luxury');
   const [tempUnit, setTempUnit] = useState('C');
   const [lengthUnit, setLengthUnit] = useState('cm');
 
