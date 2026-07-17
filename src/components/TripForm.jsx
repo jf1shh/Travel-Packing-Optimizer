@@ -20,7 +20,10 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
     beach: false,
     hike: false,
     gym: false,
-    formal: false
+    formal: false,
+    ski: false,
+    business: false,
+    nightout: false
   });
   
   // Suitcase states
@@ -206,8 +209,8 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
       {/* Activities Grid */}
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.75rem' }}>Activities</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-          {Object.entries({ beach: '🏖️ Beach/Swim', hike: '🥾 Hiking', gym: '💪 Gym/Workout', formal: '👔 Formal Event' }).map(([key, label]) => (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          {Object.entries({ beach: '🏖️ Beach/Swim', hike: '🥾 Hiking', gym: '💪 Gym/Workout', formal: '👔 Formal Event', ski: '⛷️ Skiing', business: '💼 Business', nightout: '🍸 Night Out' }).map(([key, label]) => (
             <label key={key} className={`checkbox-wrapper ${activities[key] ? 'checked' : ''}`} style={{ margin: 0, padding: '0.75rem' }}>
               <input 
                 type="checkbox" 
