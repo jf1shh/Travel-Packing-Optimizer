@@ -224,6 +224,9 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
             <option value="gorpcore">Gorpcore / Techwear</option>
             <option value="scandi">Minimalist Scandi</option>
             <option value="streetwear">Y2K Streetwear</option>
+            <option value="dark-academia">Dark Academia</option>
+            <option value="athleisure">Performance Athleisure</option>
+            <option value="bohemian">Resort / Bohemian</option>
           </select>
         </div>
       </div>

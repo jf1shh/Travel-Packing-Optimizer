@@ -18,6 +18,7 @@ function App() {
   const [weatherDataArray, setWeatherDataArray] = useState(null);
   const [packingList, setPackingList] = useState(null);
   const [currentVolume, setCurrentVolume] = useState(0);
+  const [currentWeight, setCurrentWeight] = useState(0);
   const [suitcaseVolume, setSuitcaseVolume] = useState(0);
   const [outfits, setOutfits] = useState(null);
   const [activePalette, setActivePalette] = useState('quiet-luxury');
@@ -34,6 +35,7 @@ function App() {
         if (parsed.outfits) setOutfits(parsed.outfits);
         if (parsed.weatherDataArray) setWeatherDataArray(parsed.weatherDataArray);
         if (parsed.currentVolume) setCurrentVolume(parsed.currentVolume);
+        if (parsed.currentWeight) setCurrentWeight(parsed.currentWeight);
         if (parsed.suitcaseVolume) setSuitcaseVolume(parsed.suitcaseVolume);
         if (parsed.activePalette) setActivePalette(parsed.activePalette);
         if (parsed.tempUnit) setTempUnit(parsed.tempUnit);
@@ -52,13 +54,14 @@ function App() {
         outfits,
         weatherDataArray,
         currentVolume,
+        currentWeight,
         suitcaseVolume,
         activePalette,
         tempUnit,
         lengthUnit
       }));
     }
-  }, [packingList, outfits, weatherDataArray, currentVolume, suitcaseVolume, activePalette, tempUnit, lengthUnit]);
+  }, [packingList, outfits, weatherDataArray, currentVolume, currentWeight, suitcaseVolume, activePalette, tempUnit, lengthUnit]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -111,6 +114,7 @@ function App() {
       
       setPackingList(result.list);
       setCurrentVolume(result.currentVolume);
+      setCurrentWeight(result.currentWeight);
       setOutfits(result.outfitCombinations);
       
     } catch (err) {
@@ -125,6 +129,7 @@ function App() {
     setPackingList(null);
     setOutfits(null);
     setCurrentVolume(0);
+    setCurrentWeight(0);
     setSuitcaseVolume(0);
     localStorage.removeItem('travelPackerState');
   };
@@ -165,7 +170,7 @@ function App() {
         )}
 
         {suitcaseVolume > 0 && packingList && (
-          <CapacityBar currentVolume={currentVolume} maxVolume={suitcaseVolume} />
+          <CapacityBar currentVolume={currentVolume} currentWeight={currentWeight} maxVolume={suitcaseVolume} />
         )}
 
         {packingList && (

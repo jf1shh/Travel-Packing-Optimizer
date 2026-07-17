@@ -11,7 +11,10 @@ const CapsuleVisualizer = ({ outfits, palette }) => {
     'quiet-luxury': { main: '#d4af37', sec: '#f5deb3' },
     'gorpcore': { main: '#f97316', sec: '#475569' },
     'scandi': { main: '#e2e8f0', sec: '#94a3b8' },
-    'streetwear': { main: '#8b5cf6', sec: '#22c55e' }
+    'streetwear': { main: '#8b5cf6', sec: '#22c55e' },
+    'dark-academia': { main: '#78350f', sec: '#9f1239' },
+    'athleisure': { main: '#06b6d4', sec: '#171717' },
+    'bohemian': { main: '#d97706', sec: '#9a3412' }
   };
   
   const color = paletteColors[palette] || paletteColors['quiet-luxury'];
@@ -26,6 +29,9 @@ const CapsuleVisualizer = ({ outfits, palette }) => {
     if (lower.includes('denim') || lower.includes('knit') || lower.includes('raw')) return '#64748b';
     if (lower.includes('vintage') || lower.includes('mesh') || lower.includes('parachute')) return '#8b5cf6';
     if (lower.includes('leather') || lower.includes('black')) return '#171717';
+    if (lower.includes('tweed') || lower.includes('corduroy') || lower.includes('plaid')) return '#78350f';
+    if (lower.includes('performance') || lower.includes('athletic') || lower.includes('running')) return '#06b6d4';
+    if (lower.includes('linen') || lower.includes('crochet') || lower.includes('flowy') || lower.includes('peasant')) return '#d97706';
 
     // Generic Colors
     if (lower.includes('olive')) return '#4d7c0f'; 
@@ -67,9 +73,15 @@ const CapsuleVisualizer = ({ outfits, palette }) => {
         <button onClick={prevOutfit} style={{ zIndex: 1, padding: '0.5rem 1rem' }}>◀</button>
         
         <div style={{ zIndex: 1, textAlign: 'center', flex: 1 }}>
-          <h4 style={{ color: color.main, marginBottom: '1rem', fontSize: '1.2rem' }}>{outfit.name}</h4>
+          <h4 style={{ color: color.main, marginBottom: '0.25rem', fontSize: '1.2rem', fontWeight: 'bold' }}>{outfit.name}</h4>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+          {outfit.temp !== undefined && (
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: '500' }}>
+              {Math.round(outfit.temp)}° • {outfit.weather}
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', marginTop: outfit.temp === undefined ? '1rem' : '0' }}>
             {outfit.outer && (
               <div style={{ padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.outer, color.main)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
                 {outfit.outer}
