@@ -38,6 +38,47 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     setWardrobe(wardrobe.filter(i => i.id !== id));
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      
+      const newItems = [];
+      lines.forEach(line => {
+        const lower = line.toLowerCase();
+        let cat = 'top';
+        if (lower.match(/(pant|jean|short|skirt|trouser|legging)/)) cat = 'bottom';
+        else if (lower.match(/(jacket|coat|blazer|windbreaker|shell|parka)/)) cat = 'outer';
+        else if (lower.match(/(shoe|boot|sneaker|loafer|sandal|heel)/)) cat = 'shoe';
+
+        let bulk = 'standard';
+        if (lower.match(/(bulky|heavy|thick|winter|puffer)/)) bulk = 'bulky';
+        else if (lower.match(/(light|thin|summer|breezy)/)) bulk = 'light';
+
+        const stats = getBulkStats(cat, bulk);
+        
+        newItems.push({
+          id: `w-${Date.now()}-${Math.random()}`,
+          name: line.replace(/^[-*•\s]+/, ''), // remove bullet points
+          category: cat,
+          bulkiness: bulk,
+          vol: stats.vol,
+          weight: stats.weight
+        });
+      });
+
+      if (newItems.length > 0) {
+        setWardrobe(prev => [...prev, ...newItems]);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = null; // reset input
+  };
+
   return (
     <div style={{
       position: 'fixed', top: 0, right: 0, width: '100%', maxWidth: '400px', height: '100vh',
@@ -83,7 +124,13 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
           </button>
         </form>
 
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Your Items</h3>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Your Items
+          <label style={{ fontSize: '0.75rem', padding: '0.5rem 0.75rem', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'normal' }}>
+            📁 Upload .txt
+            <input type="file" accept=".txt,.md" onChange={handleFileUpload} style={{ display: 'none' }} />
+          </label>
+        </h3>
         {wardrobe.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>Your closet is empty. Add items above!</p>
         ) : (
