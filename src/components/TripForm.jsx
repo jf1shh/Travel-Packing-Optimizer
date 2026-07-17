@@ -20,6 +20,8 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
   
   // Suitcase states
   const [preset, setPreset] = useState('away-carry');
+  const [packingStrategy, setPackingStrategy] = useState('standard');
+  const [techPorts, setTechPorts] = useState('mixed');
   const [length, setLength] = useState('55');
   const [width, setWidth] = useState('34.8');
   const [height, setHeight] = useState('22.8');
@@ -68,6 +70,8 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         palette,
         travelMode,
         dailyActivities: dailyActivities.slice(0, duration),
+        packingStrategy,
+        techPorts,
         suitcaseVolume: (parseFloat(length) || 0) * (parseFloat(width) || 0) * (parseFloat(height) || 0) 
       });
     }
@@ -261,6 +265,22 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
             <option value="dark-academia">Dark Academia</option>
             <option value="athleisure">Performance Athleisure</option>
             <option value="bohemian">Resort / Bohemian</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label htmlFor="strategy" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Packing Strategy</label>
+          <select id="strategy" value={packingStrategy} onChange={(e) => setPackingStrategy(e.target.value)}>
+            <option value="standard">Standard (Comfortable)</option>
+            <option value="minimalist">Extreme Minimalist (Rewear Basics)</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label htmlFor="ports" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Tech Devices</label>
+          <select id="ports" value={techPorts} onChange={(e) => setTechPorts(e.target.value)}>
+            <option value="mixed">Mixed (USB-C, Lightning, etc)</option>
+            <option value="usbc">All USB-C (Consolidate Cables)</option>
           </select>
         </div>
       </div>

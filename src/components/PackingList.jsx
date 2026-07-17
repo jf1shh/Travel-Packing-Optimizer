@@ -41,10 +41,12 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
 
   const categories = [
     { key: 'plane', label: '✈️ Worn on Travel Day (Not in Suitcase)' },
-    { key: 'clothes', label: '👕 Clothes & Shoes' },
-    { key: 'toiletries', label: '🧴 Toiletries' },
-    { key: 'tech', label: '💻 Electronics' },
-    { key: 'documents', label: '📄 Documents' },
+    { key: 'main', label: '👕 Main Cube: Tops & Bottoms' },
+    { key: 'base', label: '🧦 Small Cube: Base Layers & Socks' },
+    { key: 'loose', label: '🧥 Loose in Suitcase (Shoes, Jackets)' },
+    { key: 'liquid', label: '🪥 TSA 1-Quart Liquids Bag' },
+    { key: 'dry', label: '🧴 Dry Toiletries Bag' },
+    { key: 'tech', label: '🔌 Tech Dopp Kit' },
   ];
 
   const handleCopy = () => {
@@ -74,8 +76,23 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
     setAddingCategory(null);
   };
 
+  const liquidVolume = packingList && packingList.liquid ? packingList.liquid.reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
+  // Standard carry-on is around 40-50L. Let's say if volume < 60000, it's a carry-on.
+  const totalSuitcaseVol = packingList ? Object.values(packingList).flat().reduce((s, i) => s + (i.vol || 0), 0) : 0;
+  const isCarryOn = totalSuitcaseVol < 60000;
+  const showTSAAlert = isCarryOn && liquidVolume > 1000;
+
   return (
     <div className="packing-list animate-slide-up" style={{ animationDelay: '0.5s' }}>
+      {showTSAAlert && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+          <div>
+            <strong>TSA Security Alert:</strong> Your liquids bag exceeds the 1-Quart (~1000cm³) limit for carry-ons. You are currently at {Math.round(liquidVolume)}cm³. You must remove some liquids or check your bag.
+          </div>
+        </div>
+      )}
+      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Your Optimized List</h2>
         <button 

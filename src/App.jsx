@@ -90,7 +90,7 @@ function App() {
     setLengthUnit(prev => prev === 'cm' ? 'in' : 'cm');
   };
 
-  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, suitcaseVolume }) => {
+  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, packingStrategy, techPorts, suitcaseVolume }) => {
     setIsLoading(true);
     setError(null);
     setWeatherDataArray(null);
@@ -121,7 +121,7 @@ function App() {
 
       setWeatherDataArray(allWeatherData);
 
-      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe);
+      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts);
       
       setPackingList(result.list);
       setOutfits(result.outfitCombinations);

@@ -116,33 +116,49 @@ export const ACTIVITY_GEAR = {
 
 const BASE_ITEMS = {
   toiletries: {
-    t1: { name: 'Toothbrush & Travel Paste', vol: 100, weight: 80, priority: 10, isEssential: true },
-    t2: { name: 'Deodorant', vol: 120, weight: 100, priority: 10, isEssential: true },
-    t3: { name: 'Travel Shampoo/Conditioner (TSA Size)', vol: 200, weight: 220, priority: 8, isEssential: false },
-    t4: { name: 'Moisturizer & Lip Balm', vol: 150, weight: 120, priority: 7, isEssential: true },
-    t5: { name: 'Nail Clippers & Tweezers', vol: 50, weight: 40, priority: 5, isEssential: false },
-    t6: { name: 'Prescription Meds & Painkillers', vol: 100, weight: 50, priority: 10, isEssential: true }
+    t1: { name: 'Toothbrush & Travel Paste', vol: 100, weight: 80, priority: 10, isEssential: true, isLiquid: true, cube: 'liquid' },
+    t2: { name: 'Deodorant', vol: 120, weight: 100, priority: 10, isEssential: true, cube: 'dry' },
+    t3: { name: 'Travel Shampoo/Conditioner (TSA Size)', vol: 200, weight: 220, priority: 8, isEssential: false, isLiquid: true, cube: 'liquid' },
+    t4: { name: 'Moisturizer & Lip Balm', vol: 150, weight: 120, priority: 7, isEssential: true, isLiquid: true, cube: 'liquid' },
+    t5: { name: 'Nail Clippers & Tweezers', vol: 50, weight: 40, priority: 5, isEssential: false, cube: 'dry' },
+    t6: { name: 'Prescription Meds & Painkillers', vol: 100, weight: 50, priority: 10, isEssential: true, cube: 'dry' }
   },
   tech: {
-    e1: { name: 'Phone Charger & Cable', vol: 150, weight: 100, priority: 10, isEssential: true },
-    e2: { name: 'Universal Travel Adapter', vol: 250, weight: 150, priority: 9, isEssential: true },
-    e3: { name: 'Power Bank (10,000mAh)', vol: 300, weight: 250, priority: 8, isEssential: true },
-    e4: { name: 'Wireless Earbuds', vol: 100, weight: 50, priority: 9, isEssential: true }
+    e2: { name: 'Universal Travel Adapter', vol: 250, weight: 150, priority: 9, isEssential: true, cube: 'tech' },
+    e3: { name: 'Power Bank (10,000mAh)', vol: 300, weight: 250, priority: 8, isEssential: true, cube: 'tech' },
+    e4: { name: 'Wireless Earbuds', vol: 100, weight: 50, priority: 9, isEssential: true, cube: 'tech' }
   },
   documents: {
-    d1: { name: 'Passport / ID', vol: 20, weight: 30, priority: 10, isEssential: true },
-    d2: { name: 'Credit Cards & Cash', vol: 50, weight: 50, priority: 10, isEssential: true }
+    d1: { name: 'Passport / ID', vol: 20, weight: 30, priority: 10, isEssential: true, cube: 'dry' },
+    d2: { name: 'Credit Cards & Cash', vol: 50, weight: 50, priority: 10, isEssential: true, cube: 'dry' }
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = []) => {
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed') => {
   let allItems = [];
   let combinations = [];
 
   const p = PALETTES[paletteKey] || PALETTES['quiet-luxury'];
   
   const addItem = (item) => {
-    allItems.push({ ...item, checked: false });
+    let cube = item.cube;
+    if (!cube) {
+      if (item.category === 'clothes') {
+        const n = item.name.toLowerCase();
+        if (n.includes('underwear') || n.includes('sock') || n.includes('base') || n.includes('pajama')) cube = 'base';
+        else if (n.includes('jacket') || n.includes('shoe') || n.includes('boot') || n.includes('coat')) cube = 'loose';
+        else cube = 'main';
+      } else if (item.category === 'tech') {
+        cube = 'tech';
+      } else if (item.category === 'toiletries') {
+        cube = item.isLiquid ? 'liquid' : 'dry';
+      } else if (item.category === 'documents') {
+        cube = 'dry';
+      } else {
+        cube = 'main';
+      }
+    }
+    allItems.push({ ...item, checked: false, cube });
   };
 
   // 2. Versatility Scoring
@@ -312,6 +328,13 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     });
   });
 
+  // Tech Consolidator
+  if (techPorts === 'usbc') {
+    addItem({ category: 'tech', id: 'tech-usbc', name: '65W GaN Multi-Charger & 2x USB-C Cables', vol: 150, weight: 120, priority: 10, isEssential: true, cube: 'tech' });
+  } else {
+    addItem({ category: 'tech', id: 'tech-mix', name: 'Phone Charger & Laptop Power Brick', vol: 400, weight: 350, priority: 10, isEssential: true, cube: 'tech' });
+  }
+
   // Travel Mode Injections
   if (travelMode === 'driving') {
     addItem({ category: 'tech', id: 'tm1', name: 'Car USB Charger', vol: 100, weight: 50, priority: 10, isEssential: true });
@@ -368,10 +391,14 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
   allItems = allItems.filter(item => !item.removed);
 
-  const grouped = { clothes: [], toiletries: [], tech: [], documents: [] };
+  const grouped = { plane: [], main: [], base: [], loose: [], liquid: [], dry: [], tech: [] };
   allItems.forEach(item => {
-    if (grouped[item.category]) {
-      grouped[item.category].push(item);
+    if (item.category === 'plane') {
+      grouped.plane.push(item);
+    } else if (item.cube && grouped[item.cube]) {
+      grouped[item.cube].push(item);
+    } else {
+      grouped.main.push(item);
     }
   });
 
