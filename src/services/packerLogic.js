@@ -135,7 +135,7 @@ const BASE_ITEMS = {
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', activities = {}, userWardrobe = []) => {
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = []) => {
   let allItems = [];
   let combinations = [];
 
@@ -214,7 +214,19 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     const dateIndex = d % (dailyWeather?.time?.length || 1);
     
     const comboIndex = d % combos.length;
-    const outfit = combos[comboIndex];
+    const baseOutfit = combos[comboIndex];
+    let outfit = { ...baseOutfit };
+
+    const act = dailyActivities[d];
+    if (act && ACTIVITY_GEAR[act]) {
+      const gear = ACTIVITY_GEAR[act].outfit;
+      outfit = {
+        top: gear.top,
+        bottom: gear.bottom,
+        shoe: gear.shoe,
+        outer: gear.outer
+      };
+    }
 
     let displayWeather = 'Clear/Mild';
     if (dailyWeather) {
@@ -230,6 +242,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
       name: `Day ${d + 1}`,
       temp: dailyWeather ? dailyWeather.temperature_2m_max[dateIndex] : 20,
       weather: displayWeather,
+      activity: act || '',
       ...outfit
     });
   }
@@ -253,9 +266,10 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   addItem({ category: 'clothes', id: 'out1', name: finalOuter.name, vol: finalOuter.vol, weight: finalOuter.weight, priority: 8, isEssential: false, fold: 'bundle' });
   finalShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s.name, vol: s.vol, weight: s.weight, priority: 8, isEssential: i === 0 })); 
 
-  // Activities (Initial configuration)
-  Object.keys(activities).forEach(act => {
-    if (activities[act] && ACTIVITY_GEAR[act]) {
+  // Activities (Daily configuration)
+  const uniqueActivities = [...new Set(dailyActivities.filter(a => a))];
+  uniqueActivities.forEach(act => {
+    if (ACTIVITY_GEAR[act]) {
       ACTIVITY_GEAR[act].items.forEach(item => addItem(item));
     }
   });

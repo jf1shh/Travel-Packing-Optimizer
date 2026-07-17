@@ -16,15 +16,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
   const [travelMode, setTravelMode] = useState('flying');
   
   // Activities
-  const [activities, setActivities] = useState({
-    beach: false,
-    hike: false,
-    gym: false,
-    formal: false,
-    ski: false,
-    business: false,
-    nightout: false
-  });
+  const [dailyActivities, setDailyActivities] = useState(Array(30).fill(''));
   
   // Suitcase states
   const [preset, setPreset] = useState('away-carry');
@@ -40,9 +32,12 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
     else if (val === 'samsonite-check') { setLength('75'); setWidth('51'); setHeight('31'); }
   };
 
-  const handleActivityToggle = (key) => {
-    setActivities(prev => ({ ...prev, [key]: !prev[key] }));
+  const getDuration = () => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
   };
+  const duration = getDuration();
 
   const updateDestination = (index, value) => {
     const newDest = [...destinations];
@@ -67,7 +62,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         gender,
         palette,
         travelMode,
-        activities,
+        dailyActivities: dailyActivities.slice(0, duration),
         suitcaseVolume: (parseFloat(length) || 0) * (parseFloat(width) || 0) * (parseFloat(height) || 0) 
       });
     }
@@ -206,19 +201,32 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit }) => {
         </div>
       </div>
 
-      {/* Activities Grid */}
+      {/* Daily Itinerary */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.75rem' }}>Activities</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          {Object.entries({ beach: '🏖️ Beach/Swim', hike: '🥾 Hiking', gym: '💪 Gym/Workout', formal: '👔 Formal Event', ski: '⛷️ Skiing', business: '💼 Business', nightout: '🍸 Night Out' }).map(([key, label]) => (
-            <label key={key} className={`checkbox-wrapper ${activities[key] ? 'checked' : ''}`} style={{ margin: 0, padding: '0.75rem' }}>
-              <input 
-                type="checkbox" 
-                checked={activities[key]}
-                onChange={() => handleActivityToggle(key)}
-              />
-              <span className="checkbox-label" style={{ fontSize: '0.875rem' }}>{label}</span>
-            </label>
+        <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.75rem' }}>Daily Itinerary</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+          {Array.from({ length: duration }).map((_, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Day {i + 1}</span>
+              <select 
+                value={dailyActivities[i] || ''} 
+                onChange={(e) => {
+                  const newArr = [...dailyActivities];
+                  newArr[i] = e.target.value;
+                  setDailyActivities(newArr);
+                }}
+                style={{ padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}
+              >
+                <option value="">Casual / Standard</option>
+                <option value="formal">Formal / Dinner</option>
+                <option value="gym">Gym / Workout</option>
+                <option value="beach">Beach / Pool</option>
+                <option value="hike">Hiking / Trail</option>
+                <option value="ski">Skiing / Snowboarding</option>
+                <option value="business">Business / Meeting</option>
+                <option value="nightout">Night Out / Clubbing</option>
+              </select>
+            </div>
           ))}
         </div>
       </div>
