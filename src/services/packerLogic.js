@@ -307,12 +307,33 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     const data = ITEM_DATA[k];
     let name = '';
     let category = '';
-    if (k.startsWith('t')) { category = 'toiletries'; name = ['Toothbrush set', 'Deodorant', 'Skincare', 'Hair product', 'Grooming Kit'][parseInt(k[1])-1]; }
-    else if (k.startsWith('e')) { category = 'tech'; name = ['Laptop', 'Charger', 'Power Bank'][parseInt(k[1])-1]; }
-    else if (k.startsWith('d')) { category = 'documents'; name = ['Passport / ID', 'Tickets / Itinerary', 'Cards / Cash'][parseInt(k[1])-1]; }
-    else return;
+      day: d + 1,
+      weather: dailyWeather ? {
+        temp: dailyWeather.temperature_2m_max[dateIndex],
+        precip: dailyWeather.precipitation_sum[dateIndex]
+      } : { temp: 20, precip: 0 },
+      ...outfit
+    });
+  }
 
-    if (name) addItem({ category, id: k, name, vol: data.vol, weight: data.weight, priority: data.priority, isEssential: data.isEssential, fold: data.fold });
+  // Push Clothes to Packing List
+  selectedTops.forEach((t, i) => addItem({ category: 'clothes', id: `top${i}`, name: t, vol: 300, weight: 150, priority: 9, isEssential: true, fold: 'konmari' }));
+  selectedBottoms.forEach((b, i) => addItem({ category: 'clothes', id: `bot${i}`, name: b, vol: 800, weight: 400, priority: 9, isEssential: true, fold: 'bundle' }));
+  addItem({ category: 'clothes', id: 'out1', name: selectedOuter, vol: 1500, weight: 800, priority: 8, isEssential: false, fold: 'bundle' });
+  selectedShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s, vol: 2500, weight: 1000, priority: 8, isEssential: i === 0 }));
+
+  // Activities (Initial configuration)
+  Object.keys(activities).forEach(act => {
+    if (activities[act] && ACTIVITY_GEAR[act]) {
+      ACTIVITY_GEAR[act].items.forEach(item => addItem(item));
+    }
+  });
+
+  // Base Items
+  ['toiletries', 'tech', 'documents'].forEach(category => {
+    Object.entries(BASE_ITEMS[category]).forEach(([k, data]) => {
+      addItem({ category, id: k, ...data });
+    });
   });
 
   // Travel Mode Injections
@@ -329,7 +350,6 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     addItem({ category: 'tech', id: 'tm8', name: 'Portable Pump & Patch Kit', vol: 500, weight: 300, priority: 10, isEssential: true });
     addItem({ category: 'toiletries', id: 'tm9', name: 'Water Bottle (Full)', vol: 1000, weight: 1000, priority: 10, isEssential: true });
     
-    // Penalize heavy/bulky items for bikers
     allItems.forEach(item => {
       if (item.weight > 800 || item.vol > 1500) {
         if (!item.isEssential) item.priority -= 2;
@@ -340,30 +360,30 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   // VOLUME OPTIMIZATION
   let currentVolume = allItems.reduce((sum, item) => sum + item.vol, 0);
   let currentWeight = allItems.reduce((sum, item) => sum + item.weight, 0);
-  
+
   if (suitcaseVolume > 0 && currentVolume > suitcaseVolume) {
     allItems.sort((a, b) => a.priority - b.priority);
     for (let i = 0; i < allItems.length; i++) {
+      if (currentVolume <= suitcaseVolume) break;
       if (!allItems[i].isEssential) {
         currentVolume -= allItems[i].vol;
         currentWeight -= allItems[i].weight;
         allItems[i].removed = true;
-        if (currentVolume <= suitcaseVolume) break;
       }
     }
   }
 
-  const finalItems = allItems.filter(item => !item.removed);
-  
-  const categorizedList = {
-    clothes: finalItems.filter(i => i.category === 'clothes'),
-    toiletries: finalItems.filter(i => i.category === 'toiletries'),
-    tech: finalItems.filter(i => i.category === 'tech'),
-    documents: finalItems.filter(i => i.category === 'documents'),
-  };
+  allItems = allItems.filter(item => !item.removed);
 
-  return { 
-    list: categorizedList, 
+  const grouped = { clothes: [], toiletries: [], tech: [], documents: [] };
+  allItems.forEach(item => {
+    if (grouped[item.category]) {
+      grouped[item.category].push(item);
+    }
+  });
+
+  return {
+    list: grouped,
     currentVolume,
     currentWeight,
     outfitCombinations: combinations

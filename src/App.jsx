@@ -6,7 +6,7 @@ import PackingList from './components/PackingList';
 import CapacityBar from './components/CapacityBar';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
 import { geocodeLocation, fetchWeather } from './services/api';
-import { generatePackingList } from './services/packerLogic';
+import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
 import './index.css';
 
 function App() {
@@ -182,11 +182,50 @@ function App() {
         setOutfits(prev => {
           if (!prev || prev.length === 0) return prev;
           const newOutfits = [...prev];
-          // Inject into Day 1 to guarantee they see their new item
           newOutfits[0] = { ...newOutfits[0], [slot]: name };
           return newOutfits;
         });
       }
+    }
+  };
+
+  const handleActivitySwap = (dayIndex, activityKey) => {
+    // 1. Update the Outfit in the Visualizer
+    setOutfits(prev => {
+      const newOutfits = [...prev];
+      if (activityKey && ACTIVITY_GEAR[activityKey]) {
+        const gear = ACTIVITY_GEAR[activityKey].outfit;
+        newOutfits[dayIndex] = {
+          ...newOutfits[dayIndex],
+          activity: activityKey,
+          top: gear.top,
+          bottom: gear.bottom,
+          shoe: gear.shoe,
+          outer: gear.outer
+        };
+      } else {
+        newOutfits[dayIndex] = {
+          ...newOutfits[dayIndex],
+          activity: ''
+        };
+      }
+      return newOutfits;
+    });
+
+    // 2. Inject Gear into Packing List if needed
+    if (activityKey && ACTIVITY_GEAR[activityKey]) {
+      const itemsToAdd = ACTIVITY_GEAR[activityKey].items;
+      setPackingList(prev => {
+        const newList = { ...prev };
+        itemsToAdd.forEach(item => {
+          // Check if item already exists to avoid duplicates
+          const exists = newList[item.category].find(i => i.name === item.name);
+          if (!exists) {
+            newList[item.category] = [...newList[item.category], { ...item, id: `swap-${Date.now()}-${Math.random()}`, checked: false }];
+          }
+        });
+        return newList;
+      });
     }
   };
 
@@ -208,7 +247,7 @@ function App() {
         )}
 
         {outfits && (
-          <CapsuleVisualizer outfits={outfits} palette={activePalette} />
+          <CapsuleVisualizer outfits={outfits} palette={activePalette} onActivityChange={handleActivitySwap} />
         )}
 
         {suitcaseVolume > 0 && packingList && (
