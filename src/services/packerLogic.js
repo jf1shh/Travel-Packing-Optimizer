@@ -1,170 +1,113 @@
-const ITEM_DATA = {
-  // Toiletries
-  't1': { vol: 100, weight: 80, priority: 10, isEssential: true },
-  't2': { vol: 150, weight: 120, priority: 9, isEssential: true },
-  't3': { vol: 300, weight: 300, priority: 7, isEssential: false },
-  't4': { vol: 250, weight: 200, priority: 6, isEssential: false },
-  't5': { vol: 500, weight: 450, priority: 7, isEssential: false },
-  
-  // Tech
-  'e1': { vol: 1500, weight: 1400, priority: 10, isEssential: true },
-  'e2': { vol: 150, weight: 200, priority: 10, isEssential: true },
-  'e3': { vol: 300, weight: 350, priority: 5, isEssential: false },
-
-  // Docs
-  'd1': { vol: 50, weight: 30, priority: 10, isEssential: true },
-  'd2': { vol: 20, weight: 10, priority: 10, isEssential: true },
-  'd3': { vol: 50, weight: 40, priority: 8, isEssential: false },
-
-  // Generic weather
-  'w1': { vol: 4000, weight: 1200, priority: 9, isEssential: true },
-  'w2': { vol: 500, weight: 150, priority: 6, isEssential: false, fold: 'shoes' },
-  'w3': { vol: 600, weight: 200, priority: 8, isEssential: true, fold: 'ranger' },
-  'w5': { vol: 100, weight: 50, priority: 5, isEssential: false },
-  'r1': { vol: 500, weight: 300, priority: 7, isEssential: false },
-  'r2': { vol: 1500, weight: 400, priority: 6, isEssential: false },
-};
-
-const PALETTES = {
+export const PALETTES = {
   'quiet-luxury': {
-    male: {
-      outer: 'Unstructured Blazer',
-      bottoms: ['Pleated Wool Trousers', 'Linen Chinos'],
-      tops: ['Cashmere Half-Zip', 'Crisp White Oxford', 'Silk Blend Polo'],
-      shoes: ['Loro Piana Loafers', 'Minimal Leather Sneakers']
-    },
-    female: {
-      outer: 'Cashmere Wrap Coat',
-      bottoms: ['Tailored Wide-Leg Trousers', 'Silk Midi Skirt'],
-      tops: ['Silk Blouse', 'Merino Wool Turtleneck', 'Cashmere Tee'],
-      shoes: ['Suede Mules', 'Leather Flats']
-    },
-    other: {
-      outer: 'Unstructured Blazer',
-      bottoms: ['Pleated Wool Trousers', 'Tailored Chinos'],
-      tops: ['Cashmere Half-Zip', 'Silk Blouse', 'Merino Wool Polo'],
-      shoes: ['Suede Loafers', 'Minimal Leather Sneakers']
-    }
+    name: 'Quiet Luxury',
+    tops: ['Cashmere Crewneck', 'Silk Button-down', 'Merino Turtleneck', 'Crisp White Tee'],
+    bottoms: ['Tailored Trousers', 'Dark Wash Denim', 'Pleated Skirt'],
+    outerwear: ['Camel Trench Coat', 'Structured Wool Blazer'],
+    shoes: ['Leather Loafers', 'Minimalist White Sneakers', 'Suede Chelsea Boots'],
+    colors: ['#f5f5dc', '#1a1a1a', '#8b7355'] // beige, black, taupe
   },
   'gorpcore': {
-    male: {
-      outer: "Arc'teryx Beta Shell",
-      bottoms: ['Technical Cargo Pants', 'Climbing Trousers'],
-      tops: ['Merino Wool Base', 'Technical Fleece', 'Breathable Trail Shirt'],
-      shoes: ['Salomon XT-6 Sneakers', 'Hoka Trail Shoes']
-    },
-    female: {
-      outer: 'Gore-Tex Anorak',
-      bottoms: ['Utility Parachute Pants', 'Technical Leggings'],
-      tops: ['Merino Wool Base', 'Technical Fleece', 'Performance Crop'],
-      shoes: ['Hoka Trail Shoes', 'Salomon XT-4']
-    },
-    other: {
-      outer: "Arc'teryx Beta Shell",
-      bottoms: ['Technical Cargo Pants', 'Utility Parachute Pants'],
-      tops: ['Merino Wool Base', 'Technical Fleece', 'Breathable Trail Shirt'],
-      shoes: ['Salomon XT-6 Sneakers', 'Hoka Trail Shoes']
-    }
+    name: 'Gorpcore',
+    tops: ['Technical Base Layer', 'Fleece Half-Zip', 'Graphic Climbing Tee', 'Merino Wool Top'],
+    bottoms: ['Cargo Hiking Pants', 'Waterproof Trousers', 'Nylon Shorts'],
+    outerwear: ['Gore-Tex Shell', 'Puffer Vest', 'Windbreaker'],
+    shoes: ['Trail Running Shoes', 'Hiking Boots', 'Salomon Sneakers'],
+    colors: ['#4a5d23', '#cc5500', '#2f4f4f'] // olive, burnt orange, dark slate
   },
   'scandi': {
-    male: {
-      outer: 'Oversized Topcoat',
-      bottoms: ['Raw Denim', 'Wide-Leg Trousers'],
-      tops: ['Chunky Knit Turtleneck', 'Boxy Heavyweight Tee', 'Minimalist Button-Up'],
-      shoes: ['White Leather Sneakers', 'Chunky Derbies']
-    },
-    female: {
-      outer: 'Tailored Maxi Coat',
-      bottoms: ['Wide-leg Denim', 'Flowy Trousers'],
-      tops: ['Boxy Striped Knit', 'Oversized Button-Up', 'Clean White Tee'],
-      shoes: ['Clean White Sneakers', 'Chunky Loafers']
-    },
-    other: {
-      outer: 'Oversized Topcoat',
-      bottoms: ['Wide-leg Denim', 'Raw Denim'],
-      tops: ['Chunky Knit Turtleneck', 'Boxy Striped Knit', 'Heavyweight Tee'],
-      shoes: ['White Leather Sneakers', 'Chunky Derbies']
-    }
+    name: 'Scandi Minimalist',
+    tops: ['Oversized Poplin Shirt', 'Chunky Knit Sweater', 'Boxy T-Shirt', 'Striped Long-sleeve'],
+    bottoms: ['Wide-leg Jeans', 'Linen Trousers', 'Midi Slip Skirt'],
+    outerwear: ['Oversized Wool Coat', 'Quilted Liner Jacket'],
+    shoes: ['Chunky Boots', 'Slip-on Mules', 'Retro Sneakers'],
+    colors: ['#e8e8e8', '#4b5320', '#36454f'] // off-white, army green, charcoal
   },
-  'streetwear': {
-    male: {
-      outer: 'Vintage Racing Jacket',
-      bottoms: ['Baggy Parachute Pants', 'Jorts'],
-      tops: ['Graphic Baby Tee', 'Vintage Hoodie', 'Mesh Long-sleeve'],
-      shoes: ['Chunky Skate Shoes', 'Retro Jordans']
-    },
-    female: {
-      outer: 'Cropped Puffer Jacket',
-      bottoms: ['Low-rise Cargo Pants', 'Baggy Denim'],
-      tops: ['Graphic Baby Tee', 'Mesh Long-sleeve', 'Corset Top'],
-      shoes: ['Platform Boots', 'Chunky Skate Shoes']
-    },
-    other: {
-      outer: 'Vintage Racing Jacket',
-      bottoms: ['Baggy Parachute Pants', 'Baggy Denim'],
-      tops: ['Graphic Baby Tee', 'Mesh Long-sleeve', 'Vintage Hoodie'],
-      shoes: ['Chunky Skate Shoes', 'Platform Boots']
-    }
+  'y2k': {
+    name: 'Y2K Streetwear',
+    tops: ['Baby Tee', 'Oversized Graphic Hoodie', 'Mesh Top', 'Velour Zip-up'],
+    bottoms: ['Parachute Pants', 'Low-rise Baggy Jeans', 'Cargo Mini Skirt'],
+    outerwear: ['Cropped Puffer', 'Vintage Leather Racing Jacket'],
+    shoes: ['Platform Sneakers', 'Chunky Skate Shoes', 'Combat Boots'],
+    colors: ['#ff00ff', '#000000', '#00ffff'] // magenta, black, cyan
   },
   'dark-academia': {
-    male: {
-      outer: 'Tweed Blazer',
-      bottoms: ['Corduroy Trousers', 'Wool Slacks'],
-      tops: ['Cable Knit Sweater', 'Oxford Shirt', 'Turtleneck'],
-      shoes: ['Leather Brogues', 'Chelsea Boots']
-    },
-    female: {
-      outer: 'Plaid Trench Coat',
-      bottoms: ['Pleated Plaid Skirt', 'Tailored Trousers'],
-      tops: ['Peter Pan Collar Blouse', 'Chunky Cardigan', 'Ribbed Turtleneck'],
-      shoes: ['Oxford Shoes', 'Knee-High Boots']
-    },
-    other: {
-      outer: 'Tweed Blazer',
-      bottoms: ['Corduroy Trousers', 'Tailored Trousers'],
-      tops: ['Cable Knit Sweater', 'Oxford Shirt', 'Turtleneck'],
-      shoes: ['Leather Brogues', 'Chelsea Boots']
-    }
+    name: 'Dark Academia',
+    tops: ['Tweed Vest', 'Cable Knit Sweater', 'Oxford Shirt', 'Ribbed Turtleneck'],
+    bottoms: ['Plaid Trousers', 'Corduroy Pants', 'Pleated Midi Skirt'],
+    outerwear: ['Tweed Blazer', 'Long Wool Overcoat'],
+    shoes: ['Oxford Shoes', 'Leather Brogues', 'Lace-up Boots'],
+    colors: ['#3e2723', '#1b5e20', '#4e342e'] // dark brown, forest green, sepia
   },
   'athleisure': {
-    male: {
-      outer: 'Windbreaker',
-      bottoms: ['Joggers', 'Athletic Shorts'],
-      tops: ['Performance Hoodie', 'Dri-Fit Tee', 'Quarter-Zip'],
-      shoes: ['Running Shoes', 'Slip-on Trainers']
-    },
-    female: {
-      outer: 'Cropped Windbreaker',
-      bottoms: ['Flared Leggings', 'Bike Shorts'],
-      tops: ['Oversized Hoodie', 'Seamless Crop Top', 'Performance Tank'],
-      shoes: ['Running Shoes', 'Chunky Trainers']
-    },
-    other: {
-      outer: 'Windbreaker',
-      bottoms: ['Joggers', 'Flared Leggings'],
-      tops: ['Performance Hoodie', 'Seamless Crop Top', 'Quarter-Zip'],
-      shoes: ['Running Shoes', 'Slip-on Trainers']
-    }
+    name: 'Athleisure',
+    tops: ['Seamless Crop Top', 'Performance Hoodie', 'Quarter-Zip Pullover', 'Dri-FIT Tee'],
+    bottoms: ['Compression Leggings', 'Joggers', 'Biker Shorts'],
+    outerwear: ['Nylon Track Jacket', 'Fleece Zip-Up'],
+    shoes: ['Running Sneakers', 'Recovery Slides', 'Trainer Shoes'],
+    colors: ['#cfd8dc', '#263238', '#00bcd4'] // steel gray, deep dark gray, cyan
   },
   'bohemian': {
-    male: {
-      outer: 'Linen Overshirt',
-      bottoms: ['Linen Trousers', 'Relaxed Chinos'],
-      tops: ['Knit Polo', 'Printed Rayon Shirt', 'Breezy Tank'],
-      shoes: ['Leather Sandals', 'Espadrilles']
-    },
-    female: {
-      outer: 'Crochet Cardigan',
-      bottoms: ['Flowy Maxi Skirt', 'Linen Wide-Leg Pants'],
-      tops: ['Peasant Blouse', 'Crochet Top', 'Off-shoulder Top'],
-      shoes: ['Strappy Sandals', 'Wedge Espadrilles']
-    },
-    other: {
-      outer: 'Linen Overshirt',
-      bottoms: ['Flowy Maxi Skirt', 'Relaxed Chinos'],
-      tops: ['Peasant Blouse', 'Printed Rayon Shirt', 'Crochet Top'],
-      shoes: ['Leather Sandals', 'Espadrilles']
-    }
+    name: 'Bohemian / Resort',
+    tops: ['Crochet Halter', 'Linen Button-down', 'Flowy Peasant Blouse', 'Silk Cami'],
+    bottoms: ['Tiered Maxi Skirt', 'Wide-leg Linen Pants', 'Denim Cutoffs'],
+    outerwear: ['Fringed Kimono', 'Lightweight Duster'],
+    shoes: ['Strappy Leather Sandals', 'Espadrilles', 'Suede Ankle Boots'],
+    colors: ['#d2b48c', '#cd5c5c', '#8fbc8f'] // tan, indian red, sea green
+  }
+};
+
+export const ACTIVITY_GEAR = {
+  formal: {
+    outfit: { top: 'Dress Shirt / Blouse', bottom: 'Tailored Trousers / Skirt', shoe: 'Dress Shoes', outer: 'Blazer / Evening Wrap' },
+    items: [
+      { id: 'act-form-1', category: 'clothes', name: 'Formal Attire (Top & Bottom)', weight: 600, vol: 1500, priority: 10, isEssential: true, fold: 'bundle' },
+      { id: 'act-form-2', category: 'clothes', name: 'Dress Shoes', weight: 800, vol: 2000, priority: 10, isEssential: true, fold: 'shoes' }
+    ]
+  },
+  gym: {
+    outfit: { top: 'Moisture-Wicking Tee', bottom: 'Athletic Shorts / Leggings', shoe: 'Running Shoes', outer: null },
+    items: [
+      { id: 'act-gym-1', category: 'clothes', name: 'Gym Outfit', weight: 300, vol: 800, priority: 10, isEssential: true, fold: 'ranger' },
+      { id: 'act-gym-2', category: 'clothes', name: 'Running Shoes', weight: 600, vol: 1500, priority: 10, isEssential: true, fold: 'shoes' }
+    ]
+  },
+  beach: {
+    outfit: { top: 'Swimwear', bottom: 'Board Shorts / Cover-up', shoe: 'Sandals', outer: 'Sun Hat' },
+    items: [
+      { id: 'act-beach-1', category: 'clothes', name: 'Swimsuit / Trunks', weight: 150, vol: 400, priority: 10, isEssential: true, fold: 'ranger' },
+      { id: 'act-beach-2', category: 'toiletries', name: 'Beach Towel (Microfiber)', weight: 200, vol: 500, priority: 8, isEssential: true, fold: 'ranger' },
+      { id: 'act-beach-3', category: 'toiletries', name: 'Reef-Safe Sunscreen', weight: 150, vol: 150, priority: 10, isEssential: true }
+    ]
+  },
+  hike: {
+    outfit: { top: 'Merino Wool Tee', bottom: 'Hiking Pants / Leggings', shoe: 'Trail Shoes', outer: 'Fleece Mid-Layer' },
+    items: [
+      { id: 'act-hike-1', category: 'clothes', name: 'Hiking Pants / Leggings', weight: 400, vol: 1000, priority: 10, isEssential: true, fold: 'ranger' },
+      { id: 'act-hike-2', category: 'clothes', name: 'Trail Shoes', weight: 800, vol: 2000, priority: 10, isEssential: true, fold: 'shoes' },
+      { id: 'act-hike-3', category: 'toiletries', name: 'Water Bottle & Bug Spray', weight: 300, vol: 500, priority: 10, isEssential: true }
+    ]
+  }
+};
+
+const BASE_ITEMS = {
+  toiletries: {
+    t1: { name: 'Toothbrush & Travel Paste', vol: 100, weight: 80, priority: 10, isEssential: true },
+    t2: { name: 'Deodorant', vol: 120, weight: 100, priority: 10, isEssential: true },
+    t3: { name: 'Travel Shampoo/Conditioner (TSA Size)', vol: 200, weight: 220, priority: 8, isEssential: false },
+    t4: { name: 'Moisturizer & Lip Balm', vol: 150, weight: 120, priority: 7, isEssential: true },
+    t5: { name: 'Nail Clippers & Tweezers', vol: 50, weight: 40, priority: 5, isEssential: false },
+    t6: { name: 'Prescription Meds & Painkillers', vol: 100, weight: 50, priority: 10, isEssential: true }
+  },
+  tech: {
+    e1: { name: 'Phone Charger & Cable', vol: 150, weight: 100, priority: 10, isEssential: true },
+    e2: { name: 'Universal Travel Adapter', vol: 250, weight: 150, priority: 9, isEssential: true },
+    e3: { name: 'Power Bank (10,000mAh)', vol: 300, weight: 250, priority: 8, isEssential: true },
+    e4: { name: 'Wireless Earbuds', vol: 100, weight: 50, priority: 9, isEssential: true }
+  },
+  documents: {
+    d1: { name: 'Passport / ID', vol: 20, weight: 30, priority: 10, isEssential: true },
+    d2: { name: 'Credit Cards & Cash', vol: 50, weight: 50, priority: 10, isEssential: true }
   }
 };
 
@@ -172,146 +115,77 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   let allItems = [];
   let combinations = [];
 
-  const addItem = ({ category, id, name, vol = 500, weight = 250, priority = 5, isEssential = false, fold = null }) => {
-    allItems.push({ id, category, name, checked: false, vol, weight, priority, isEssential, fold });
+  const p = PALETTES[paletteKey] || PALETTES['quiet-luxury'];
+  
+  const addItem = (item) => {
+    allItems.push({ ...item, checked: false });
   };
 
-  const days = parseInt(tripDuration) || 1;
-  const p = PALETTES[paletteKey]?.[gender] || PALETTES['quiet-luxury'][gender];
-
-  // 1. Generate Base Casual Capsule
-  addItem({ category: 'clothes', id: 'outer', name: p.outer, vol: 2500, weight: 800, priority: 10, isEssential: true, fold: 'bundle' });
+  // Base Layers
+  const baseLayerCount = Math.min(tripDuration, 7); 
+  addItem({ category: 'clothes', id: 'w1', name: `${baseLayerCount}x Pairs of Underwear`, vol: 150 * baseLayerCount, weight: 50 * baseLayerCount, priority: 10, isEssential: true, fold: 'ranger' });
+  addItem({ category: 'clothes', id: 'w2', name: `${baseLayerCount}x Pairs of Socks`, vol: 100 * baseLayerCount, weight: 40 * baseLayerCount, priority: 10, isEssential: true, fold: 'shoes' });
   
-  const selectedBottoms = days > 3 ? p.bottoms : [p.bottoms[0]];
-  selectedBottoms.forEach((b, i) => addItem({ category: 'clothes', id: `b${i}`, name: b, vol: 1500, weight: 500, priority: 10, isEssential: true, fold: 'konmari' }));
-
-  const selectedTops = p.tops.slice(0, Math.min(days, 3));
-  selectedTops.forEach((t, i) => addItem({ category: 'clothes', id: `t${i}`, name: t, vol: 600, weight: 250, priority: 9, isEssential: true, fold: 'ranger' }));
-
-  addItem({ category: 'clothes', id: 's1', name: p.shoes[0], vol: 2500, weight: 900, priority: 10, isEssential: true, fold: null });
-  if (days > 2) addItem({ category: 'clothes', id: 's2', name: p.shoes[1], vol: 2000, weight: 800, priority: 7, isEssential: false, fold: null });
-
-  addItem({ category: 'clothes', id: 'u1', name: `${days + 2}x Underwear & Socks`, vol: (days+2)*250, weight: (days+2)*50, priority: 10, isEssential: true, fold: 'ranger' });
-  addItem({ category: 'clothes', id: 'pj1', name: 'Pajamas / Sleepwear', vol: 800, weight: 300, priority: 10, isEssential: true, fold: 'ranger' });
-
-  // 2. Activity Injections
-  if (activities.formal) {
-    const formalTop = gender === 'female' ? 'Elegant Blouse' : 'Dress Shirt';
-    const formalBottom = gender === 'female' ? 'Formal Skirt / Dress' : 'Suit Trousers';
-    const formalShoe = gender === 'female' ? 'Dress Heels/Flats' : 'Dress Shoes';
-    const formalOuter = gender === 'female' ? 'Evening Wrap' : 'Suit Blazer';
-    
-    addItem({ category: 'clothes', id: 'f1', name: formalTop, vol: 600, weight: 300, priority: 9, isEssential: true, fold: 'bundle' });
-    if (gender !== 'female') addItem({ category: 'clothes', id: 'f2', name: formalBottom, vol: 1500, weight: 500, priority: 9, isEssential: true, fold: 'bundle' });
-    addItem({ category: 'clothes', id: 'f3', name: formalShoe, vol: 2000, weight: 800, priority: 9, isEssential: true, fold: null });
-    addItem({ category: 'clothes', id: 'f4', name: formalOuter, vol: 2500, weight: 900, priority: 8, isEssential: true, fold: 'bundle' });
-    
-    combinations.push({
-      name: 'Evening / Formal Look',
-      top: formalTop,
-      bottom: gender === 'female' ? formalBottom : formalBottom,
-      outer: formalOuter,
-      shoe: formalShoe
-    });
+  if (tripDuration > 7) {
+    addItem({ category: 'toiletries', id: 't-laundry', name: 'Travel Laundry Detergent Packets', vol: 100, weight: 100, priority: 10, isEssential: true });
   }
 
-  if (activities.gym) {
-    addItem({ category: 'clothes', id: 'g1', name: 'Workout Top & Shorts', vol: 800, weight: 400, priority: 8, isEssential: true, fold: 'ranger' });
-    addItem({ category: 'clothes', id: 'g2', name: 'Athletic Shoes', vol: 2500, weight: 800, priority: 8, isEssential: true, fold: 'shoes' });
-    combinations.push({ name: 'Gym / Active Look', top: 'Workout Top', bottom: 'Workout Shorts', outer: null, shoe: 'Athletic Shoes' });
+  addItem({ category: 'clothes', id: 'w3', name: 'Pajamas / Sleepwear', vol: 400, weight: 200, priority: 9, isEssential: true, fold: 'konmari' });
+
+  // Outfits
+  let selectedTops = [];
+  let selectedBottoms = [];
+  let selectedOuter = p.outerwear[0];
+  let selectedShoes = [p.shoes[0]]; 
+
+  const topsNeeded = Math.min(tripDuration, 3); 
+  const bottomsNeeded = tripDuration > 3 ? 2 : 1;
+
+  for (let i = 0; i < topsNeeded; i++) {
+    selectedTops.push(p.tops[i % p.tops.length]);
+  }
+  for (let i = 0; i < bottomsNeeded; i++) {
+    selectedBottoms.push(p.bottoms[i % p.bottoms.length]);
+  }
+  if (tripDuration > 3) {
+    selectedShoes.push(p.shoes[1 % p.shoes.length]);
   }
 
-  if (activities.beach) {
-    addItem({ category: 'clothes', id: 'b1', name: 'Swimsuit / Trunks', vol: 300, weight: 150, priority: 10, isEssential: true, fold: 'ranger' });
-    addItem({ category: 'clothes', id: 'b2', name: 'Sandals / Flip Flops', vol: 1000, weight: 300, priority: 9, isEssential: true, fold: null });
-    addItem({ category: 'clothes', id: 'b3', name: 'Beach Towel', vol: 1500, weight: 600, priority: 6, isEssential: false, fold: 'konmari' });
-    combinations.push({ name: 'Beach / Pool Look', top: 'Swimwear', bottom: 'Beach Towel', outer: null, shoe: 'Sandals' });
-  }
-
-  if (activities.hike) {
-    addItem({ category: 'clothes', id: 'h1', name: 'Hiking Pants / Leggings', vol: 1200, weight: 500, priority: 9, isEssential: true, fold: 'konmari' });
-    addItem({ category: 'clothes', id: 'h2', name: 'Moisture-wicking Shirt', vol: 500, weight: 200, priority: 9, isEssential: true, fold: 'ranger' });
-    addItem({ category: 'clothes', id: 'h3', name: 'Hiking Boots / Trail Shoes', vol: 3500, weight: 1200, priority: 10, isEssential: true, fold: 'shoes' });
-    combinations.push({ name: 'Trail / Hiking Look', top: 'Wicking Shirt', bottom: 'Hiking Pants', outer: 'Rain Shell', shoe: 'Hiking Boots' });
-  }
-
-  // 3. Global Weather Extremes
-  let globalMaxTemp = -Infinity;
-  let globalMinTemp = Infinity;
-  let globalRain = 0;
-
-  weatherDataArray?.forEach(({ weather }) => {
-    if (weather) {
-      const maxes = weather.temperature_2m_max || [];
-      const mins = weather.temperature_2m_min || [];
-      const rain = weather.precipitation_sum || [];
-      
-      const cityMax = Math.max(...maxes);
-      const cityMin = Math.min(...mins);
-      const cityRain = rain.reduce((a, b) => a + b, 0);
-
-      if (cityMax > globalMaxTemp) globalMaxTemp = cityMax;
-      if (cityMin < globalMinTemp) globalMinTemp = cityMin;
-      globalRain += cityRain;
+  const combos = [];
+  for (let t = 0; t < selectedTops.length; t++) {
+    for (let b = 0; b < selectedBottoms.length; b++) {
+      for (let s = 0; s < selectedShoes.length; s++) {
+        combos.push({
+          top: selectedTops[t],
+          bottom: selectedBottoms[b],
+          shoe: selectedShoes[s],
+          outer: (t % 2 === 0) ? selectedOuter : null 
+        });
+      }
     }
-  });
-
-  if (globalMinTemp < 15 && globalMinTemp !== Infinity) {
-    addItem({ category: 'clothes', id: 'w1', name: 'Warm Overcoat / Puffer', vol: 4000, weight: 1200, priority: 9, isEssential: true });
-    addItem({ category: 'clothes', id: 'w2', name: 'Gloves and Beanie', vol: 500, weight: 200, priority: 8, isEssential: false, fold: 'shoes' });
-  }
-  if (globalMaxTemp > 25 && globalMaxTemp !== -Infinity) {
-    addItem({ category: 'clothes', id: 'w5', name: 'Sunglasses & Sun Hat', vol: 300, weight: 150, priority: 8, isEssential: true });
-  }
-  if (globalRain > 5) {
-    addItem({ category: 'clothes', id: 'r1', name: 'Compact Umbrella', vol: 500, weight: 300, priority: 9, isEssential: true });
-    addItem({ category: 'clothes', id: 'r2', name: 'Rain Jacket / Shell', vol: 1500, weight: 450, priority: 8, isEssential: false, fold: 'bundle' });
   }
 
-  // Smart Day-by-Day Combinatorics
-  const primaryLoc = weatherDataArray?.[0];
-  const maxes = primaryLoc?.weather?.temperature_2m_max || [];
-  const rain = primaryLoc?.weather?.precipitation_sum || [];
-  
-  for (let d = 0; d < days; d++) {
-    const dailyMax = maxes[d] !== undefined ? maxes[d] : 20;
-    const dailyRain = rain[d] !== undefined ? rain[d] : 0;
+  for (let d = 0; d < tripDuration; d++) {
+    const dailyWeather = weatherDataArray[d % weatherDataArray.length]?.weather;
+    const dateIndex = d % (dailyWeather?.time?.length || 1);
     
-    const top = selectedTops[d % selectedTops.length];
-    const bottom = selectedBottoms[Math.floor(d / 2) % selectedBottoms.length];
-    
-    let outer = null;
-    if (dailyMax < 18) outer = p.outer;
-    if (dailyRain > 5) outer = 'Rain Jacket / Shell';
-    
-    let shoe = p.shoes[0];
-    if (dailyRain > 5) shoe = 'Waterproof / Durable Shoes';
-    else if (p.shoes.length > 1 && d % 2 !== 0) shoe = p.shoes[1]; // rotate shoes
-    
-    combinations.unshift({
-      name: `Day ${d + 1} - ${primaryLoc?.locationName || 'Trip'}`,
-      temp: dailyMax,
-      weather: dailyRain > 5 ? 'Rainy' : (dailyMax > 25 ? 'Sunny' : 'Clear/Mild'),
-      top,
-      bottom,
-      outer,
-      shoe,
-    });
-  }
-  
-  // Re-reverse to chronological (unshift makes it backward)
-  combinations.reverse();
+    const comboIndex = d % combos.length;
+    const outfit = combos[comboIndex];
 
-  // Toiletries & Tech
-  Object.keys(ITEM_DATA).forEach(k => {
-    const data = ITEM_DATA[k];
-    let name = '';
-    let category = '';
+    let displayWeather = 'Clear/Mild';
+    if (dailyWeather) {
+       const precip = dailyWeather.precipitation_sum[dateIndex];
+       const temp = dailyWeather.temperature_2m_max[dateIndex];
+       if (precip > 5) displayWeather = 'Rainy';
+       else if (temp > 25) displayWeather = 'Sunny';
+       else if (temp < 10) displayWeather = 'Cold';
+    }
+
+    combinations.push({
       day: d + 1,
-      weather: dailyWeather ? {
-        temp: dailyWeather.temperature_2m_max[dateIndex],
-        precip: dailyWeather.precipitation_sum[dateIndex]
-      } : { temp: 20, precip: 0 },
+      name: `Day ${d + 1}`,
+      temp: dailyWeather ? dailyWeather.temperature_2m_max[dateIndex] : 20,
+      weather: displayWeather,
       ...outfit
     });
   }
@@ -320,7 +194,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   selectedTops.forEach((t, i) => addItem({ category: 'clothes', id: `top${i}`, name: t, vol: 300, weight: 150, priority: 9, isEssential: true, fold: 'konmari' }));
   selectedBottoms.forEach((b, i) => addItem({ category: 'clothes', id: `bot${i}`, name: b, vol: 800, weight: 400, priority: 9, isEssential: true, fold: 'bundle' }));
   addItem({ category: 'clothes', id: 'out1', name: selectedOuter, vol: 1500, weight: 800, priority: 8, isEssential: false, fold: 'bundle' });
-  selectedShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s, vol: 2500, weight: 1000, priority: 8, isEssential: i === 0 }));
+  selectedShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s, vol: 2500, weight: 1000, priority: 8, isEssential: i === 0 })); 
 
   // Activities (Initial configuration)
   Object.keys(activities).forEach(act => {
@@ -362,7 +236,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   let currentWeight = allItems.reduce((sum, item) => sum + item.weight, 0);
 
   if (suitcaseVolume > 0 && currentVolume > suitcaseVolume) {
-    allItems.sort((a, b) => a.priority - b.priority);
+    allItems.sort((a, b) => a.priority - b.priority); 
     for (let i = 0; i < allItems.length; i++) {
       if (currentVolume <= suitcaseVolume) break;
       if (!allItems[i].isEssential) {
@@ -381,6 +255,10 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
       grouped[item.category].push(item);
     }
   });
+
+  // Re-calculate derived totals after pruning
+  currentVolume = allItems.reduce((sum, item) => sum + item.vol, 0);
+  currentWeight = allItems.reduce((sum, item) => sum + item.weight, 0);
 
   return {
     list: grouped,
