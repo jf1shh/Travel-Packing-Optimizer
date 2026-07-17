@@ -120,6 +120,15 @@ function App() {
     }
   };
 
+  const handleReset = () => {
+    setWeatherDataArray(null);
+    setPackingList(null);
+    setOutfits(null);
+    setCurrentVolume(0);
+    setSuitcaseVolume(0);
+    localStorage.removeItem('travelPackerState');
+  };
+
   const toggleItem = (category, itemId) => {
     setPackingList(prev => {
       const updatedCategory = [...prev[category]];
@@ -160,7 +169,24 @@ function App() {
         )}
 
         {packingList && (
-          <PackingList packingList={packingList} toggleItem={toggleItem} />
+          <div style={{ paddingBottom: '2rem' }}>
+            <PackingList packingList={packingList} toggleItem={toggleItem} />
+            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
+              <button 
+                onClick={handleReset} 
+                style={{ 
+                  background: 'transparent', 
+                  color: '#ef4444', 
+                  border: '1px solid #ef4444', 
+                  padding: '0.75rem 2rem', 
+                  fontWeight: '600',
+                  boxShadow: 'none'
+                }}
+              >
+                Clear Data & Start Over
+              </button>
+            </div>
+          </div>
         )}
       </main>
     </div>
