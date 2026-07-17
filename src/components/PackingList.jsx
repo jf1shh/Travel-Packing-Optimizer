@@ -28,9 +28,14 @@ const FOLD_TIPS = {
   }
 };
 
-const PackingList = ({ packingList, toggleItem }) => {
+const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem }) => {
   const [selectedTip, setSelectedTip] = useState(null);
   const [copied, setCopied] = useState(false);
+  
+  // Custom Add State
+  const [addingCategory, setAddingCategory] = useState(null);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemWeight, setNewItemWeight] = useState('');
 
   if (!packingList) return null;
 
@@ -60,6 +65,14 @@ const PackingList = ({ packingList, toggleItem }) => {
     });
   };
 
+  const submitAddItem = (category) => {
+    if (!newItemName.trim()) return;
+    handleAddItem(category, newItemName, newItemWeight);
+    setNewItemName('');
+    setNewItemWeight('');
+    setAddingCategory(null);
+  };
+
   return (
     <div className="packing-list animate-slide-up" style={{ animationDelay: '0.5s' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -83,14 +96,14 @@ const PackingList = ({ packingList, toggleItem }) => {
       
       {categories.map((cat) => {
         const items = packingList[cat.key] || [];
-        if (items.length === 0) return null;
-
+        // Even if items is empty, we show the category so they can add items!
+        
         return (
           <div key={cat.key} className="category-card glass">
             <h3>{cat.label}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {items.map((item) => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
                   <label 
                     className={`checkbox-wrapper ${item.checked ? 'checked' : ''}`}
                     style={{ flex: 1, marginBottom: 0, padding: '0.5rem' }}
@@ -103,28 +116,68 @@ const PackingList = ({ packingList, toggleItem }) => {
                     <span className="checkbox-label">{item.name}</span>
                   </label>
                   
-                  {item.fold && FOLD_TIPS[item.fold] && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {item.fold && FOLD_TIPS[item.fold] && (
+                      <button 
+                        onClick={() => setSelectedTip(FOLD_TIPS[item.fold])}
+                        style={{ 
+                          background: 'transparent', 
+                          border: '1px solid var(--accent-color)', 
+                          color: 'var(--accent-color)',
+                          padding: '0.25rem 0.5rem',
+                          fontSize: '0.75rem',
+                          borderRadius: '999px',
+                          boxShadow: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                        }}
+                      >
+                        {FOLD_TIPS[item.fold].icon} Fold Tip
+                      </button>
+                    )}
                     <button 
-                      onClick={() => setSelectedTip(FOLD_TIPS[item.fold])}
-                      style={{ 
-                        background: 'transparent', 
-                        border: '1px solid var(--accent-color)', 
-                        color: 'var(--accent-color)',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem',
-                        borderRadius: '999px',
-                        boxShadow: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        marginLeft: '1rem'
-                      }}
+                      onClick={() => handleRemoveItem(cat.key, item.id)}
+                      style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', padding: '0.25rem', fontSize: '1rem', boxShadow: 'none' }}
+                      title="Remove Item"
                     >
-                      {FOLD_TIPS[item.fold].icon} Fold Tip
+                      🗑️
                     </button>
-                  )}
+                  </div>
                 </div>
               ))}
+              
+              {/* Add Custom Item UI */}
+              <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem' }}>
+                {addingCategory === cat.key ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Item name (e.g. Leather Jacket)" 
+                      value={newItemName}
+                      onChange={e => setNewItemName(e.target.value)}
+                      style={{ flex: 2, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', minWidth: '150px' }}
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Weight (g)" 
+                      value={newItemWeight}
+                      onChange={e => setNewItemWeight(e.target.value)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', minWidth: '80px' }}
+                    />
+                    <button onClick={() => submitAddItem(cat.key)} style={{ padding: '0.5rem 1rem', background: 'var(--accent-color)', color: '#fff', borderRadius: '4px', border: 'none' }}>Add</button>
+                    <button onClick={() => setAddingCategory(null)} style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}>Cancel</button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => { setAddingCategory(cat.key); setNewItemName(''); setNewItemWeight(''); }}
+                    style={{ background: 'transparent', border: '1px dashed var(--accent-color)', color: 'var(--accent-color)', width: '100%', padding: '0.75rem', borderRadius: '8px', boxShadow: 'none', fontWeight: 'bold' }}
+                  >
+                    + Add Custom Item
+                  </button>
+                )}
+              </div>
+
             </div>
           </div>
         );

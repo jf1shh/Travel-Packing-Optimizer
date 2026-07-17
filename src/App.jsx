@@ -17,14 +17,16 @@ function App() {
   // State
   const [weatherDataArray, setWeatherDataArray] = useState(null);
   const [packingList, setPackingList] = useState(null);
-  const [currentVolume, setCurrentVolume] = useState(0);
-  const [currentWeight, setCurrentWeight] = useState(0);
   const [suitcaseVolume, setSuitcaseVolume] = useState(0);
   const [outfits, setOutfits] = useState(null);
   const [activePalette, setActivePalette] = useState('quiet-luxury');
   const [activeTravelMode, setActiveTravelMode] = useState('flying');
   const [tempUnit, setTempUnit] = useState('C');
   const [lengthUnit, setLengthUnit] = useState('cm');
+
+  // Derived State (Dynamic Recalculation)
+  const currentVolume = packingList ? Object.values(packingList).flat().reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
+  const currentWeight = packingList ? Object.values(packingList).flat().reduce((sum, item) => sum + (item.weight || 0), 0) : 0;
 
   // Load from local storage
   useEffect(() => {
@@ -35,8 +37,6 @@ function App() {
         if (parsed.packingList) setPackingList(parsed.packingList);
         if (parsed.outfits) setOutfits(parsed.outfits);
         if (parsed.weatherDataArray) setWeatherDataArray(parsed.weatherDataArray);
-        if (parsed.currentVolume) setCurrentVolume(parsed.currentVolume);
-        if (parsed.currentWeight) setCurrentWeight(parsed.currentWeight);
         if (parsed.suitcaseVolume) setSuitcaseVolume(parsed.suitcaseVolume);
         if (parsed.activePalette) setActivePalette(parsed.activePalette);
         if (parsed.activeTravelMode) setActiveTravelMode(parsed.activeTravelMode);
@@ -55,8 +55,6 @@ function App() {
         packingList,
         outfits,
         weatherDataArray,
-        currentVolume,
-        currentWeight,
         suitcaseVolume,
         activePalette,
         activeTravelMode,
@@ -64,7 +62,7 @@ function App() {
         lengthUnit
       }));
     }
-  }, [packingList, outfits, weatherDataArray, currentVolume, currentWeight, suitcaseVolume, activePalette, activeTravelMode, tempUnit, lengthUnit]);
+  }, [packingList, outfits, weatherDataArray, suitcaseVolume, activePalette, activeTravelMode, tempUnit, lengthUnit]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -93,7 +91,6 @@ function App() {
     setActiveTravelMode(travelMode);
     
     try {
-      // Calculate duration in days (inclusive)
       const start = new Date(startDate);
       const end = new Date(endDate);
       const duration = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
@@ -117,8 +114,6 @@ function App() {
       const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, activities);
       
       setPackingList(result.list);
-      setCurrentVolume(result.currentVolume);
-      setCurrentWeight(result.currentWeight);
       setOutfits(result.outfitCombinations);
       
     } catch (err) {
@@ -132,8 +127,6 @@ function App() {
     setWeatherDataArray(null);
     setPackingList(null);
     setOutfits(null);
-    setCurrentVolume(0);
-    setCurrentWeight(0);
     setSuitcaseVolume(0);
     localStorage.removeItem('travelPackerState');
   };
@@ -150,6 +143,51 @@ function App() {
       }
       return { ...prev, [category]: updatedCategory };
     });
+  };
+
+  const handleRemoveItem = (category, itemId) => {
+    setPackingList(prev => {
+      const updatedCategory = prev[category].filter(i => i.id !== itemId);
+      return { ...prev, [category]: updatedCategory };
+    });
+  };
+
+  const handleAddItem = (category, name, weight) => {
+    const newItem = {
+      id: `custom-${Date.now()}`,
+      category,
+      name,
+      checked: false,
+      vol: 500, // Custom items default to 500cm3 so they don't break the volume bar
+      weight: parseInt(weight) || 0,
+      priority: 10,
+      isEssential: true
+    };
+    
+    setPackingList(prev => {
+      const updatedCategory = [...prev[category], newItem];
+      return { ...prev, [category]: updatedCategory };
+    });
+
+    // Fashion Sync: If they add clothes, inject it into the Capsule Visualizer!
+    if (category === 'clothes' && outfits) {
+      const lower = name.toLowerCase();
+      let slot = null;
+      if (lower.includes('shirt') || lower.includes('top') || lower.includes('sweater') || lower.includes('tee') || lower.includes('hoodie')) slot = 'top';
+      else if (lower.includes('pant') || lower.includes('jean') || lower.includes('short') || lower.includes('skirt') || lower.includes('trouser')) slot = 'bottom';
+      else if (lower.includes('jacket') || lower.includes('coat') || lower.includes('blazer') || lower.includes('windbreaker') || lower.includes('shell')) slot = 'outer';
+      else if (lower.includes('shoe') || lower.includes('boot') || lower.includes('sneaker') || lower.includes('loafer')) slot = 'shoe';
+      
+      if (slot) {
+        setOutfits(prev => {
+          if (!prev || prev.length === 0) return prev;
+          const newOutfits = [...prev];
+          // Inject into Day 1 to guarantee they see their new item
+          newOutfits[0] = { ...newOutfits[0], [slot]: name };
+          return newOutfits;
+        });
+      }
+    }
   };
 
   return (
@@ -179,7 +217,12 @@ function App() {
 
         {packingList && (
           <div style={{ paddingBottom: '2rem' }}>
-            <PackingList packingList={packingList} toggleItem={toggleItem} />
+            <PackingList 
+              packingList={packingList} 
+              toggleItem={toggleItem} 
+              handleRemoveItem={handleRemoveItem}
+              handleAddItem={handleAddItem}
+            />
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
               <button 
                 onClick={handleReset} 
