@@ -54,17 +54,27 @@ const WeatherWidget = ({ weatherDataArray, tempUnit, toggleTempUnit }) => {
                 const icon = getIcon(rain, maxC);
 
                 return (
-                  <div key={dateStr} style={{ 
-                    minWidth: '100px', 
-                    padding: '1rem', 
-                    backgroundColor: 'var(--surface-color)', 
-                    borderRadius: '12px',
-                    border: '1px solid var(--border-color)',
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.5rem'
-                  }}>
+                  <a 
+                    key={dateStr} 
+                    href={`https://www.google.com/search?q=weather+in+${encodeURIComponent(locationName)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Verify forecast for ${locationName}`}
+                    style={{ 
+                      minWidth: '100px', 
+                      padding: '1rem', 
+                      backgroundColor: 'var(--surface-color)', 
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-color)',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      cursor: 'pointer'
+                    }}
+                  >
                     <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>{getDayName(dateStr)}</div>
                     <div style={{ fontSize: '2rem' }}>{icon}</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{max}°</div>
@@ -74,7 +84,7 @@ const WeatherWidget = ({ weatherDataArray, tempUnit, toggleTempUnit }) => {
                     ) : (
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>0mm</div>
                     )}
-                  </div>
+                  </a>
                 );
               })}
             </div>
