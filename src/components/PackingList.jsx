@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const FOLD_TIPS = {
   ranger: {
@@ -129,7 +130,7 @@ const PackingList = ({ packingList, toggleItem }) => {
         );
       })}
 
-      {selectedTip && (
+      {selectedTip && createPortal(
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -145,7 +146,9 @@ const PackingList = ({ packingList, toggleItem }) => {
             padding: '2rem',
             maxWidth: '400px',
             width: '100%',
-            position: 'relative'
+            position: 'relative',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
             <button 
               onClick={() => setSelectedTip(null)}
@@ -173,7 +176,8 @@ const PackingList = ({ packingList, toggleItem }) => {
             
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{selectedTip.description}</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -3,10 +3,10 @@ import React from 'react';
 const WeatherWidget = ({ weatherDataArray, tempUnit, toggleTempUnit }) => {
   if (!weatherDataArray || weatherDataArray.length === 0) return null;
 
-  const getDayName = (dateStr, index) => {
-    if (index === 0) return 'Tomorrow';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short' });
+  const getDayName = (dateStr) => {
+    const [y, m, d] = dateStr.split('-');
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' });
   };
 
   const getIcon = (rain, maxTemp) => {
@@ -65,7 +65,7 @@ const WeatherWidget = ({ weatherDataArray, tempUnit, toggleTempUnit }) => {
                     flexDirection: 'column',
                     gap: '0.5rem'
                   }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>{getDayName(dateStr, idx)}</div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: '600' }}>{getDayName(dateStr)}</div>
                     <div style={{ fontSize: '2rem' }}>{icon}</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{max}°</div>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{min}°</div>
