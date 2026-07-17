@@ -54,7 +54,7 @@ const CapsuleVisualizer = ({ outfits, palette, onActivityChange }) => {
   return (
     <div className="glass animate-slide-up" style={{ padding: '1.5rem', marginBottom: '1.5rem', animationDelay: '0.4s' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Capsule Visualizer</h3>
+        <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Daily Outfit Combos</h3>
         <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
           {currentIndex + 1} of {outfits.length}
         </span>
