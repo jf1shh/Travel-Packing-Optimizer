@@ -264,7 +264,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     allItems.push({ ...item, checked: false, cube });
   };
 
-  // 2. Versatility Scoring
+  // 2. Versatility & Thermal Scoring
   const getVersatilityScore = (item) => {
     let score = 0;
     const name = String(item.name || '').toLowerCase();
@@ -273,6 +273,26 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     if (mat.match(/(denim|leather|wool|merino)/)) score += 3;
     if (name.match(/(jeans|t-shirt|tee|sneaker|boot)/)) score += 2;
     return score;
+  };
+
+  const getThermalValue = (item) => {
+    if (!item) return 0;
+    let tv = 0;
+    const bulk = item.bulkiness || 'standard';
+    const mat = item.material || 'cotton';
+    
+    // Base material insulation
+    if (mat === 'wool' || mat === 'merino') tv += 3;
+    else if (mat === 'synthetic' || mat === 'leather' || mat === 'denim') tv += 2;
+    else if (mat === 'cotton') tv += 1;
+    else if (mat === 'linen' || mat === 'silk') tv += 0;
+
+    // Bulkiness multiplier
+    if (bulk === 'bulky') tv += 4;
+    else if (bulk === 'standard') tv += 2;
+    else if (bulk === 'light') tv += 0;
+
+    return tv;
   };
 
   // 1. Prioritize userWardrobe items (Graph-based Bipartite Selection)
@@ -355,14 +375,21 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
       if (doColorsMatch(t.color, b.color)) {
          for (let s of selectedShoes) {
             if (doColorsMatch(b.color, s.color)) {
-               allOutfits.push({ top: t, bottom: b, shoe: s });
+               allOutfits.push({ 
+                 top: t, 
+                 bottom: b, 
+                 shoe: s,
+                 thermalValue: getThermalValue(t) + getThermalValue(b)
+               });
             }
          }
       }
     }
   }
   if (allOutfits.length === 0) {
-    allOutfits.push({ top: selectedTops[0], bottom: selectedBottoms[0], shoe: selectedShoes[0] });
+    const defaultT = selectedTops[0];
+    const defaultB = selectedBottoms[0];
+    allOutfits.push({ top: defaultT, bottom: defaultB, shoe: selectedShoes[0], thermalValue: getThermalValue(defaultT) + getThermalValue(defaultB) });
   }
   
   const combos = [];
@@ -378,16 +405,35 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
        isEvening = true;
     }
 
+    const maxTempC = dailyWeather ? dailyWeather.temperature_2m_max[dateIndex] : 20;
+    
+    // Calculate required thermal insulation based on max temp
+    let requiredThermal = 3; // default for mild (20C)
+    if (maxTempC < 0) requiredThermal = 12; // Freezing
+    else if (maxTempC < 10) requiredThermal = 8; // Cold
+    else if (maxTempC < 15) requiredThermal = 5; // Cool
+    else if (maxTempC > 25) requiredThermal = 1; // Hot
+
     let dayOutfits = allOutfits.filter(o => isEvening ? (o.top.time === 'evening' || o.bottom.time === 'evening') : (o.top.time === 'day' && o.bottom.time === 'day'));
     if (dayOutfits.length === 0) dayOutfits = allOutfits;
 
-    const chosenOutfit = dayOutfits[d % dayOutfits.length];
+    // Pick the outfit that is closest to the required thermal value
+    let chosenOutfit = dayOutfits[0];
+    let minThermalDiff = Infinity;
+    
+    for (let o of dayOutfits) {
+       const diff = Math.abs(o.thermalValue - requiredThermal);
+       if (diff < minThermalDiff) {
+          minThermalDiff = diff;
+          chosenOutfit = o;
+       }
+    }
     
     let outfit = { 
       top: chosenOutfit.top.name, 
       bottom: chosenOutfit.bottom.name, 
       shoe: chosenOutfit.shoe.name,
-      outer: (d % 2 === 0) ? selectedOuter.name : null
+      outer: null
     };
 
     if (act && ACTIVITY_GEAR[act]) {
@@ -406,14 +452,19 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     let isCold = false;
     if (dailyWeather) {
        const precip = dailyWeather.precipitation_sum[dateIndex];
-       const temp = dailyWeather.temperature_2m_max[dateIndex];
        if (precip > 5) displayWeather = 'Rainy';
-       else if (temp > 25) displayWeather = 'Sunny';
-       else if (temp < 10) { displayWeather = 'Cold'; isCold = true; }
+       else if (maxTempC > 25) displayWeather = 'Sunny';
+       else if (maxTempC < 10) { displayWeather = 'Cold'; isCold = true; }
     }
 
-    if (isCold && (!act || !ACTIVITY_GEAR[act] || !ACTIVITY_GEAR[act].outfit)) {
-      outfit.outer = 'Fleece + Rain Shell (Layered)';
+    // Stack outer layer if it's cold or if outfit alone isn't warm enough
+    if (chosenOutfit.thermalValue < requiredThermal) {
+       const outerTV = getThermalValue(selectedOuter);
+       if (chosenOutfit.thermalValue + outerTV >= requiredThermal - 2) {
+         outfit.outer = selectedOuter.name;
+       } else if (isCold && (!act || !ACTIVITY_GEAR[act] || !ACTIVITY_GEAR[act].outfit)) {
+         outfit.outer = 'Fleece + Rain Shell (Layered)';
+       }
     }
 
     combos.push({

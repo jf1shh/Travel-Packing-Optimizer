@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode }) => {
+const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode, packingList }) => {
   if (!maxVolume || maxVolume <= 0) return null;
 
   const percentage = Math.min(100, Math.round((currentVolume / maxVolume) * 100));
@@ -13,16 +13,44 @@ const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode }) =>
   const currentLiters = (currentVolume / 1000).toFixed(1);
   const maxLiters = (maxVolume / 1000).toFixed(1);
   
-  // Weight logic (10,000g = 10kg limit)
+  // Weight logic (7,000g = 7kg budget airline limit)
   const weightKg = (currentWeight / 1000).toFixed(1);
-  const weightWarning = currentWeight >= 10000 && travelMode === 'flying';
+  const weightWarning = currentWeight > 7000 && travelMode === 'flying';
+
+  // Find heaviest non-essential items
+  let heaviestItems = [];
+  if (weightWarning && packingList) {
+    let allItems = [];
+    Object.values(packingList).forEach(catArray => {
+      catArray.forEach(item => {
+        if (!item.isEssential && !item.isWorn) {
+          allItems.push(item);
+        }
+      });
+    });
+    heaviestItems = allItems.sort((a, b) => b.weight - a.weight).slice(0, 2);
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
       {weightWarning && (
-        <div className="glass animate-slide-up" style={{ padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '500', animationDelay: '0.3s' }}>
-          <span>⚠️</span>
-          <span>Budget Airline Warning: Estimated weight ({weightKg} kg) exceeds the standard 10 kg carry-on limit!</span>
+        <div className="glass animate-slide-up" style={{ padding: '1.25rem', backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid #ef4444', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '0.75rem', animationDelay: '0.3s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold', color: '#ef4444' }}>
+            <span>⚠️</span>
+            <span>Budget Airline Warning: Estimated weight ({weightKg} kg) exceeds the standard 7 kg carry-on limit!</span>
+          </div>
+          {heaviestItems.length > 0 && (
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Consider removing these heavy non-essential items:
+              <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                {heaviestItems.map(item => (
+                  <li key={item.id}>
+                    <strong>{item.name}</strong> - {(item.weight / 1000).toFixed(1)}kg
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
       

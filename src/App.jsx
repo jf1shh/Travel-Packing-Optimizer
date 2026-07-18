@@ -317,7 +317,7 @@ function App() {
         )}
 
         {suitcaseVolume > 0 && packingList && (
-          <CapacityBar currentVolume={currentVolume} currentWeight={currentWeight} maxVolume={suitcaseVolume} travelMode={activeTravelMode} />
+          <CapacityBar currentVolume={currentVolume} currentWeight={currentWeight} maxVolume={suitcaseVolume} travelMode={activeTravelMode} packingList={packingList} />
         )}
 
         {packingList && (
