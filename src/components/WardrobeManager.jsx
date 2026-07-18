@@ -135,7 +135,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
   return (
     <div style={{
       position: 'fixed', top: 0, right: 0, width: '100%', maxWidth: '400px', height: '100vh',
-      backgroundColor: 'var(--surface-color)', boxShadow: '-4px 0 15px rgba(0,0,0,0.2)',
+      backgroundColor: 'var(--bg-color)', boxShadow: '-4px 0 15px rgba(0,0,0,0.5)',
       zIndex: 1000, display: 'flex', flexDirection: 'column'
     }}>
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
