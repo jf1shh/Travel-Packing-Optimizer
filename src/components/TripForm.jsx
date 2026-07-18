@@ -347,7 +347,7 @@ const handleIcsUpload = (e) => {
           )}
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', scrollSnapType: 'x mandatory' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', paddingBottom: '1rem' }}>
           {Array.from({ length: duration }).map((_, i) => {
             const dest = dailyDestinations[i] || destinations[0] || 'Unknown';
             const weatherObj = formWeatherData[dest];
@@ -375,7 +375,7 @@ const handleIcsUpload = (e) => {
             const min = minTempC !== null ? (tempUnit === 'F' ? Math.round(minTempC * 9/5 + 32) : minTempC) : '--';
 
             return (
-              <div key={i} className="glass" style={{ minWidth: '160px', flex: '0 0 auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', scrollSnapAlign: 'start', position: 'relative' }}>
+              <div key={i} className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day {i + 1}</span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{dateStr}</span>
