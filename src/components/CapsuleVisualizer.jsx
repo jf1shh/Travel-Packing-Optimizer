@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getItemImage } from '../services/db';
+
 
 const CapsuleVisualizer = ({ outfits, palette, onActivityChange, startDate }) => {
   const [currentIndex, setCurrentIndex] = useState(0);

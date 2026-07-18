@@ -1,7 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { removeBackground } from '@imgly/background-removal';
+import { saveItemImage, getItemImage, deleteItemImage } from '../services/db';
+
 
 const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
   const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard', material: 'cotton' });
+  const [itemImages, setItemImages] = useState({});
+  const [isProcessing, setIsProcessing] = useState({});
+
+  useEffect(() => {
+    const loadImages = async () => {
+      const images = {};
+      for (const item of wardrobe) {
+        const img = await getItemImage(item.id);
+        if (img) images[item.id] = img;
+      }
+      setItemImages(images);
+    };
+    if (isOpen) loadImages();
+  }, [wardrobe, isOpen]);
+
+  const handleImageUpload = async (itemId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsProcessing(p => ({ ...p, [itemId]: true }));
+
+    try {
+      const blobURL = URL.createObjectURL(file);
+      const imageBlob = await removeBackground(blobURL);
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(imageBlob);
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        await saveItemImage(itemId, base64data);
+        setItemImages(p => ({ ...p, [itemId]: base64data }));
+        setIsProcessing(p => ({ ...p, [itemId]: false }));
+      };
+    } catch (err) {
+      console.error("BG Removal failed", err);
+      setIsProcessing(p => ({ ...p, [itemId]: false }));
+    }
+  };
+
 
   if (!isOpen) return null;
 
@@ -164,10 +206,24 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {wardrobe.map(item => (
               <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div>
-                  <div style={{ fontWeight: 'bold' }}>{item.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    {item.category.toUpperCase()} • {item.material} • {item.bulkiness} ({item.weight}g)
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative' }}>
+                    {itemImages[item.id] ? (
+                       <img src={itemImages[item.id]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : isProcessing[item.id] ? (
+                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>AI...</span>
+                    ) : (
+                       <label style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                         <span style={{ fontSize: '1.2rem' }}>📷</span>
+                         <input type="file" accept="image/*" onChange={(e) => handleImageUpload(item.id, e)} style={{ display: 'none' }} />
+                       </label>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 'bold' }}>{item.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                      {item.category.toUpperCase()} • {item.material} • {item.bulkiness} ({item.weight}g)
+                    </div>
                   </div>
                 </div>
                 <button onClick={() => handleDelete(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1.2rem' }}>
