@@ -144,6 +144,12 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
           <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: '500' }}>
             {outfit.temp !== undefined ? `${Math.round(outfit.temp)}° • ${outfit.weather}` : ''}
             
+            {outfit.isLaundryDay && (
+              <div style={{ marginTop: '0.5rem', display: 'inline-block', background: 'var(--accent-color)', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                👕 Laundry Day
+              </div>
+            )}
+            
             <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
               <span>Activity:</span>
               <select 

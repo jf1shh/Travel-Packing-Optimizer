@@ -237,7 +237,7 @@ const BASE_ITEMS = {
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = []) => {
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = [], laundryCycle = 7) => {
   let allItems = [];
   let combinations = [];
 
@@ -290,12 +290,11 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   const userShoes = userShoesRaw.sort((a,b) => b.priority - a.priority);
 
   // Base Layers & Mid-Trip Laundry Threshold
-  let baseLayerLimit = Math.min(tripDuration, 7);
+  let baseLayerLimit = Math.min(tripDuration, laundryCycle);
   let hasQuickDry = userTops.some(t => t.material === 'merino' || t.material === 'synthetic');
-  if (hasQuickDry && tripDuration > 3) {
-    baseLayerLimit = 3;
+  if (hasQuickDry && tripDuration > laundryCycle) {
     addItem({ category: 'toiletries', id: 't-laundry', name: 'Travel Laundry Detergent (Sink Wash)', vol: 100, weight: 100, priority: 10, isEssential: true });
-  } else if (tripDuration > 7) {
+  } else if (tripDuration > laundryCycle) {
     addItem({ category: 'toiletries', id: 't-laundry', name: 'Travel Laundry Detergent Packets', vol: 100, weight: 100, priority: 10, isEssential: true });
   }
 
@@ -368,7 +367,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   
   const combos = [];
   for (let d = 0; d < tripDuration; d++) {
-    const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
+    const destName = dailyDestinations[d] || destinations[0] || 'Unknown';
     const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
     const dailyWeather = destWeatherObj?.weather;
     const dateIndex = d % (dailyWeather?.time?.length || 1);
@@ -419,10 +418,11 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
     combos.push({
       day: d + 1,
-      name: `Day ${d + 1}`,
+      name: `Day ${d + 1} - ${displayWeather}`,
       temp: dailyWeather ? dailyWeather.temperature_2m_max[dateIndex] : 20,
       weather: displayWeather,
       activity: act || '',
+      isLaundryDay: laundryCycle !== 999 && d > 0 && d % laundryCycle === 0,
       ...outfit
     });
   }

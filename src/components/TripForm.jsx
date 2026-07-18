@@ -53,6 +53,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   const [preset, setPreset] = useState('away-carry');
   const [packingStrategy, setPackingStrategy] = useState('standard');
   const [techPorts, setTechPorts] = useState('mixed');
+  const [laundryCycle, setLaundryCycle] = useState(7);
   const [length, setLength] = useState('55');
   const [width, setWidth] = useState('34.8');
   const [height, setHeight] = useState('22.8');
@@ -206,6 +207,7 @@ const handleIcsUpload = (e) => {
         formWeatherData,
         packingStrategy,
         techPorts,
+        laundryCycle,
         suitcaseVolume: (parseFloat(length) || 0) * (parseFloat(width) || 0) * (parseFloat(height) || 0) 
       });
     }
@@ -505,6 +507,18 @@ const handleIcsUpload = (e) => {
             <option value="standard">Standard (Comfortable)</option>
             <option value="flexible">Flexible & Efficient</option>
             <option value="minimalist">Extreme Minimalist (Rewear Basics)</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label htmlFor="laundry" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Laundry Plan</label>
+          <select id="laundry" value={laundryCycle} onChange={(e) => setLaundryCycle(parseInt(e.target.value))}>
+            <option value={3}>Wash every 3 days</option>
+            <option value={5}>Wash every 5 days</option>
+            <option value={7}>Wash every 7 days</option>
+            <option value={10}>Wash every 10 days</option>
+            <option value={14}>Wash every 14 days</option>
+            <option value={999}>No Laundry (Pack it all)</option>
           </select>
         </div>
 

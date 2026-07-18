@@ -114,7 +114,7 @@ function App() {
     setLengthUnit(prev => prev === 'cm' ? 'in' : 'cm');
   };
 
-  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, dailyDestinations, formWeatherData, packingStrategy, techPorts, suitcaseVolume }) => {
+  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, dailyDestinations, formWeatherData, packingStrategy, techPorts, suitcaseVolume, laundryCycle = 7 }) => {
     setIsLoading(true);
     setError(null);
     setWeatherDataArray(null);
@@ -153,7 +153,7 @@ function App() {
       // Unblock main thread to allow loading spinner to render
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts, dailyDestinations, destinations);
+      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts, dailyDestinations, destinations, laundryCycle);
       
       setPackingList(result.list);
       setOutfits(result.outfitCombinations);
