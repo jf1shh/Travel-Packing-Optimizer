@@ -337,6 +337,8 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
                     style={{ padding: '0.35rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', width: '100%' }}
                   >
                     <option value="">Casual / Standard</option>
+                    <option value="sightseeing">Sightseeing / Heavy Walking</option>
+                    <option value="transit">Transit / Travel Day</option>
                     <option value="formal">Formal / Dinner</option>
                     <option value="gym">Gym / Workout</option>
                     <option value="beach">Beach / Pool</option>
@@ -379,6 +381,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
           <label htmlFor="strategy" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Packing Strategy</label>
           <select id="strategy" value={packingStrategy} onChange={(e) => setPackingStrategy(e.target.value)}>
             <option value="standard">Standard (Comfortable)</option>
+            <option value="flexible">Flexible & Efficient</option>
             <option value="minimalist">Extreme Minimalist (Rewear Basics)</option>
           </select>
         </div>

@@ -68,6 +68,10 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         else if (lower.match(/(polyester|nylon|synthetic|gore-tex|spandex)/)) mat = 'synthetic';
         else if (lower.match(/(silk|satin)/)) mat = 'silk';
 
+        let col = 'black'; // default
+        const colorMatch = lower.match(/(black|navy|khaki|beige|white|grey|gray|olive|brown|blue|red|green)/);
+        if (colorMatch) col = colorMatch[0] === 'gray' ? 'grey' : colorMatch[0];
+
         const stats = getBulkStats(cat, bulk);
         
         newItems.push({
@@ -76,6 +80,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
           category: cat,
           bulkiness: bulk,
           material: mat,
+          color: col,
           vol: stats.vol,
           weight: stats.weight
         });

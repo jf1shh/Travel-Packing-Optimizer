@@ -1,59 +1,146 @@
+export const COLOR_MATCHES = {
+  'black': ['white', 'grey', 'beige', 'khaki', 'olive', 'black'],
+  'navy': ['white', 'grey', 'khaki', 'beige', 'olive', 'red', 'navy'],
+  'khaki': ['black', 'navy', 'white', 'grey', 'olive', 'brown', 'khaki'],
+  'beige': ['black', 'navy', 'white', 'grey', 'brown', 'olive', 'beige'],
+  'white': ['black', 'navy', 'khaki', 'beige', 'grey', 'olive', 'brown', 'blue', 'red', 'green', 'white'],
+  'grey': ['black', 'navy', 'white', 'blue', 'red', 'green', 'grey'],
+  'olive': ['black', 'navy', 'white', 'khaki', 'beige', 'brown', 'olive'],
+  'brown': ['white', 'khaki', 'beige', 'olive', 'brown'],
+  'blue': ['white', 'grey', 'khaki', 'beige', 'black', 'navy', 'blue'],
+  'red': ['white', 'grey', 'black', 'navy', 'beige', 'red'],
+  'green': ['white', 'grey', 'black', 'khaki', 'beige', 'green']
+};
+
+export const doColorsMatch = (c1, c2) => {
+  if (!c1 || !c2) return true;
+  const color1 = c1.toLowerCase();
+  const color2 = c2.toLowerCase();
+  if (color1 === color2) return true;
+  if (COLOR_MATCHES[color1] && COLOR_MATCHES[color1].includes(color2)) return true;
+  if (COLOR_MATCHES[color2] && COLOR_MATCHES[color2].includes(color1)) return true;
+  return false;
+};
+
 export const PALETTES = {
   'quiet-luxury': {
     name: 'Quiet Luxury',
-    tops: ['Cashmere Crewneck', 'Silk Button-down', 'Merino Turtleneck', 'Crisp White Tee'],
-    bottoms: ['Tailored Trousers', 'Dark Wash Denim', 'Pleated Skirt'],
-    outerwear: ['Camel Trench Coat', 'Structured Wool Blazer'],
-    shoes: ['Leather Loafers', 'Minimalist White Sneakers', 'Suede Chelsea Boots'],
-    colors: ['#f5f5dc', '#1a1a1a', '#8b7355'] // beige, black, taupe
+    tops: [
+      { name: 'Beige Cashmere Crewneck', color: 'beige', time: 'day' },
+      { name: 'Black Silk Button-down', color: 'black', time: 'evening' },
+      { name: 'Grey Merino Turtleneck', color: 'grey', time: 'day' },
+      { name: 'Crisp White Tee', color: 'white', time: 'day' }
+    ],
+    bottoms: [
+      { name: 'Khaki Tailored Trousers', color: 'khaki', time: 'day' },
+      { name: 'Dark Wash Denim', color: 'navy', time: 'day' },
+      { name: 'Black Pleated Skirt', color: 'black', time: 'evening' }
+    ],
+    outerwear: [{ name: 'Camel Trench Coat', color: 'beige' }, { name: 'Structured Wool Blazer', color: 'grey' }],
+    shoes: [{ name: 'Black Leather Loafers', color: 'black' }, { name: 'Minimalist White Sneakers', color: 'white' }, { name: 'Suede Chelsea Boots', color: 'brown' }],
+    colors: ['#f5f5dc', '#1a1a1a', '#8b7355']
   },
   'gorpcore': {
     name: 'Gorpcore',
-    tops: ['Technical Base Layer', 'Fleece Half-Zip', 'Graphic Climbing Tee', 'Merino Wool Top'],
-    bottoms: ['Cargo Hiking Pants', 'Waterproof Trousers', 'Nylon Shorts'],
-    outerwear: ['Gore-Tex Shell', 'Puffer Vest', 'Windbreaker'],
-    shoes: ['Trail Running Shoes', 'Hiking Boots', 'Salomon Sneakers'],
-    colors: ['#4a5d23', '#cc5500', '#2f4f4f'] // olive, burnt orange, dark slate
+    tops: [
+      { name: 'Olive Technical Base Layer', color: 'olive', time: 'day' },
+      { name: 'Black Fleece Half-Zip', color: 'black', time: 'evening' },
+      { name: 'Grey Graphic Climbing Tee', color: 'grey', time: 'day' },
+      { name: 'Navy Merino Wool Top', color: 'navy', time: 'day' }
+    ],
+    bottoms: [
+      { name: 'Khaki Cargo Hiking Pants', color: 'khaki', time: 'day' },
+      { name: 'Black Waterproof Trousers', color: 'black', time: 'evening' },
+      { name: 'Olive Nylon Shorts', color: 'olive', time: 'day' }
+    ],
+    outerwear: [{ name: 'Olive Gore-Tex Shell', color: 'olive' }, { name: 'Black Puffer Vest', color: 'black' }],
+    shoes: [{ name: 'Trail Running Shoes', color: 'grey' }, { name: 'Hiking Boots', color: 'brown' }],
+    colors: ['#4a5d23', '#cc5500', '#2f4f4f']
   },
   'scandi': {
     name: 'Scandi Minimalist',
-    tops: ['Oversized Poplin Shirt', 'Chunky Knit Sweater', 'Boxy T-Shirt', 'Striped Long-sleeve'],
-    bottoms: ['Wide-leg Jeans', 'Linen Trousers', 'Midi Slip Skirt'],
-    outerwear: ['Oversized Wool Coat', 'Quilted Liner Jacket'],
-    shoes: ['Chunky Boots', 'Slip-on Mules', 'Retro Sneakers'],
-    colors: ['#e8e8e8', '#4b5320', '#36454f'] // off-white, army green, charcoal
+    tops: [
+      { name: 'White Oversized Poplin Shirt', color: 'white', time: 'day' },
+      { name: 'Grey Chunky Knit Sweater', color: 'grey', time: 'day' },
+      { name: 'Black Boxy T-Shirt', color: 'black', time: 'evening' },
+      { name: 'Navy Striped Long-sleeve', color: 'navy', time: 'day' }
+    ],
+    bottoms: [
+      { name: 'Blue Wide-leg Jeans', color: 'blue', time: 'day' },
+      { name: 'Beige Linen Trousers', color: 'beige', time: 'day' },
+      { name: 'Black Midi Slip Skirt', color: 'black', time: 'evening' }
+    ],
+    outerwear: [{ name: 'Grey Oversized Wool Coat', color: 'grey' }, { name: 'Olive Quilted Liner Jacket', color: 'olive' }],
+    shoes: [{ name: 'Black Chunky Boots', color: 'black' }, { name: 'White Retro Sneakers', color: 'white' }],
+    colors: ['#e8e8e8', '#4b5320', '#36454f']
   },
   'y2k': {
     name: 'Y2K Streetwear',
-    tops: ['Baby Tee', 'Oversized Graphic Hoodie', 'Mesh Top', 'Velour Zip-up'],
-    bottoms: ['Parachute Pants', 'Low-rise Baggy Jeans', 'Cargo Mini Skirt'],
-    outerwear: ['Cropped Puffer', 'Vintage Leather Racing Jacket'],
-    shoes: ['Platform Sneakers', 'Chunky Skate Shoes', 'Combat Boots'],
-    colors: ['#ff00ff', '#000000', '#00ffff'] // magenta, black, cyan
+    tops: [
+      { name: 'White Baby Tee', color: 'white', time: 'day' },
+      { name: 'Grey Oversized Graphic Hoodie', color: 'grey', time: 'day' },
+      { name: 'Black Mesh Top', color: 'black', time: 'evening' },
+      { name: 'Navy Velour Zip-up', color: 'navy', time: 'day' }
+    ],
+    bottoms: [
+      { name: 'Olive Parachute Pants', color: 'olive', time: 'day' },
+      { name: 'Blue Low-rise Baggy Jeans', color: 'blue', time: 'day' },
+      { name: 'Black Cargo Mini Skirt', color: 'black', time: 'evening' }
+    ],
+    outerwear: [{ name: 'Black Cropped Puffer', color: 'black' }, { name: 'Vintage Leather Racing Jacket', color: 'brown' }],
+    shoes: [{ name: 'Platform Sneakers', color: 'white' }, { name: 'Combat Boots', color: 'black' }],
+    colors: ['#ff00ff', '#000000', '#00ffff']
   },
   'dark-academia': {
     name: 'Dark Academia',
-    tops: ['Tweed Vest', 'Cable Knit Sweater', 'Oxford Shirt', 'Ribbed Turtleneck'],
-    bottoms: ['Plaid Trousers', 'Corduroy Pants', 'Pleated Midi Skirt'],
-    outerwear: ['Tweed Blazer', 'Long Wool Overcoat'],
-    shoes: ['Oxford Shoes', 'Leather Brogues', 'Lace-up Boots'],
-    colors: ['#3e2723', '#1b5e20', '#4e342e'] // dark brown, forest green, sepia
+    tops: [
+      { name: 'Brown Tweed Vest', color: 'brown', time: 'day' },
+      { name: 'Beige Cable Knit Sweater', color: 'beige', time: 'day' },
+      { name: 'White Oxford Shirt', color: 'white', time: 'day' },
+      { name: 'Black Ribbed Turtleneck', color: 'black', time: 'evening' }
+    ],
+    bottoms: [
+      { name: 'Brown Plaid Trousers', color: 'brown', time: 'day' },
+      { name: 'Olive Corduroy Pants', color: 'olive', time: 'day' },
+      { name: 'Black Pleated Midi Skirt', color: 'black', time: 'evening' }
+    ],
+    outerwear: [{ name: 'Brown Tweed Blazer', color: 'brown' }, { name: 'Navy Long Wool Overcoat', color: 'navy' }],
+    shoes: [{ name: 'Brown Oxford Shoes', color: 'brown' }, { name: 'Black Leather Brogues', color: 'black' }],
+    colors: ['#3e2723', '#1b5e20', '#4e342e']
   },
   'athleisure': {
     name: 'Athleisure',
-    tops: ['Seamless Crop Top', 'Performance Hoodie', 'Quarter-Zip Pullover', 'Dri-FIT Tee'],
-    bottoms: ['Compression Leggings', 'Joggers', 'Biker Shorts'],
-    outerwear: ['Nylon Track Jacket', 'Fleece Zip-Up'],
-    shoes: ['Running Sneakers', 'Recovery Slides', 'Trainer Shoes'],
-    colors: ['#cfd8dc', '#263238', '#00bcd4'] // steel gray, deep dark gray, cyan
+    tops: [
+      { name: 'Black Seamless Crop Top', color: 'black', time: 'day' },
+      { name: 'Grey Performance Hoodie', color: 'grey', time: 'day' },
+      { name: 'Navy Quarter-Zip Pullover', color: 'navy', time: 'day' },
+      { name: 'White Dri-FIT Tee', color: 'white', time: 'day' }
+    ],
+    bottoms: [
+      { name: 'Black Compression Leggings', color: 'black', time: 'day' },
+      { name: 'Grey Joggers', color: 'grey', time: 'day' },
+      { name: 'Navy Biker Shorts', color: 'navy', time: 'day' }
+    ],
+    outerwear: [{ name: 'Black Nylon Track Jacket', color: 'black' }, { name: 'Grey Fleece Zip-Up', color: 'grey' }],
+    shoes: [{ name: 'White Running Sneakers', color: 'white' }, { name: 'Black Recovery Slides', color: 'black' }],
+    colors: ['#cfd8dc', '#263238', '#00bcd4']
   },
   'bohemian': {
     name: 'Bohemian / Resort',
-    tops: ['Crochet Halter', 'Linen Button-down', 'Flowy Peasant Blouse', 'Silk Cami'],
-    bottoms: ['Tiered Maxi Skirt', 'Wide-leg Linen Pants', 'Denim Cutoffs'],
-    outerwear: ['Fringed Kimono', 'Lightweight Duster'],
-    shoes: ['Strappy Leather Sandals', 'Espadrilles', 'Suede Ankle Boots'],
-    colors: ['#d2b48c', '#cd5c5c', '#8fbc8f'] // tan, indian red, sea green
+    tops: [
+      { name: 'White Flowy Linen Blouse', color: 'white', time: 'day' },
+      { name: 'Beige Crochet Top', color: 'beige', time: 'day' },
+      { name: 'Olive Off-shoulder Tunic', color: 'olive', time: 'evening' },
+      { name: 'White Gauze Button-up', color: 'white', time: 'day' }
+    ],
+    bottoms: [
+      { name: 'Khaki Tiered Maxi Skirt', color: 'khaki', time: 'day' },
+      { name: 'Beige Linen Wide-leg Pants', color: 'beige', time: 'day' },
+      { name: 'Blue Denim Cut-offs', color: 'blue', time: 'day' }
+    ],
+    outerwear: [{ name: 'White Lightweight Kimono', color: 'white' }, { name: 'Blue Denim Jacket', color: 'blue' }],
+    shoes: [{ name: 'Brown Strappy Leather Sandals', color: 'brown' }, { name: 'Beige Espadrilles', color: 'beige' }],
+    colors: ['#f4a460', '#8b4513', '#556b2f']
   }
 };
 
@@ -110,6 +197,22 @@ export const ACTIVITY_GEAR = {
     items: [
       { id: 'act-night-1', category: 'clothes', name: 'Evening Outfit', weight: 400, vol: 1000, priority: 9, isEssential: true, fold: 'konmari' },
       { id: 'act-night-2', category: 'clothes', name: 'Evening Jacket', weight: 900, vol: 1800, priority: 8, isEssential: false, fold: 'bundle' }
+    ]
+  },
+  sightseeing: {
+    outfit: { top: 'Breathable Tee', bottom: 'Comfortable Shorts / Pants', shoe: 'Walking Shoes', outer: 'Light Layer' },
+    items: [
+      { id: 'act-sight-1', category: 'clothes', name: 'Comfortable Walking Shoes', weight: 700, vol: 1800, priority: 10, isEssential: true, fold: 'shoes' },
+      { id: 'act-sight-2', category: 'loose', name: 'Daypack / Sling Bag', weight: 300, vol: 500, priority: 10, isEssential: true, cube: 'loose' },
+      { id: 'act-sight-3', category: 'toiletries', name: 'Reusable Water Bottle', weight: 200, vol: 800, priority: 9, isEssential: true }
+    ]
+  },
+  transit: {
+    outfit: { top: 'Soft Long-sleeve', bottom: 'Joggers / Leggings', shoe: 'Slip-on Shoes', outer: 'Hoodie / Fleece' },
+    items: [
+      { id: 'act-trans-1', category: 'clothes', name: 'Slip-on Shoes', weight: 600, vol: 1500, priority: 9, isEssential: false, fold: 'shoes' },
+      { id: 'act-trans-2', category: 'tech', name: 'Noise-Canceling Headphones', weight: 250, vol: 600, priority: 10, isEssential: true, cube: 'tech' },
+      { id: 'act-trans-3', category: 'loose', name: 'Travel Neck Pillow', weight: 300, vol: 2000, priority: 8, isEssential: false, cube: 'loose' }
     ]
   }
 };
@@ -200,66 +303,93 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   let selectedOuter = p.outerwear[0];
   let selectedShoes = [p.shoes[0]]; 
 
-  const topsNeeded = Math.min(tripDuration, 3); 
-  const bottomsNeeded = tripDuration > 3 ? 2 : 1;
+  let topsNeeded = tripDuration;
+  let bottomsNeeded = Math.ceil(tripDuration / 2);
+
+  if (packingStrategy === 'minimalist') {
+    topsNeeded = Math.ceil(tripDuration / 3);
+    bottomsNeeded = Math.ceil(tripDuration / 5);
+  } else if (packingStrategy === 'flexible') {
+    topsNeeded = Math.ceil(tripDuration / 2);
+    bottomsNeeded = Math.ceil(tripDuration / 3);
+  }
+  
+  topsNeeded = Math.max(1, Math.min(topsNeeded, p.tops.length));
+  bottomsNeeded = Math.max(1, Math.min(bottomsNeeded, p.bottoms.length));
 
   for (let i = 0; i < topsNeeded; i++) {
-    if (userTops[i]) selectedTops.push(userTops[i].name);
+    if (userTops[i]) selectedTops.push({ name: userTops[i].name, color: userTops[i].color || 'black', time: 'day' });
     else selectedTops.push(p.tops[i % p.tops.length]);
   }
   for (let i = 0; i < bottomsNeeded; i++) {
-    if (userBottoms[i]) selectedBottoms.push(userBottoms[i].name);
+    if (userBottoms[i]) selectedBottoms.push({ name: userBottoms[i].name, color: userBottoms[i].color || 'black', time: 'day' });
     else selectedBottoms.push(p.bottoms[i % p.bottoms.length]);
   }
   
   if (userOuter.length > 0) {
-    selectedOuter = userOuter[0].name;
+    selectedOuter = { name: userOuter[0].name, color: userOuter[0].color || 'black' };
   }
 
   if (userShoes.length > 0) {
-    selectedShoes[0] = userShoes[0].name;
+    selectedShoes[0] = { name: userShoes[0].name, color: userShoes[0].color || 'black' };
   }
   if (tripDuration > 3) {
     if (userShoes.length > 1) {
-      selectedShoes.push(userShoes[1].name);
+      selectedShoes.push({ name: userShoes[1].name, color: userShoes[1].color || 'black' });
     } else {
       selectedShoes.push(p.shoes[1 % p.shoes.length]);
     }
   }
 
   const combos = [];
-  for (let t = 0; t < selectedTops.length; t++) {
-    for (let b = 0; b < selectedBottoms.length; b++) {
-      for (let s = 0; s < selectedShoes.length; s++) {
-        combos.push({
-          top: selectedTops[t],
-          bottom: selectedBottoms[b],
-          shoe: selectedShoes[s],
-          outer: (t % 2 === 0) ? selectedOuter : null 
-        });
-      }
-    }
-  }
-
+  
   for (let d = 0; d < tripDuration; d++) {
     const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
     const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
     const dailyWeather = destWeatherObj?.weather;
     const dateIndex = d % (dailyWeather?.time?.length || 1);
     
-    const comboIndex = d % combos.length;
-    const baseOutfit = combos[comboIndex];
-    let outfit = { ...baseOutfit };
-
     const act = dailyActivities[d];
+    let isEvening = false;
+    if (act === 'nightout' || act === 'formal') {
+       isEvening = true;
+    }
+
+    // Filter tops/bottoms by time if evening (fallback to day if none)
+    let validTops = selectedTops.filter(t => isEvening ? t.time === 'evening' : t.time === 'day');
+    if (validTops.length === 0) validTops = selectedTops;
+    
+    let validBottoms = selectedBottoms.filter(b => isEvening ? b.time === 'evening' : b.time === 'day');
+    if (validBottoms.length === 0) validBottoms = selectedBottoms;
+
+    // Pick top
+    const chosenTop = validTops[d % validTops.length];
+    
+    // Pick bottom that matches top
+    let chosenBottom = validBottoms.find(b => doColorsMatch(chosenTop.color, b.color));
+    if (!chosenBottom) chosenBottom = validBottoms[0]; // fallback
+    
+    // Pick shoe that matches bottom
+    let chosenShoe = selectedShoes.find(s => doColorsMatch(chosenBottom.color, s.color));
+    if (!chosenShoe) chosenShoe = selectedShoes[0];
+
+    let outfit = { 
+      top: chosenTop.name, 
+      bottom: chosenBottom.name, 
+      shoe: chosenShoe.name,
+      outer: (d % 2 === 0) ? selectedOuter.name : null
+    };
+
     if (act && ACTIVITY_GEAR[act]) {
       const gear = ACTIVITY_GEAR[act].outfit;
-      outfit = {
-        top: gear.top,
-        bottom: gear.bottom,
-        shoe: gear.shoe,
-        outer: gear.outer
-      };
+      if (gear) {
+        outfit = {
+          top: gear.top || outfit.top,
+          bottom: gear.bottom || outfit.bottom,
+          shoe: gear.shoe || outfit.shoe,
+          outer: gear.outer || outfit.outer
+        };
+      }
     }
 
     let displayWeather = 'Clear/Mild';
@@ -272,11 +402,11 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
        else if (temp < 10) { displayWeather = 'Cold'; isCold = true; }
     }
 
-    if (isCold && (!act || !ACTIVITY_GEAR[act])) {
+    if (isCold && (!act || !ACTIVITY_GEAR[act] || !ACTIVITY_GEAR[act].outfit)) {
       outfit.outer = 'Fleece + Rain Shell (Layered)';
     }
 
-    combinations.push({
+    combos.push({
       day: d + 1,
       name: `Day ${d + 1}`,
       temp: dailyWeather ? dailyWeather.temperature_2m_max[dateIndex] : 20,
