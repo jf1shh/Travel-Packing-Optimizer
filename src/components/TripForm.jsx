@@ -437,7 +437,7 @@ const handleIcsUpload = (e) => {
                       ))}
                     </select>
                   )}
-                  <div className="activity-tags-container" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem', marginTop: '0.25rem', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                  <div className="activity-tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', paddingBottom: '0.5rem', marginTop: '0.25rem' }}>
                     {ACTIVITY_OPTIONS.map(opt => {
                       const guessed = dailyActivities[i] === null ? guessActivityFromDestination(dailyDestinations[i] || destinations[0]) : null;
                       const isSelected = dailyActivities[i] === opt.value || (dailyActivities[i] === null && guessed === opt.value) || (dailyActivities[i] === null && guessed === '' && opt.value === '');
