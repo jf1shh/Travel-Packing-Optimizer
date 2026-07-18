@@ -275,11 +275,19 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     return score;
   };
 
-  // 1. Prioritize userWardrobe items (sorted by versatility)
-  const userTops = userWardrobe.filter(i => i.category === 'top').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
-  const userBottoms = userWardrobe.filter(i => i.category === 'bottom').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
-  const userShoes = userWardrobe.filter(i => i.category === 'shoe').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
-  const userOuter = userWardrobe.filter(i => i.category === 'outer').sort((a,b) => getVersatilityScore(b) - getVersatilityScore(a));
+  // 1. Prioritize userWardrobe items (Graph-based Bipartite Selection)
+  const userTopsRaw = userWardrobe.filter(i => i.category === 'top');
+  const userBottomsRaw = userWardrobe.filter(i => i.category === 'bottom');
+  const userShoesRaw = userWardrobe.filter(i => i.category === 'shoe');
+  const userOuter = userWardrobe.filter(i => i.category === 'outer').sort((a,b) => b.priority - a.priority);
+
+  // Score tops and bottoms based on how many color matches they have in the opposite pool
+  const scoreTopMatch = (top, bottomsPool) => bottomsPool.filter(b => doColorsMatch(top.color || 'black', b.color || 'black')).length;
+  const scoreBottomMatch = (bottom, topsPool) => topsPool.filter(t => doColorsMatch(t.color || 'black', bottom.color || 'black')).length;
+
+  const userTops = userTopsRaw.sort((a,b) => scoreTopMatch(b, userBottomsRaw) - scoreTopMatch(a, userBottomsRaw));
+  const userBottoms = userBottomsRaw.sort((a,b) => scoreBottomMatch(b, userTopsRaw) - scoreBottomMatch(a, userTopsRaw));
+  const userShoes = userShoesRaw.sort((a,b) => b.priority - a.priority);
 
   // Base Layers & Mid-Trip Laundry Threshold
   let baseLayerLimit = Math.min(tripDuration, 7);
@@ -341,8 +349,24 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     }
   }
 
-  const combos = [];
+  // Permutation Maximization (Cartesian Product)
+  const allOutfits = [];
+  for (let t of selectedTops) {
+    for (let b of selectedBottoms) {
+      if (doColorsMatch(t.color, b.color)) {
+         for (let s of selectedShoes) {
+            if (doColorsMatch(b.color, s.color)) {
+               allOutfits.push({ top: t, bottom: b, shoe: s });
+            }
+         }
+      }
+    }
+  }
+  if (allOutfits.length === 0) {
+    allOutfits.push({ top: selectedTops[0], bottom: selectedBottoms[0], shoe: selectedShoes[0] });
+  }
   
+  const combos = [];
   for (let d = 0; d < tripDuration; d++) {
     const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
     const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
@@ -355,28 +379,15 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
        isEvening = true;
     }
 
-    // Filter tops/bottoms by time if evening (fallback to day if none)
-    let validTops = selectedTops.filter(t => isEvening ? t.time === 'evening' : t.time === 'day');
-    if (validTops.length === 0) validTops = selectedTops;
-    
-    let validBottoms = selectedBottoms.filter(b => isEvening ? b.time === 'evening' : b.time === 'day');
-    if (validBottoms.length === 0) validBottoms = selectedBottoms;
+    let dayOutfits = allOutfits.filter(o => isEvening ? (o.top.time === 'evening' || o.bottom.time === 'evening') : (o.top.time === 'day' && o.bottom.time === 'day'));
+    if (dayOutfits.length === 0) dayOutfits = allOutfits;
 
-    // Pick top
-    const chosenTop = validTops[d % validTops.length];
+    const chosenOutfit = dayOutfits[d % dayOutfits.length];
     
-    // Pick bottom that matches top
-    let chosenBottom = validBottoms.find(b => doColorsMatch(chosenTop.color, b.color));
-    if (!chosenBottom) chosenBottom = validBottoms[0]; // fallback
-    
-    // Pick shoe that matches bottom
-    let chosenShoe = selectedShoes.find(s => doColorsMatch(chosenBottom.color, s.color));
-    if (!chosenShoe) chosenShoe = selectedShoes[0];
-
     let outfit = { 
-      top: chosenTop.name, 
-      bottom: chosenBottom.name, 
-      shoe: chosenShoe.name,
+      top: chosenOutfit.top.name, 
+      bottom: chosenOutfit.bottom.name, 
+      shoe: chosenOutfit.shoe.name,
       outer: (d % 2 === 0) ? selectedOuter.name : null
     };
 
@@ -505,26 +516,63 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     }
   });
 
-  // VOLUME OPTIMIZATION
+  // VOLUME OPTIMIZATION (0/1 Knapsack Algorithm)
   let currentVolume = allItems.filter(i => !i.isWorn).reduce((sum, item) => sum + item.vol, 0);
-  let currentWeight = allItems.filter(i => !i.isWorn).reduce((sum, item) => sum + item.weight, 0);
 
   if (suitcaseVolume > 0 && currentVolume > suitcaseVolume) {
-    allItems.sort((a, b) => a.priority - b.priority); 
-    for (let i = 0; i < allItems.length; i++) {
-      if (currentVolume <= suitcaseVolume) break;
-      if (!allItems[i].isEssential) {
-        currentVolume -= allItems[i].vol;
-        currentWeight -= allItems[i].weight;
-        allItems[i].removed = true;
+    const essentialItems = allItems.filter(i => i.isWorn || i.isEssential || i.priority >= 10);
+    const optionalItems = allItems.filter(i => !i.isWorn && !i.isEssential && i.priority < 10);
+    
+    const essentialVol = essentialItems.reduce((sum, item) => sum + (item.isWorn ? 0 : item.vol), 0);
+    const remainingVol = suitcaseVolume - essentialVol;
+    
+    if (remainingVol <= 0) {
+      // Essentials alone exceed or exactly meet capacity. Drop all optionals.
+      optionalItems.forEach(i => i.removed = true);
+    } else {
+      // 0/1 Knapsack on optionals
+      const SCALE = 50; 
+      const capacity = Math.floor(remainingVol / SCALE);
+      const n = optionalItems.length;
+      const dp = Array.from({length: n + 1}, () => Array(capacity + 1).fill(0));
+
+      for (let i = 1; i <= n; i++) {
+        const item = optionalItems[i-1];
+        const w = Math.ceil(item.vol / SCALE);
+        const v = item.priority; // value is priority
+        
+        for (let c = 0; c <= capacity; c++) {
+          if (w <= c) {
+            dp[i][c] = Math.max(dp[i-1][c], dp[i-1][c-w] + v);
+          } else {
+            dp[i][c] = dp[i-1][c];
+          }
+        }
       }
+
+      // Backtrack
+      let c = capacity;
+      const keptItems = new Set();
+      for (let i = n; i > 0; i--) {
+        if (dp[i][c] !== dp[i-1][c]) {
+          const item = optionalItems[i-1];
+          keptItems.add(item.id);
+          c -= Math.ceil(item.vol / SCALE);
+        }
+      }
+
+      // Mark unkept optionals as removed
+      optionalItems.forEach(item => {
+        if (!keptItems.has(item.id)) {
+          item.removed = true;
+        }
+      });
     }
   }
 
   allItems = allItems.filter(item => !item.removed);
 
-  const grouped = { plane: [], main: [], base: [], loose: [], liquid: [], dry: [], tech: [] };
-  allItems.forEach(item => {
+  const grouped = { plane: [], main: [], base: [], loose: [], liquid: [], dry: [], tech: [] }; allItems.forEach(item => {
     if (item.category === 'plane') {
       grouped.plane.push(item);
     } else if (item.cube && grouped[item.cube]) {
