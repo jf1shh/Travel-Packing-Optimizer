@@ -46,6 +46,46 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     }
   };
 
+  const handleCameraAdd = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Create a new item instantly
+    const newId = `w-${Date.now()}-${Math.random()}`;
+    const newItemObj = {
+      id: newId,
+      name: 'Captured Item',
+      category: 'top',
+      bulkiness: 'standard',
+      material: 'cotton',
+      color: 'black',
+      vol: 400,
+      weight: 200
+    };
+    
+    setWardrobe(prev => [newItemObj, ...prev]);
+    
+    // Process the image
+    setIsProcessing(prev => ({ ...prev, [newId]: true }));
+    try {
+      const { removeBackground } = await import('@imgly/background-removal');
+      const blobURL = URL.createObjectURL(file);
+      const imageBlob = await removeBackground(blobURL);
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(imageBlob);
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        await saveItemImage(newId, base64data);
+        setItemImages(p => ({ ...p, [newId]: base64data }));
+        setIsProcessing(p => ({ ...p, [newId]: false }));
+      };
+    } catch (err) {
+      console.error('BG removal failed on camera add:', err);
+      setIsProcessing(p => ({ ...p, [newId]: false }));
+    }
+  };
+
 
   if (!isOpen) return null;
 
@@ -104,6 +144,15 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
       </div>
 
       <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+           <div style={{ flex: 1 }}>
+             <label style={{ display: 'block', padding: '1rem', textAlign: 'center', background: 'var(--accent-color)', color: 'white', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>
+               📸 Quick Add via Camera
+               <input type="file" accept="image/*" capture="environment" onChange={handleCameraAdd} style={{ display: 'none' }} />
+             </label>
+           </div>
+        </div>
+
         <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <div>
             <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Add Single Item</label>
@@ -170,7 +219,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
                     ) : (
                        <label style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                          <span style={{ fontSize: '1.2rem' }}>📷</span>
-                         <input type="file" accept="image/*" onChange={(e) => handleImageUpload(item.id, e)} style={{ display: 'none' }} />
+                         <input type="file" accept="image/*" capture="environment" onChange={(e) => handleImageUpload(item.id, e)} style={{ display: 'none' }} />
                        </label>
                     )}
                   </div>
