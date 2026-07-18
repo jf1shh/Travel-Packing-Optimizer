@@ -367,7 +367,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   
   const combos = [];
   for (let d = 0; d < tripDuration; d++) {
-    const destName = dailyDestinations[d] || destinations[0] || 'Unknown';
+    const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
     const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
     const dailyWeather = destWeatherObj?.weather;
     const dateIndex = d % (dailyWeather?.time?.length || 1);
