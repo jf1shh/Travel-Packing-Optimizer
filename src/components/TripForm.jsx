@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { geocodeLocation, fetchWeather } from '../services/api';
+import { guessActivityFromDestination } from '../utils/activity';
+import SuitcaseSelector from './SuitcaseSelector';
+import ItineraryCalendar from './ItineraryCalendar';
+import LogisticsPreferences from './LogisticsPreferences';
 
 const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit = 'C', toggleTempUnit }) => {
   const [destinations, setDestinations] = useState(['']);
@@ -58,50 +62,12 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   const [width, setWidth] = useState('34.8');
   const [height, setHeight] = useState('22.8');
 
-  const handlePresetChange = (e) => {
-    const val = e.target.value;
-    setPreset(val);
-    if (val === 'away-carry') { setLength('55'); setWidth('34.8'); setHeight('22.8'); }
-    else if (val === 'rimowa-cabin') { setLength('55'); setWidth('40'); setHeight('23'); }
-    else if (val === 'samsonite-check') { setLength('75'); setWidth('51'); setHeight('31'); }
-    else if (val === 'monos-carry') { setLength('55.9'); setWidth('35.6'); setHeight('22.9'); }
-    else if (val === 'travelpro-21') { setLength('59.7'); setWidth('36.8'); setHeight('22.9'); }
-    else if (val === 'beis-roller') { setLength('58'); setWidth('40'); setHeight('25.4'); }
-    else if (val === 'osprey-40') { setLength('55'); setWidth('35'); setHeight('23'); }
-    else if (val === 'peak-45') { setLength('56'); setWidth('33'); setHeight('24'); }
-  };
-
   const getDuration = () => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
   };
   const duration = getDuration();
-
-  const guessActivityFromDestination = (dest) => {
-    if (!dest) return '';
-    const d = dest.toLowerCase();
-    if (d.match(/(ski|aspen|whistler|chamonix|vail|tahoe|niseko|snow|breckenridge|banff|park city|alps)/)) return 'ski';
-    if (d.match(/(beach|honolulu|maui|cancun|maldives|ibiza|bali|phuket|miami|tulum|boracay|fiji|resort)/)) return 'beach';
-    if (d.match(/(hike|yosemite|zion|glacier|yellowstone|patagonia|machu picchu|kilimanjaro|trail|camp)/)) return 'hike';
-    if (d.match(/(vegas|mykonos|new orleans|night|club)/)) return 'nightout';
-    if (d.match(/(business|corporate|hq|office|meeting|conference)/)) return 'business';
-    if (d.match(/(london|paris|rome|tokyo|new york|nyc|berlin|madrid|barcelona|amsterdam|prague|vienna|sightseeing)/)) return 'sightseeing';
-    return '';
-  };
-
-  const ACTIVITY_OPTIONS = [
-    { value: '', label: '🚶 Casual' },
-    { value: 'sightseeing', label: '📸 Sightseeing' },
-    { value: 'formal', label: '🍷 Formal' },
-    { value: 'business', label: '👔 Business' },
-    { value: 'beach', label: '🏖️ Beach' },
-    { value: 'hike', label: '🥾 Hike' },
-    { value: 'ski', label: '⛷️ Ski' },
-    { value: 'nightout', label: '🕺 Night Out' },
-    { value: 'gym', label: '💪 Gym' },
-    { value: 'transit', label: '✈️ Transit' },
-  ];
 
   const updateDestination = (index, value) => {
     const newDest = [...destinations];
@@ -115,7 +81,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     }
   };
 
-const handleIcsUpload = (e) => {
+  const handleIcsUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -225,7 +191,6 @@ const handleIcsUpload = (e) => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         
-        {/* Destinations */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Destinations</label>
           {destinations.map((dest, idx) => (
@@ -275,7 +240,6 @@ const handleIcsUpload = (e) => {
         </div>
       </div>
 
-      {/* Travel Mode */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label htmlFor="travelMode" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Travel Mode</label>
         <select id="travelMode" value={travelMode} onChange={(e) => setTravelMode(e.target.value)}>
@@ -286,250 +250,34 @@ const handleIcsUpload = (e) => {
         </select>
       </div>
 
-      {/* Bag Selection */}
-      <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: 'var(--surface-color)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', margin: 0 }}>Suitcase Optimization</label>
-          <button 
-            type="button" 
-            className="theme-toggle" 
-            onClick={toggleLengthUnit} 
-            style={{ fontSize: '0.875rem', fontWeight: 'bold' }}
-          >
-            {lengthUnit}
-          </button>
-        </div>
+      <SuitcaseSelector 
+        preset={preset} setPreset={setPreset}
+        length={length} setLength={setLength}
+        width={width} setWidth={setWidth}
+        height={height} setHeight={setHeight}
+        lengthUnit={lengthUnit} toggleLengthUnit={toggleLengthUnit}
+      />
 
-        <select value={preset} onChange={handlePresetChange} style={{ marginBottom: '1rem' }}>
-          <option value="away-carry">Away: The Carry-On {lengthUnit === 'in' ? '(21.7 x 13.7 x 9.0)' : '(55 x 34.8 x 22.8)'}</option>
-          <option value="monos-carry">Monos: Carry-On {lengthUnit === 'in' ? '(22 x 14 x 9)' : '(55.9 x 35.6 x 22.9)'}</option>
-          <option value="beis-roller">BÉIS: Carry-On Roller {lengthUnit === 'in' ? '(22.8 x 15.7 x 10)' : '(58 x 40 x 25.4)'}</option>
-          <option value="travelpro-21">Travelpro: Platinum Elite 21" {lengthUnit === 'in' ? '(23.5 x 14.5 x 9)' : '(59.7 x 36.8 x 22.9)'}</option>
-          <option value="rimowa-cabin">Rimowa: Cabin {lengthUnit === 'in' ? '(21.7 x 15.7 x 9.1)' : '(55 x 40 x 23)'}</option>
-          <option value="osprey-40">Osprey: Farpoint 40L Backpack {lengthUnit === 'in' ? '(21.7 x 13.8 x 9.1)' : '(55 x 35 x 23)'}</option>
-          <option value="peak-45">Peak Design: Travel Backpack 45L {lengthUnit === 'in' ? '(22 x 13 x 9.5)' : '(56 x 33 x 24)'}</option>
-          <option value="samsonite-check">Samsonite: Check-In Large {lengthUnit === 'in' ? '(29.5 x 20.1 x 12.2)' : '(75 x 51 x 31)'}</option>
-          <option value="custom">Custom Dimensions</option>
-        </select>
-        
-        <div style={{ display: 'flex', gap: '0.5rem', width: '100%', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>L</span>
-            <input 
-              style={{ width: '100%', boxSizing: 'border-box' }} 
-              type="number" 
-              step="any"
-              value={lengthUnit === 'in' ? (parseFloat(length) / 2.54).toFixed(1) : length} 
-              onChange={(e) => { 
-                const v = parseFloat(e.target.value) || 0;
-                setLength(lengthUnit === 'in' ? v * 2.54 : v); 
-                setPreset('custom'); 
-              }} 
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>W</span>
-            <input 
-              style={{ width: '100%', boxSizing: 'border-box' }} 
-              type="number" 
-              step="any"
-              value={lengthUnit === 'in' ? (parseFloat(width) / 2.54).toFixed(1) : width} 
-              onChange={(e) => { 
-                const v = parseFloat(e.target.value) || 0;
-                setWidth(lengthUnit === 'in' ? v * 2.54 : v); 
-                setPreset('custom'); 
-              }} 
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>H</span>
-            <input 
-              style={{ width: '100%', boxSizing: 'border-box' }} 
-              type="number" 
-              step="any"
-              value={lengthUnit === 'in' ? (parseFloat(height) / 2.54).toFixed(1) : height} 
-              onChange={(e) => { 
-                const v = parseFloat(e.target.value) || 0;
-                setHeight(lengthUnit === 'in' ? v * 2.54 : v); 
-                setPreset('custom'); 
-              }} 
-            />
-          </div>
-        </div>
-      </div>
+      <ItineraryCalendar 
+        duration={duration}
+        destinations={destinations}
+        startDate={startDate}
+        dailyDestinations={dailyDestinations}
+        setDailyDestinations={setDailyDestinations}
+        dailyActivities={dailyActivities}
+        setDailyActivities={setDailyActivities}
+        formWeatherData={formWeatherData}
+        tempUnit={tempUnit}
+        toggleTempUnit={toggleTempUnit}
+      />
 
-      {/* Daily Itinerary & Forecast Carousel */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <label style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>Itinerary & Forecast</label>
-          {toggleTempUnit && (
-            <button 
-              type="button"
-              className="theme-toggle" 
-              onClick={toggleTempUnit}
-              style={{ fontSize: '1rem', fontWeight: 'bold', padding: '0.25rem 0.5rem' }}
-              title="Toggle Temperature Unit"
-            >
-              °{tempUnit}
-            </button>
-          )}
-        </div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', paddingBottom: '1rem' }}>
-          {Array.from({ length: duration }).map((_, i) => {
-            const dest = dailyDestinations[i] || destinations[0] || 'Unknown';
-            const weatherObj = formWeatherData[dest];
-            
-            const dDate = new Date(startDate);
-            dDate.setDate(dDate.getDate() + i);
-            const dateStr = dDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-            
-            let maxTempC = null;
-            let minTempC = null;
-            let rain = 0;
-            let icon = '⛅';
-
-            if (weatherObj && weatherObj.temperature_2m_max && weatherObj.temperature_2m_max[i] !== undefined) {
-              maxTempC = Math.round(weatherObj.temperature_2m_max[i]);
-              minTempC = Math.round(weatherObj.temperature_2m_min[i]);
-              rain = weatherObj.precipitation_sum[i];
-              
-              if (rain > 5) icon = '🌧️';
-              else if (maxTempC < 15) icon = '❄️';
-              else if (maxTempC > 25) icon = '☀️';
-            }
-
-            const max = maxTempC !== null ? (tempUnit === 'F' ? Math.round(maxTempC * 9/5 + 32) : maxTempC) : '--';
-            const min = minTempC !== null ? (tempUnit === 'F' ? Math.round(minTempC * 9/5 + 32) : minTempC) : '--';
-
-            return (
-              <div key={i} className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day {i + 1}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{dateStr}</span>
-                </div>
-                
-                <div style={{ textAlign: 'center', margin: '0.5rem 0' }}>
-                  <div style={{ fontSize: '2.5rem', lineHeight: '1' }}>{icon}</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'baseline', marginTop: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{max}°</span>
-                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{min}°</span>
-                  </div>
-                  {rain > 0 ? (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>{rain.toFixed(1)}mm rain</div>
-                  ) : (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>0mm rain</div>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto' }}>
-                  {destinations.filter(d => d.trim() !== '').length > 1 && (
-                    <select
-                      value={dailyDestinations[i] || destinations[0]}
-                      onChange={(e) => {
-                        const newD = [...dailyDestinations];
-                        newD[i] = e.target.value;
-                        setDailyDestinations(newD);
-                      }}
-                      style={{ padding: '0.35rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', width: '100%' }}
-                    >
-                      {destinations.map((d, idx) => d.trim() !== '' && (
-                        <option key={idx} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  )}
-                  <div className="activity-tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', paddingBottom: '0.5rem', marginTop: '0.25rem' }}>
-                    {ACTIVITY_OPTIONS.map(opt => {
-                      const guessed = dailyActivities[i] === null ? guessActivityFromDestination(dailyDestinations[i] || destinations[0]) : null;
-                      const isSelected = dailyActivities[i] === opt.value || (dailyActivities[i] === null && guessed === opt.value) || (dailyActivities[i] === null && guessed === '' && opt.value === '');
-                      
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            const newArr = [...dailyActivities];
-                            newArr[i] = opt.value;
-                            setDailyActivities(newArr);
-                          }}
-                          style={{
-                            background: isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-                            color: isSelected ? '#fff' : 'var(--text-secondary)',
-                            border: `1px solid ${isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'}`,
-                            padding: '0.35rem 0.75rem',
-                            borderRadius: '16px',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            transition: 'all 0.2s',
-                            boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
-                          }}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="gender" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Style</label>
-          <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="male">Menswear</option>
-            <option value="female">Womenswear</option>
-            <option value="other">Neutral</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="palette" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Fashion Archetype</label>
-          <select id="palette" value={palette} onChange={(e) => setPalette(e.target.value)}>
-            <option value="quiet-luxury">Quiet Luxury / Old Money</option>
-            <option value="gorpcore">Gorpcore / Techwear</option>
-            <option value="scandi">Minimalist Scandi</option>
-            <option value="streetwear">Y2K Streetwear</option>
-            <option value="dark-academia">Dark Academia</option>
-            <option value="athleisure">Performance Athleisure</option>
-            <option value="bohemian">Resort / Bohemian</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="strategy" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Packing Strategy</label>
-          <select id="strategy" value={packingStrategy} onChange={(e) => setPackingStrategy(e.target.value)}>
-            <option value="standard">Standard (Comfortable)</option>
-            <option value="flexible">Flexible & Efficient</option>
-            <option value="minimalist">Extreme Minimalist (Rewear Basics)</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="laundry" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Laundry Plan</label>
-          <select id="laundry" value={laundryCycle} onChange={(e) => setLaundryCycle(parseInt(e.target.value))}>
-            <option value={3}>Wash every 3 days</option>
-            <option value={5}>Wash every 5 days</option>
-            <option value={7}>Wash every 7 days</option>
-            <option value={10}>Wash every 10 days</option>
-            <option value={14}>Wash every 14 days</option>
-            <option value={999}>No Laundry (Pack it all)</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="ports" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Tech Devices</label>
-          <select id="ports" value={techPorts} onChange={(e) => setTechPorts(e.target.value)}>
-            <option value="mixed">Mixed (USB-C, Lightning, etc)</option>
-            <option value="usbc">All USB-C (Consolidate Cables)</option>
-          </select>
-        </div>
-      </div>
+      <LogisticsPreferences 
+        gender={gender} setGender={setGender}
+        palette={palette} setPalette={setPalette}
+        packingStrategy={packingStrategy} setPackingStrategy={setPackingStrategy}
+        laundryCycle={laundryCycle} setLaundryCycle={setLaundryCycle}
+        techPorts={techPorts} setTechPorts={setTechPorts}
+      />
 
       <button type="submit" disabled={isLoading} style={{ width: '100%', fontSize: '1.1rem', padding: '1rem' }}>
         {isLoading ? 'Optimizing...' : 'Generate Optimized List'}
