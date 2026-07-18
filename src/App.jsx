@@ -8,6 +8,7 @@ import CapsuleVisualizer from './components/CapsuleVisualizer';
 import PackingList from './components/PackingList';
 import VolumeChart from './components/VolumeChart';
 import WardrobeManager from './components/WardrobeManager';
+import { Logger } from './services/logger';
 import { encodeTripData, decodeTripData } from './services/share';
 import './index.css';
 
@@ -358,36 +359,53 @@ function App() {
           <p style={{ fontSize: '0.875rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
             This app runs 100% locally on your device. We do not store or transmit your data to any databases.
           </p>
-                    <button 
-            onClick={handleCopyShareLink}
-            style={{ 
-              background: 'transparent', 
-              color: 'var(--primary-color)', 
-              border: '1px solid var(--primary-color)', 
-              padding: '0.5rem 1rem', 
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              marginBottom: '1rem',
-              marginRight: '1rem'
-            }}
-          >
-            🔗 Copy Share Link
-          </button>
-          <button 
-            onClick={handleDeleteAllData}
-            style={{ 
-              background: 'transparent', 
-              color: '#ef4444', 
-              border: '1px solid #ef4444', 
-              padding: '0.5rem 1rem', 
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              cursor: 'pointer'
-            }}
-          >
-            Delete All My Data
-          </button>
+          <div style={{ marginBottom: '1rem' }}>
+            <button 
+              onClick={handleCopyShareLink}
+              style={{ 
+                background: 'transparent', 
+                color: 'var(--primary-color)', 
+                border: '1px solid var(--primary-color)', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                marginRight: '1rem'
+              }}
+            >
+              🔗 Copy Share Link
+            </button>
+          </div>
+          <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+            <button 
+              onClick={handleDeleteAllData}
+              style={{ 
+                background: 'transparent', 
+                color: '#ef4444', 
+                border: '1px solid #ef4444', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                cursor: 'pointer'
+              }}
+            >
+              Delete All My Data
+            </button>
+            <button 
+              onClick={() => Logger.exportLogs()} 
+              style={{ 
+                background: 'transparent', 
+                color: 'var(--text-secondary)', 
+                border: '1px solid var(--border-color)', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                cursor: 'pointer'
+              }}
+            >
+              Download Diagnostic Logs
+            </button>
+          </div>
         </div>
       </main>
     </div>
