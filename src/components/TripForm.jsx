@@ -17,7 +17,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   const [travelMode, setTravelMode] = useState('flying');
   
   // Activities
-  const [dailyActivities, setDailyActivities] = useState(Array(30).fill(''));
+  const [dailyActivities, setDailyActivities] = useState(Array(30).fill(null));
   
   // Daily Destinations & Weather
   const [dailyDestinations, setDailyDestinations] = useState(Array(30).fill(''));
@@ -76,6 +76,31 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
   };
   const duration = getDuration();
+
+  const guessActivityFromDestination = (dest) => {
+    if (!dest) return '';
+    const d = dest.toLowerCase();
+    if (d.match(/(ski|aspen|whistler|chamonix|vail|tahoe|niseko|snow|breckenridge|banff|park city|alps)/)) return 'ski';
+    if (d.match(/(beach|honolulu|maui|cancun|maldives|ibiza|bali|phuket|miami|tulum|boracay|fiji|resort)/)) return 'beach';
+    if (d.match(/(hike|yosemite|zion|glacier|yellowstone|patagonia|machu picchu|kilimanjaro|trail|camp)/)) return 'hike';
+    if (d.match(/(vegas|mykonos|new orleans|night|club)/)) return 'nightout';
+    if (d.match(/(business|corporate|hq|office|meeting|conference)/)) return 'business';
+    if (d.match(/(london|paris|rome|tokyo|new york|nyc|berlin|madrid|barcelona|amsterdam|prague|vienna|sightseeing)/)) return 'sightseeing';
+    return '';
+  };
+
+  const ACTIVITY_OPTIONS = [
+    { value: '', label: '🚶 Casual' },
+    { value: 'sightseeing', label: '📸 Sightseeing' },
+    { value: 'formal', label: '🍷 Formal' },
+    { value: 'business', label: '👔 Business' },
+    { value: 'beach', label: '🏖️ Beach' },
+    { value: 'hike', label: '🥾 Hike' },
+    { value: 'ski', label: '⛷️ Ski' },
+    { value: 'nightout', label: '🕺 Night Out' },
+    { value: 'gym', label: '💪 Gym' },
+    { value: 'transit', label: '✈️ Transit' },
+  ];
 
   const updateDestination = (index, value) => {
     const newDest = [...destinations];
@@ -174,7 +199,9 @@ const handleIcsUpload = (e) => {
         gender,
         palette,
         travelMode,
-        dailyActivities: dailyActivities.slice(0, duration),
+        dailyActivities: dailyActivities.slice(0, duration).map((a, i) => {
+          return a !== null ? a : guessActivityFromDestination(dailyDestinations[i] || destinations[0]);
+        }),
         dailyDestinations: dailyDestinations.slice(0, duration),
         formWeatherData,
         packingStrategy,
@@ -410,26 +437,38 @@ const handleIcsUpload = (e) => {
                       ))}
                     </select>
                   )}
-                  <select 
-                    value={dailyActivities[i] || ''} 
-                    onChange={(e) => {
-                      const newArr = [...dailyActivities];
-                      newArr[i] = e.target.value;
-                      setDailyActivities(newArr);
-                    }}
-                    style={{ padding: '0.35rem', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', width: '100%' }}
-                  >
-                    <option value="">Casual / Standard</option>
-                    <option value="sightseeing">Sightseeing / Heavy Walking</option>
-                    <option value="transit">Transit / Travel Day</option>
-                    <option value="formal">Formal / Dinner</option>
-                    <option value="gym">Gym / Workout</option>
-                    <option value="beach">Beach / Pool</option>
-                    <option value="hike">Hiking / Trail</option>
-                    <option value="ski">Skiing / Snowboarding</option>
-                    <option value="business">Business / Meeting</option>
-                    <option value="nightout">Night Out / Clubbing</option>
-                  </select>
+                  <div className="activity-tags-container" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem', marginTop: '0.25rem', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                    {ACTIVITY_OPTIONS.map(opt => {
+                      const guessed = dailyActivities[i] === null ? guessActivityFromDestination(dailyDestinations[i] || destinations[0]) : null;
+                      const isSelected = dailyActivities[i] === opt.value || (dailyActivities[i] === null && guessed === opt.value) || (dailyActivities[i] === null && guessed === '' && opt.value === '');
+                      
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            const newArr = [...dailyActivities];
+                            newArr[i] = opt.value;
+                            setDailyActivities(newArr);
+                          }}
+                          style={{
+                            background: isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
+                            color: isSelected ? '#fff' : 'var(--text-secondary)',
+                            border: `1px solid ${isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'}`,
+                            padding: '0.35rem 0.75rem',
+                            borderRadius: '16px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s',
+                            boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             );
