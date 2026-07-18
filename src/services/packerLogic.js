@@ -247,7 +247,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     let cube = item.cube;
     if (!cube) {
       if (item.category === 'clothes') {
-        const n = item.name.toLowerCase();
+        const n = (item.name || '').toLowerCase();
         if (n.includes('underwear') || n.includes('sock') || n.includes('base') || n.includes('pajama')) cube = 'base';
         else if (n.includes('jacket') || n.includes('shoe') || n.includes('boot') || n.includes('coat')) cube = 'loose';
         else cube = 'main';
@@ -267,7 +267,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   // 2. Versatility Scoring
   const getVersatilityScore = (item) => {
     let score = 0;
-    const name = item.name.toLowerCase();
+    const name = (item.name || '').toLowerCase();
     const mat = item.material ? item.material.toLowerCase() : '';
     if (name.match(/(black|white|gray|grey|navy|beige|neutral|cream|tan|charcoal)/)) score += 5;
     if (mat.match(/(denim|leather|wool|merino)/)) score += 3;
@@ -430,10 +430,10 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   // Layering Optimizer Checks
   let tripHasColdDay = combinations.some(c => c.weather === 'Cold');
   if (tripHasColdDay) {
-    const hasFleece = userTops.some(t => t.name.toLowerCase().includes('fleece'));
+    const hasFleece = userTops.some(t => (t.name || '').toLowerCase().includes('fleece'));
     if (!hasFleece) addItem({ category: 'clothes', id: 'layer-mid', name: 'Fleece Mid-Layer', vol: 800, weight: 300, priority: 10, isEssential: true, fold: 'ranger' });
     
-    const hasShell = userOuter.some(o => o.name.toLowerCase().includes('shell') || o.name.toLowerCase().includes('windbreaker') || o.name.toLowerCase().includes('rain'));
+    const hasShell = userOuter.some(o => (o.name || '').toLowerCase().includes('shell') || (o.name || '').toLowerCase().includes('windbreaker') || (o.name || '').toLowerCase().includes('rain'));
     if (!hasShell) addItem({ category: 'clothes', id: 'layer-shell', name: 'Rain Shell / Windbreaker', vol: 600, weight: 250, priority: 10, isEssential: true, fold: 'bundle' });
   }
 
@@ -501,10 +501,10 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
   // Worn on Travel Day Subtractor
   const clothesAndShoes = allItems.filter(i => i.category === 'clothes');
-  const topsInList = clothesAndShoes.filter(i => i.id.startsWith('top') || i.name.toLowerCase().includes('shirt') || i.name.toLowerCase().includes('fleece') || i.name.toLowerCase().includes('base')).sort((a,b) => b.vol - a.vol);
-  const botsInList = clothesAndShoes.filter(i => i.id.startsWith('bot') || i.name.toLowerCase().includes('pant') || i.name.toLowerCase().includes('jeans')).sort((a,b) => b.vol - a.vol);
-  const outersInList = clothesAndShoes.filter(i => i.id.startsWith('out') || i.name.toLowerCase().includes('jacket') || i.name.toLowerCase().includes('shell') || i.name.toLowerCase().includes('coat')).sort((a,b) => b.vol - a.vol);
-  const shoesInList = clothesAndShoes.filter(i => i.id.startsWith('shoe') || i.name.toLowerCase().includes('shoe') || i.name.toLowerCase().includes('boot')).sort((a,b) => b.vol - a.vol);
+  const topsInList = clothesAndShoes.filter(i => i.id.startsWith('top') || (i.name || '').toLowerCase().includes('shirt') || (i.name || '').toLowerCase().includes('fleece') || (i.name || '').toLowerCase().includes('base')).sort((a,b) => b.vol - a.vol);
+  const botsInList = clothesAndShoes.filter(i => i.id.startsWith('bot') || (i.name || '').toLowerCase().includes('pant') || (i.name || '').toLowerCase().includes('jeans')).sort((a,b) => b.vol - a.vol);
+  const outersInList = clothesAndShoes.filter(i => i.id.startsWith('out') || (i.name || '').toLowerCase().includes('jacket') || (i.name || '').toLowerCase().includes('shell') || (i.name || '').toLowerCase().includes('coat')).sort((a,b) => b.vol - a.vol);
+  const shoesInList = clothesAndShoes.filter(i => i.id.startsWith('shoe') || (i.name || '').toLowerCase().includes('shoe') || (i.name || '').toLowerCase().includes('boot')).sort((a,b) => b.vol - a.vol);
 
   const wornItems = [topsInList[0], botsInList[0], outersInList[0], shoesInList[0]].filter(Boolean);
   
