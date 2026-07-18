@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { removeBackground } from '@imgly/background-removal';
 import { saveItemImage, getItemImage, deleteItemImage } from '../services/db';
 
 
@@ -27,6 +26,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     setIsProcessing(p => ({ ...p, [itemId]: true }));
 
     try {
+      const { removeBackground } = await import('@imgly/background-removal');
       const blobURL = URL.createObjectURL(file);
       const imageBlob = await removeBackground(blobURL);
       

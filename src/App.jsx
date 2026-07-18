@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { geocodeLocation, fetchWeather } from './services/api';
 import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
 import Header from './components/Header';
@@ -6,7 +6,7 @@ import CapacityBar from './components/CapacityBar';
 import TripForm from './components/TripForm';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
 import PackingList from './components/PackingList';
-import VolumeChart from './components/VolumeChart';
+const VolumeChart = React.lazy(() => import('./components/VolumeChart'));
 import WardrobeManager from './components/WardrobeManager';
 import { Logger } from './services/logger';
 import { encodeTripData, decodeTripData } from './services/share';
@@ -322,7 +322,9 @@ function App() {
 
         {packingList && (
           <div style={{ paddingBottom: '2rem' }}>
-            <VolumeChart packingList={packingList} suitcaseVolume={suitcaseVolume} />
+            <Suspense fallback={<div style={{ textAlign: 'center', padding: '2rem' }}>Loading Chart...</div>}>
+              <VolumeChart packingList={packingList} suitcaseVolume={suitcaseVolume} />
+            </Suspense>
             <PackingList 
               packingList={packingList} 
               toggleItem={toggleItem} 
