@@ -584,7 +584,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
   // Re-calculate derived totals after pruning
   currentVolume = allItems.reduce((sum, item) => sum + item.vol, 0);
-  currentWeight = allItems.reduce((sum, item) => sum + item.weight, 0);
+  let currentWeight = allItems.reduce((sum, item) => sum + item.weight, 0);
 
   return {
     list: grouped,

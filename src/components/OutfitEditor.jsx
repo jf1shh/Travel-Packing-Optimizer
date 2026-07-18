@@ -21,7 +21,8 @@ const DraggableItem = ({ item }) => {
   } : undefined;
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="draggable-item" style={{ 
+    <div ref={setNodeRef} {...listeners} {...attributes} className="draggable-item" style={{ 
+      ...style,
       padding: '0.5rem', 
       margin: '0.5rem', 
       background: 'var(--bg-color)', 

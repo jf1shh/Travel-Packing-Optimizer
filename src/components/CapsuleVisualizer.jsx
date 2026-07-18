@@ -5,6 +5,16 @@ import OutfitEditor from './OutfitEditor';
 
 const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityChange, startDate }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [editingDayIndex, setEditingDayIndex] = useState(null);
+
+  const handleSaveOutfit = (editedOutfit) => {
+    setOutfits(prev => {
+      const newOutfits = [...prev];
+      newOutfits[editingDayIndex] = editedOutfit;
+      return newOutfits;
+    });
+    setEditingDayIndex(null);
+  };
 
   const handleExportICS = () => {
     if (!startDate) return;
@@ -93,11 +103,24 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
 
   return (
     <div className="glass animate-slide-up" style={{ padding: '1.5rem', marginBottom: '1.5rem', animationDelay: '0.4s' }}>
+      {editingDayIndex !== null && (
+        <OutfitEditor 
+          dayOutfit={outfits[editingDayIndex]} 
+          wardrobe={wardrobe} 
+          onSave={handleSaveOutfit} 
+          onCancel={() => setEditingDayIndex(null)} 
+        />
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Daily Outfit Combos</h3>
-        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          {currentIndex + 1} of {outfits.length}
-        </span>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button onClick={() => setEditingDayIndex(currentIndex)} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
+            ✏️ Edit
+          </button>
+          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            {currentIndex + 1} of {outfits.length}
+          </span>
+        </div>
       </div>
 
       <div style={{ 
