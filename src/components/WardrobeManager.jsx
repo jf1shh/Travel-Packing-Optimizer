@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { saveItemImage, getItemImage, deleteItemImage } from '../services/db';
+import { parseBulkText } from '../utils/parser';
 
 
 const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
   const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard', material: 'cotton' });
+  const [bulkText, setBulkText] = useState('');
   const [itemImages, setItemImages] = useState({});
   const [isProcessing, setIsProcessing] = useState({});
 
@@ -81,59 +83,13 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     setWardrobe(wardrobe.filter(i => i.id !== id));
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target.result;
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      
-      const newItems = [];
-      lines.forEach(line => {
-        const lower = String(line).toLowerCase();
-        let cat = 'top';
-        if (lower.match(/(pant|jean|short|skirt|trouser|legging)/)) cat = 'bottom';
-        else if (lower.match(/(jacket|coat|blazer|windbreaker|shell|parka)/)) cat = 'outer';
-        else if (lower.match(/(shoe|boot|sneaker|loafer|sandal|heel)/)) cat = 'shoe';
-
-        let bulk = 'standard';
-        if (lower.match(/(bulky|heavy|thick|winter|puffer)/)) bulk = 'bulky';
-        else if (lower.match(/(light|thin|summer|breezy)/)) bulk = 'light';
-
-        let mat = 'cotton';
-        if (lower.match(/(linen)/)) mat = 'linen';
-        else if (lower.match(/(merino|wool|cashmere)/)) mat = 'wool';
-        else if (lower.match(/(denim|jean)/)) mat = 'denim';
-        else if (lower.match(/(leather|suede)/)) mat = 'leather';
-        else if (lower.match(/(polyester|nylon|synthetic|gore-tex|spandex)/)) mat = 'synthetic';
-        else if (lower.match(/(silk|satin)/)) mat = 'silk';
-
-        let col = 'black'; // default
-        const colorMatch = lower.match(/(black|navy|khaki|beige|white|grey|gray|olive|brown|blue|red|green)/);
-        if (colorMatch) col = colorMatch[0] === 'gray' ? 'grey' : colorMatch[0];
-
-        const stats = getBulkStats(cat, bulk);
-        
-        newItems.push({
-          id: `w-${Date.now()}-${Math.random()}`,
-          name: line.replace(/^[-*•\s]+/, ''), // remove bullet points
-          category: cat,
-          bulkiness: bulk,
-          material: mat,
-          color: col,
-          vol: stats.vol,
-          weight: stats.weight
-        });
-      });
-
-      if (newItems.length > 0) {
-        setWardrobe(prev => [...prev, ...newItems]);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = null; // reset input
+  const handleBulkUpload = () => {
+    if (!bulkText.trim()) return;
+    const newItems = parseBulkText(bulkText);
+    if (newItems.length > 0) {
+      setWardrobe(prev => [...prev, ...newItems]);
+      setBulkText(''); // clear on success
+    }
   };
 
   return (
@@ -148,19 +104,18 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
       </div>
 
       <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
-        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <div>
-            <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Item Name</label>
+            <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Add Single Item</label>
             <input 
               type="text" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})}
               placeholder="e.g. Black Levis 501"
-              style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem' }}
             />
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Type</label>
-              <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
+              <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}>
                 <option value="top">Top</option>
                 <option value="bottom">Bottom</option>
                 <option value="outer">Outerwear</option>
@@ -168,37 +123,37 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Bulkiness</label>
-              <select value={newItem.bulkiness} onChange={e => setNewItem({...newItem, bulkiness: e.target.value})} style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
-                <option value="light">Lightweight</option>
+              <select value={newItem.bulkiness} onChange={e => setNewItem({...newItem, bulkiness: e.target.value})} style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}>
+                <option value="light">Light</option>
                 <option value="standard">Standard</option>
                 <option value="bulky">Bulky</option>
               </select>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Material</label>
-              <select value={newItem.material} onChange={e => setNewItem({...newItem, material: e.target.value})} style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
-                <option value="cotton">Cotton</option>
-                <option value="linen">Linen</option>
-                <option value="wool">Wool / Merino</option>
-                <option value="denim">Denim</option>
-                <option value="leather">Leather</option>
-                <option value="synthetic">Synthetic</option>
-                <option value="silk">Silk</option>
-              </select>
-            </div>
           </div>
-          <button type="submit" style={{ padding: '0.75rem', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-            Add to Closet
+          <button type="submit" style={{ padding: '0.75rem', borderRadius: '8px' }}>
+            + Add to Closet
           </button>
         </form>
 
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
+          <label style={{ fontSize: '0.875rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>✨ AI Brain Dump (Bulk Add)</label>
+          <textarea 
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder="Paste your packing list here! e.g., '3 pairs of blue jeans, 5 black cotton shirts, 1 heavy wool jacket...'"
+            style={{ 
+              width: '100%', minHeight: '100px', padding: '0.75rem', borderRadius: '12px', 
+              border: '1px solid var(--border-color)', background: 'var(--bg-color)', 
+              color: 'var(--text-primary)', fontFamily: 'inherit', resize: 'vertical'
+            }}
+          />
+          <button type="button" onClick={handleBulkUpload} style={{ padding: '0.75rem', borderRadius: '8px' }}>
+            Parse & Add Items
+          </button>
+        </div>
+
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
           Your Items
-          <label style={{ fontSize: '0.75rem', padding: '0.5rem 0.75rem', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'normal' }}>
-            📁 Upload .txt
-            <input type="file" accept=".txt,.md" onChange={handleFileUpload} style={{ display: 'none' }} />
-          </label>
         </h3>
         {wardrobe.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>Your closet is empty. Add items above!</p>
