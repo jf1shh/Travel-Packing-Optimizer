@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import TripForm from './components/TripForm';
-import PackingList from './components/PackingList';
-import CapacityBar from './components/CapacityBar';
-import CapsuleVisualizer from './components/CapsuleVisualizer';
-import WardrobeManager from './components/WardrobeManager';
 import { geocodeLocation, fetchWeather } from './services/api';
 import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
+import TripForm from './components/TripForm';
+import CapsuleVisualizer from './components/CapsuleVisualizer';
+import PackingList from './components/PackingList';
+import WardrobeManager from './components/WardrobeManager';
+import { encodeTripData, decodeTripData } from './services/share';
 import './index.css';
 
 function App() {
@@ -73,6 +72,27 @@ function App() {
   useEffect(() => {
     localStorage.setItem('travelPackerWardrobe', JSON.stringify(wardrobe));
   }, [wardrobe]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareCode = urlParams.get('share');
+    if (shareCode) {
+      const data = decodeTripData(shareCode);
+      if (data) {
+        if (data.w) {
+          setWardrobe(data.w);
+          localStorage.setItem('travelPackerWardrobe', JSON.stringify(data.w));
+        }
+        if (data.s) {
+          localStorage.setItem('travelPackerState', JSON.stringify(data.s));
+          alert("Shared trip loaded successfully! Click Generate to view the packing list.");
+        }
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
+
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -254,6 +274,20 @@ function App() {
     }
   };
 
+
+  const handleCopyShareLink = () => {
+    const tripState = localStorage.getItem('travelPackerState') ? JSON.parse(localStorage.getItem('travelPackerState')) : null;
+    const shareCode = encodeTripData(wardrobe, tripState);
+    if (shareCode) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('share', shareCode);
+      navigator.clipboard.writeText(url.toString());
+      alert("Share link copied to clipboard! Send this to your travel partner.");
+    } else {
+      alert("Failed to generate share link.");
+    }
+  };
+
   return (
     <div className="app-container">
       <Header theme={theme} toggleTheme={toggleTheme} onOpenWardrobe={() => setIsWardrobeOpen(true)} />
@@ -320,6 +354,22 @@ function App() {
           <p style={{ fontSize: '0.875rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
             This app runs 100% locally on your device. We do not store or transmit your data to any databases.
           </p>
+                    <button 
+            onClick={handleCopyShareLink}
+            style={{ 
+              background: 'transparent', 
+              color: 'var(--primary-color)', 
+              border: '1px solid var(--primary-color)', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              marginBottom: '1rem',
+              marginRight: '1rem'
+            }}
+          >
+            🔗 Copy Share Link
+          </button>
           <button 
             onClick={handleDeleteAllData}
             style={{ 
