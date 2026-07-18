@@ -61,7 +61,7 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
 
   const getItemColor = (itemName, fallbackColor) => {
     if (!itemName) return fallbackColor;
-    const lower = itemName.toLowerCase();
+    const lower = String(itemName).toLowerCase();
     
     if (lower.includes('cashmere') || lower.includes('silk') || lower.includes('polo')) return '#d4af37';
     if (lower.includes('gore-tex') || lower.includes("arc'teryx") || lower.includes('technical')) return '#f97316';

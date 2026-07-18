@@ -83,7 +83,7 @@ const DroppableSlot = ({ id, label, currentItem }) => {
           <div style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>{currentItem.name}</div>
         </div>
       ) : (
-        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Drag {label.toLowerCase()} here</div>
+        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Drag {String(label).toLowerCase()} here</div>
       )}
     </div>
   );

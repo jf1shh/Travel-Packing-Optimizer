@@ -218,7 +218,7 @@ function App() {
 
     // Fashion Sync: If they add clothes, inject it into the Capsule Visualizer!
     if (category === 'clothes' && outfits) {
-      const lower = name.toLowerCase();
+      const lower = String(name).toLowerCase();
       let slot = null;
       if (lower.includes('shirt') || lower.includes('top') || lower.includes('sweater') || lower.includes('tee') || lower.includes('hoodie')) slot = 'top';
       else if (lower.includes('pant') || lower.includes('jean') || lower.includes('short') || lower.includes('skirt') || lower.includes('trouser')) slot = 'bottom';

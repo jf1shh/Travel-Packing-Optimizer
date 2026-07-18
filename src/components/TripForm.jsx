@@ -143,7 +143,7 @@ const handleIcsUpload = (e) => {
             if (dayIndex < 30) {
                if (ev.location) newDailyDest[dayIndex] = ev.location.split(',')[0];
                
-               const lowerSum = (ev.summary || '').toLowerCase();
+               const lowerSum = String(ev.summary || '').toLowerCase();
                if (lowerSum.match(/(meeting|business|conference|client)/)) newDailyAct[dayIndex] = 'business';
                else if (lowerSum.match(/(hike|trail|mountain|trek)/)) newDailyAct[dayIndex] = 'hike';
                else if (lowerSum.match(/(ski|snow|board)/)) newDailyAct[dayIndex] = 'ski';

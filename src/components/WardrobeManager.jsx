@@ -92,7 +92,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
       
       const newItems = [];
       lines.forEach(line => {
-        const lower = line.toLowerCase();
+        const lower = String(line).toLowerCase();
         let cat = 'top';
         if (lower.match(/(pant|jean|short|skirt|trouser|legging)/)) cat = 'bottom';
         else if (lower.match(/(jacket|coat|blazer|windbreaker|shell|parka)/)) cat = 'outer';
