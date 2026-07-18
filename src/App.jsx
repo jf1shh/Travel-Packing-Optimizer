@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { geocodeLocation, fetchWeather } from './services/api';
 import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
+import Header from './components/Header';
 import TripForm from './components/TripForm';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
 import PackingList from './components/PackingList';
