@@ -310,7 +310,7 @@ function App() {
         )}
 
         {outfits && (
-          <CapsuleVisualizer outfits={outfits} palette={activePalette} onActivityChange={handleActivitySwap} startDate={tripStartDate} />
+          <CapsuleVisualizer outfits={outfits} setOutfits={setOutfits} wardrobe={wardrobe} palette={activePalette} onActivityChange={handleActivitySwap} startDate={tripStartDate} />
         )}
 
         {suitcaseVolume > 0 && packingList && (

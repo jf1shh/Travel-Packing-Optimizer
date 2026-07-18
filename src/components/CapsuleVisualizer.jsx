@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getItemImage } from '../services/db';
+import OutfitEditor from './OutfitEditor';
 
 
-const CapsuleVisualizer = ({ outfits, palette, onActivityChange, startDate }) => {
+const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityChange, startDate }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleExportICS = () => {
