@@ -440,9 +440,10 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   // Push Clothes to Packing List
   const getSelectedItems = (names, catKey, defVol, defWeight) => {
     return names.map(n => {
-      const w = userWardrobe.find(item => item.name === n && item.category === catKey);
-      if (w) return { name: n, vol: w.vol, weight: w.weight };
-      return { name: n, vol: defVol, weight: defWeight };
+      const nameStr = typeof n === 'string' ? n : (n.name || 'Unknown Item');
+      const w = userWardrobe.find(item => item.name === nameStr && item.category === catKey);
+      if (w) return { name: nameStr, vol: w.vol, weight: w.weight };
+      return { name: nameStr, vol: defVol, weight: defWeight };
     });
   };
 

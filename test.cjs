@@ -19,6 +19,12 @@ const { spawn } = require('child_process');
   
   try {
     await page.goto('http://localhost:4173/Travel-Packing-Optimizer/', { waitUntil: 'networkidle0', timeout: 10000 });
+    console.log('Filling out form...');
+    await page.type('input[type="text"]', 'Paris');
+    await new Promise(r => setTimeout(r, 1000));
+    console.log('Clicking Generate button...');
+    await page.click('button[type="submit"]');
+    await new Promise(r => setTimeout(r, 4000));
     const rootHtml = await page.$eval('#root', el => el.innerHTML);
     console.log('Root length:', rootHtml.length);
     if (rootHtml.trim() === '') console.log('BLANK PAGE ERROR!');
