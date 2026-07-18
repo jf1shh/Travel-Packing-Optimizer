@@ -130,7 +130,7 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
           <div style={{ display: 'flex', flex: 1, gap: '2rem', minHeight: 0 }}>
             <div style={{ flex: 1, overflowY: 'auto', borderRight: '1px solid var(--border-color)', paddingRight: '1rem' }}>
               <h3 style={{ marginTop: 0 }}>Your Closet</h3>
-              {wardrobe.filter(i => i.category === 'clothes').map(item => (
+              {wardrobe.filter(i => ['top', 'bottom', 'outer', 'shoe'].includes(i.category)).map(item => (
                 <DraggableItem key={item.id} item={item} />
               ))}
             </div>

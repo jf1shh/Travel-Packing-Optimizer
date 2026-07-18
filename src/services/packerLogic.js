@@ -239,7 +239,6 @@ const BASE_ITEMS = {
 
 export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = [], laundryCycle = 7) => {
   let allItems = [];
-  let combinations = [];
 
   const p = PALETTES[paletteKey] || PALETTES['quiet-luxury'];
   
@@ -305,8 +304,9 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   const scoreTopMatch = (top, bottomsPool) => bottomsPool.filter(b => doColorsMatch(top.color || 'black', b.color || 'black')).length;
   const scoreBottomMatch = (bottom, topsPool) => topsPool.filter(t => doColorsMatch(t.color || 'black', bottom.color || 'black')).length;
 
-  const userTops = userTopsRaw.sort((a,b) => scoreTopMatch(b, userBottomsRaw) - scoreTopMatch(a, userBottomsRaw));
-  const userBottoms = userBottomsRaw.sort((a,b) => scoreBottomMatch(b, userTopsRaw) - scoreBottomMatch(a, userTopsRaw));
+  // Rank by color-match count first, breaking ties (and nudging close calls) with versatility
+  const userTops = userTopsRaw.sort((a,b) => (scoreTopMatch(b, userBottomsRaw) * 10 + getVersatilityScore(b)) - (scoreTopMatch(a, userBottomsRaw) * 10 + getVersatilityScore(a)));
+  const userBottoms = userBottomsRaw.sort((a,b) => (scoreBottomMatch(b, userTopsRaw) * 10 + getVersatilityScore(b)) - (scoreBottomMatch(a, userTopsRaw) * 10 + getVersatilityScore(a)));
   const userShoes = userShoesRaw.sort((a,b) => b.priority - a.priority);
 
   // Base Layers & Mid-Trip Laundry Threshold
@@ -479,7 +479,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   }
 
   // Layering Optimizer Checks
-  let tripHasColdDay = combinations.some(c => c.weather === 'Cold');
+  let tripHasColdDay = combos.some(c => c.weather === 'Cold');
   if (tripHasColdDay) {
     const hasFleece = userTops.some(t => String(t.name || '').toLowerCase().includes('fleece'));
     if (!hasFleece) addItem({ category: 'clothes', id: 'layer-mid', name: 'Fleece Mid-Layer', vol: 800, weight: 300, priority: 10, isEssential: true, fold: 'ranger' });
@@ -642,6 +642,6 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     list: grouped,
     currentVolume,
     currentWeight,
-    outfitCombinations: combinations
+    outfitCombinations: combos
   };
 };

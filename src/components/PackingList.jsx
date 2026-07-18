@@ -78,7 +78,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
 
   const liquidVolume = packingList && packingList.liquid ? packingList.liquid.reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
   // Standard carry-on is around 40-50L. Let's say if volume < 60000, it's a carry-on.
-  const totalSuitcaseVol = packingList ? Object.values(packingList).flat().reduce((s, i) => s + (i.vol || 0), 0) : 0;
+  const totalSuitcaseVol = packingList ? Object.values(packingList).flat().filter(i => i.category !== 'plane').reduce((s, i) => s + (i.vol || 0), 0) : 0;
   const isCarryOn = totalSuitcaseVol < 60000;
   const showTSAAlert = isCarryOn && liquidVolume > 1000;
 

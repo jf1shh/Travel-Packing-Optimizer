@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getItemImage } from '../services/db';
+import React, { useState } from 'react';
 import OutfitEditor from './OutfitEditor';
 
 
@@ -114,6 +113,11 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Daily Outfit Combos</h3>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {startDate && (
+            <button onClick={handleExportICS} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
+              📅 Export .ics
+            </button>
+          )}
           <button onClick={() => setEditingDayIndex(currentIndex)} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
             ✏️ Edit
           </button>

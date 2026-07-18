@@ -121,6 +121,12 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
 
   const handleDelete = (id) => {
     setWardrobe(wardrobe.filter(i => i.id !== id));
+    deleteItemImage(id);
+    setItemImages(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const handleBulkUpload = () => {

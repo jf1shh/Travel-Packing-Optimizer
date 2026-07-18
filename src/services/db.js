@@ -1,4 +1,4 @@
-import { get, set, del } from 'idb-keyval';
+import { get, set, del, clear } from 'idb-keyval';
 
 /**
  * Saves a base64 image or blob to IndexedDB
@@ -37,5 +37,17 @@ export const deleteItemImage = async (itemId) => {
     await del(`img_${itemId}`);
   } catch (e) {
     console.error("Failed to delete image from IndexedDB", e);
+  }
+};
+
+/**
+ * Wipes the entire IndexedDB store (wardrobe photos + crash logs).
+ * Used by "Delete All My Data" alongside localStorage.clear().
+ */
+export const clearAllLocalData = async () => {
+  try {
+    await clear();
+  } catch (e) {
+    console.error("Failed to clear IndexedDB", e);
   }
 };

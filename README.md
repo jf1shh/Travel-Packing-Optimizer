@@ -15,7 +15,7 @@ This app isn't just a checklist—it's a smart packing engine that thinks like a
 - **TSA Liquid Enforcer:** The app calculates the exact physical volume of your liquids. If you pack too much shampoo, it warns you before you get to airport security!
 - **Weight & Space Limits:** Tell it what suitcase you are using, and the app calculates the physical size of every shirt and shoe you pack. An interactive Donut Chart visually shows you exactly how full your suitcase is, stopping you from overpacking.
 - **Tech Charger Consolidation:** If you pack a laptop, phone, and tablet, the app realizes they all use USB-C and suggests bringing a single fast-charging brick instead of three separate chargers, saving space.
-- **Privacy First:** We don't use external servers. Your personal travel plans, wardrobe photos, and data stay entirely on your device and are never sent to the cloud. You can even share your trip with friends via a secure, encrypted URL!
+- **Privacy First:** Your personal travel plans, wardrobe photos, and closet data stay entirely on your device and are never sent to a database or backend. (The app does call the free, public [Open-Meteo](https://open-meteo.com/) API to geocode destination names and fetch forecasts — no account, no API key, and nothing beyond a place name and travel dates ever leaves the device.) You can even share your trip with friends via a secure, encrypted URL!
 
 
 ## Installation

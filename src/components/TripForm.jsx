@@ -192,7 +192,10 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Destinations</label>
+          <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
+            Destinations
+            {isFetchingWeather && <span style={{ marginLeft: '0.5rem', color: 'var(--accent-color)', fontWeight: 'normal' }}>• Fetching weather...</span>}
+          </label>
           {destinations.map((dest, idx) => (
             <input 
               key={idx}

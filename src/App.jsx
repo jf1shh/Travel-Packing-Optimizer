@@ -10,6 +10,7 @@ const VolumeChart = React.lazy(() => import('./components/VolumeChart'));
 import WardrobeManager from './components/WardrobeManager';
 import { Logger } from './services/logger';
 import { encodeTripData, decodeTripData } from './services/share';
+import { clearAllLocalData } from './services/db';
 import './index.css';
 
 function App() {
@@ -135,15 +136,17 @@ function App() {
       for (let i = 0; i < destinations.length; i++) {
         const dest = destinations[i];
         let weather = formWeatherData[dest];
-        let locName = dest;
         if (!weather) {
           const location = await geocodeLocation(dest);
           weather = await fetchWeather(location.latitude, location.longitude, startDate, endDate);
-          locName = [location.name, location.country].filter(Boolean).join(', ');
         }
-        
+
+        // Always key by the raw typed destination string, not the geocoded
+        // canonical name — dailyDestinations/formDestinations only ever
+        // contain the raw string, so a canonical-name key would silently
+        // fail to match and fall back to the wrong day's weather.
         allWeatherData.push({
-          locationName: locName,
+          locationName: dest,
           weather
         });
       }
@@ -173,8 +176,9 @@ function App() {
     localStorage.removeItem('travelPackerState');
   };
 
-  const handleDeleteAllData = () => {
+  const handleDeleteAllData = async () => {
     if (window.confirm("Are you sure you want to completely delete all saved data, including your Wardrobe and Trip preferences? This cannot be undone.")) {
+      await clearAllLocalData(); // wipes IndexedDB (wardrobe photos + crash logs)
       localStorage.clear();
       window.location.reload();
     }
