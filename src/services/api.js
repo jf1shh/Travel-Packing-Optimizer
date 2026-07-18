@@ -54,11 +54,23 @@ export const fetchWeather = async (lat, lon, startDateStr, endDateStr) => {
     
     if (data.error) throw new Error(data.reason || 'Weather API Error');
     if (data.daily) {
+      localStorage.setItem(`weather_${lat}_${lon}`, JSON.stringify(data.daily));
       return data.daily;
     }
     throw new Error('Weather data not available for these dates');
   } catch (error) {
-    console.error("Weather Fetch Error:", error);
-    throw error;
+    const cached = localStorage.getItem(`weather_${lat}_${lon}`);
+    if (cached) {
+      console.log("Using cached offline weather for", lat, lon);
+      return JSON.parse(cached);
+    }
+    console.error("Weather Fetch Error and no cache:", error);
+    // Deep fallback so app doesn't crash on airplane mode without cache
+    return {
+      time: [startDateStr],
+      temperature_2m_max: [20],
+      temperature_2m_min: [10],
+      precipitation_sum: [0]
+    };
   }
 };

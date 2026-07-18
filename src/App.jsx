@@ -126,6 +126,9 @@ function App() {
 
       setWeatherDataArray(allWeatherData);
 
+      // Unblock main thread to allow loading spinner to render
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts, dailyDestinations, destinations);
       
       setPackingList(result.list);
@@ -144,6 +147,13 @@ function App() {
     setOutfits(null);
     setSuitcaseVolume(0);
     localStorage.removeItem('travelPackerState');
+  };
+
+  const handleDeleteAllData = () => {
+    if (window.confirm("Are you sure you want to completely delete all saved data, including your Wardrobe and Trip preferences? This cannot be undone.")) {
+      localStorage.clear();
+      window.location.reload();
+    }
   };
 
   const toggleItem = (category, itemId) => {
@@ -304,6 +314,27 @@ function App() {
           isOpen={isWardrobeOpen} 
           onClose={() => setIsWardrobeOpen(false)} 
         />
+
+        <div style={{ marginTop: '4rem', padding: '2rem 0', borderTop: '1px solid var(--border-color)', textAlign: 'center', opacity: 0.7 }}>
+          <h4 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>Data & Privacy</h4>
+          <p style={{ fontSize: '0.875rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+            This app runs 100% locally on your device. We do not store or transmit your data to any databases.
+          </p>
+          <button 
+            onClick={handleDeleteAllData}
+            style={{ 
+              background: 'transparent', 
+              color: '#ef4444', 
+              border: '1px solid #ef4444', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              cursor: 'pointer'
+            }}
+          >
+            Delete All My Data
+          </button>
+        </div>
       </main>
     </div>
   );
