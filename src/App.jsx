@@ -23,6 +23,7 @@ function App() {
   const [activeTravelMode, setActiveTravelMode] = useState('flying');
   const [tempUnit, setTempUnit] = useState('C');
   const [lengthUnit, setLengthUnit] = useState('cm');
+  const [tripStartDate, setTripStartDate] = useState(null);
   const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
   const [wardrobe, setWardrobe] = useState(() => {
     const saved = localStorage.getItem('travelPackerWardrobe');
@@ -98,6 +99,7 @@ function App() {
     setSuitcaseVolume(suitcaseVolume);
     setActivePalette(palette);
     setActiveTravelMode(travelMode);
+    setTripStartDate(startDate);
     
     try {
       const start = new Date(startDate);
@@ -263,7 +265,7 @@ function App() {
         )}
 
         {outfits && (
-          <CapsuleVisualizer outfits={outfits} palette={activePalette} onActivityChange={handleActivitySwap} />
+          <CapsuleVisualizer outfits={outfits} palette={activePalette} onActivityChange={handleActivitySwap} startDate={tripStartDate} />
         )}
 
         {suitcaseVolume > 0 && packingList && (

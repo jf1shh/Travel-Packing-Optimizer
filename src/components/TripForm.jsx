@@ -45,7 +45,81 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     };
 
     const debounceId = setTimeout(fetchAll, 1000);
-    return () => clearTimeout(debounceId);
+    const handleIcsUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const lines = text.split('\n');
+      
+      let events = [];
+      let currentEvent = null;
+      
+      lines.forEach(line => {
+        line = line.trim();
+        if (line === 'BEGIN:VEVENT') currentEvent = {};
+        else if (line === 'END:VEVENT' && currentEvent) {
+          events.push(currentEvent);
+          currentEvent = null;
+        } else if (currentEvent) {
+          if (line.startsWith('DTSTART')) {
+             const match = line.match(/:(\d{4})(\d{2})(\d{2})/);
+             if (match) currentEvent.start = `${match[1]}-${match[2]}-${match[3]}`;
+          }
+          if (line.startsWith('LOCATION:')) currentEvent.location = line.replace('LOCATION:', '');
+          if (line.startsWith('SUMMARY:')) currentEvent.summary = line.replace('SUMMARY:', '');
+        }
+      });
+      
+      const today = new Date().toISOString().split('T')[0];
+      events = events.filter(ev => ev.start && ev.start >= today).sort((a,b) => a.start.localeCompare(b.start));
+      
+      if (events.length > 0) {
+         setStartDate(events[0].start);
+         const lastEventDate = events[events.length - 1].start;
+         const endD = new Date(lastEventDate);
+         endD.setDate(endD.getDate() + 1);
+         setEndDate(endD.toISOString().split('T')[0]);
+         
+         const dests = [...new Set(events.filter(e => e.location).map(e => e.location.split(',')[0]))];
+         if (dests.length > 0) {
+            const paddedDests = dests.slice(0, 5);
+            setDestinations(paddedDests);
+         }
+         
+         const startD = new Date(events[0].start);
+         const newDailyDest = Array(30).fill('');
+         const newDailyAct = Array(30).fill('');
+         
+         events.forEach(ev => {
+            const evDate = new Date(ev.start);
+            const dayIndex = Math.max(0, Math.floor((evDate - startD) / (1000 * 60 * 60 * 24)));
+            if (dayIndex < 30) {
+               if (ev.location) newDailyDest[dayIndex] = ev.location.split(',')[0];
+               
+               const lowerSum = (ev.summary || '').toLowerCase();
+               if (lowerSum.match(/(meeting|business|conference|client)/)) newDailyAct[dayIndex] = 'business';
+               else if (lowerSum.match(/(hike|trail|mountain|trek)/)) newDailyAct[dayIndex] = 'hike';
+               else if (lowerSum.match(/(ski|snow|board)/)) newDailyAct[dayIndex] = 'ski';
+               else if (lowerSum.match(/(dinner|formal|gala|wedding)/)) newDailyAct[dayIndex] = 'formal';
+               else if (lowerSum.match(/(party|club|night out|drinks)/)) newDailyAct[dayIndex] = 'nightout';
+               else if (lowerSum.match(/(beach|pool|swim)/)) newDailyAct[dayIndex] = 'beach';
+               else if (lowerSum.match(/(tour|sightseeing|museum|walk)/)) newDailyAct[dayIndex] = 'sightseeing';
+               else if (lowerSum.match(/(flight|train|transit|travel)/)) newDailyAct[dayIndex] = 'transit';
+            }
+         });
+         
+         setDailyDestinations(newDailyDest);
+         setDailyActivities(newDailyAct);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = null;
+  };
+
+  return () => clearTimeout(debounceId);
   }, [destinations, startDate, endDate]);
   
   // Suitcase states
@@ -111,6 +185,14 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
 
   return (
     <form onSubmit={handleSubmit} className="trip-form glass animate-slide-up">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Trip Details</h3>
+        <label style={{ cursor: 'pointer', fontSize: '0.875rem', background: 'var(--primary-color)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold' }}>
+          Import Calendar (.ics)
+          <input type="file" accept=".ics" onChange={handleIcsUpload} style={{ display: 'none' }} />
+        </label>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         
         {/* Destinations */}

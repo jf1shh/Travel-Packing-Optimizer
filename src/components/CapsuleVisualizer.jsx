@@ -1,7 +1,44 @@
 import React, { useState } from 'react';
 
-const CapsuleVisualizer = ({ outfits, palette, onActivityChange }) => {
+const CapsuleVisualizer = ({ outfits, palette, onActivityChange, startDate }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleExportICS = () => {
+    if (!startDate) return;
+    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Travel Packing Optimizer//NONSGML v1.0//EN\n";
+    
+    outfits.forEach((o, index) => {
+       const evDate = new Date(startDate);
+       evDate.setDate(evDate.getDate() + index);
+       
+       const dtStart = evDate.toISOString().replace(/[-:]/g, '').split('T')[0];
+       const evEnd = new Date(evDate);
+       evEnd.setDate(evEnd.getDate() + 1);
+       const dtEnd = evEnd.toISOString().replace(/[-:]/g, '').split('T')[0];
+       
+       const actStr = o.activity ? o.activity.charAt(0).toUpperCase() + o.activity.slice(1) : 'Trip Day';
+       const summary = `${actStr} (${o.weather}, ${o.temp}°)`;
+       
+       const description = `Outfit:\nTop: ${o.top}\nBottom: ${o.bottom}\nShoes: ${o.shoe}${o.outer ? '\nOuter: ' + o.outer : ''}`;
+       
+       icsContent += "BEGIN:VEVENT\n";
+       icsContent += `DTSTART;VALUE=DATE:${dtStart}\n`;
+       icsContent += `DTEND;VALUE=DATE:${dtEnd}\n`;
+       icsContent += `SUMMARY:${summary}\n`;
+       icsContent += `DESCRIPTION:${description.replace(/\n/g, '\\n')}\n`;
+       icsContent += "END:VEVENT\n";
+    });
+    
+    icsContent += "END:VCALENDAR";
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute('download', 'travel-itinerary.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (!outfits || outfits.length === 0) return null;
 
