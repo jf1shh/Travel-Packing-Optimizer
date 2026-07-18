@@ -4,6 +4,7 @@ import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
 import TripForm from './components/TripForm';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
 import PackingList from './components/PackingList';
+import VolumeChart from './components/VolumeChart';
 import WardrobeManager from './components/WardrobeManager';
 import { encodeTripData, decodeTripData } from './services/share';
 import './index.css';
@@ -318,6 +319,7 @@ function App() {
 
         {packingList && (
           <div style={{ paddingBottom: '2rem' }}>
+            <VolumeChart packingList={packingList} suitcaseVolume={suitcaseVolume} />
             <PackingList 
               packingList={packingList} 
               toggleItem={toggleItem} 
