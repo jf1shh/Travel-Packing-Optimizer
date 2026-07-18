@@ -45,7 +45,51 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     };
 
     const debounceId = setTimeout(fetchAll, 1000);
-    const handleIcsUpload = (e) => {
+    
+  return () => clearTimeout(debounceId);
+  }, [destinations, startDate, endDate]);
+  
+  // Suitcase states
+  const [preset, setPreset] = useState('away-carry');
+  const [packingStrategy, setPackingStrategy] = useState('standard');
+  const [techPorts, setTechPorts] = useState('mixed');
+  const [length, setLength] = useState('55');
+  const [width, setWidth] = useState('34.8');
+  const [height, setHeight] = useState('22.8');
+
+  const handlePresetChange = (e) => {
+    const val = e.target.value;
+    setPreset(val);
+    if (val === 'away-carry') { setLength('55'); setWidth('34.8'); setHeight('22.8'); }
+    else if (val === 'rimowa-cabin') { setLength('55'); setWidth('40'); setHeight('23'); }
+    else if (val === 'samsonite-check') { setLength('75'); setWidth('51'); setHeight('31'); }
+    else if (val === 'monos-carry') { setLength('55.9'); setWidth('35.6'); setHeight('22.9'); }
+    else if (val === 'travelpro-21') { setLength('59.7'); setWidth('36.8'); setHeight('22.9'); }
+    else if (val === 'beis-roller') { setLength('58'); setWidth('40'); setHeight('25.4'); }
+    else if (val === 'osprey-40') { setLength('55'); setWidth('35'); setHeight('23'); }
+    else if (val === 'peak-45') { setLength('56'); setWidth('33'); setHeight('24'); }
+  };
+
+  const getDuration = () => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
+  };
+  const duration = getDuration();
+
+  const updateDestination = (index, value) => {
+    const newDest = [...destinations];
+    newDest[index] = value;
+    setDestinations(newDest);
+  };
+
+  const addDestination = () => {
+    if (destinations.length < 5) {
+      setDestinations([...destinations, '']);
+    }
+  };
+
+const handleIcsUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -117,49 +161,6 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     };
     reader.readAsText(file);
     e.target.value = null;
-  };
-
-  return () => clearTimeout(debounceId);
-  }, [destinations, startDate, endDate]);
-  
-  // Suitcase states
-  const [preset, setPreset] = useState('away-carry');
-  const [packingStrategy, setPackingStrategy] = useState('standard');
-  const [techPorts, setTechPorts] = useState('mixed');
-  const [length, setLength] = useState('55');
-  const [width, setWidth] = useState('34.8');
-  const [height, setHeight] = useState('22.8');
-
-  const handlePresetChange = (e) => {
-    const val = e.target.value;
-    setPreset(val);
-    if (val === 'away-carry') { setLength('55'); setWidth('34.8'); setHeight('22.8'); }
-    else if (val === 'rimowa-cabin') { setLength('55'); setWidth('40'); setHeight('23'); }
-    else if (val === 'samsonite-check') { setLength('75'); setWidth('51'); setHeight('31'); }
-    else if (val === 'monos-carry') { setLength('55.9'); setWidth('35.6'); setHeight('22.9'); }
-    else if (val === 'travelpro-21') { setLength('59.7'); setWidth('36.8'); setHeight('22.9'); }
-    else if (val === 'beis-roller') { setLength('58'); setWidth('40'); setHeight('25.4'); }
-    else if (val === 'osprey-40') { setLength('55'); setWidth('35'); setHeight('23'); }
-    else if (val === 'peak-45') { setLength('56'); setWidth('33'); setHeight('24'); }
-  };
-
-  const getDuration = () => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
-  };
-  const duration = getDuration();
-
-  const updateDestination = (index, value) => {
-    const newDest = [...destinations];
-    newDest[index] = value;
-    setDestinations(newDest);
-  };
-
-  const addDestination = () => {
-    if (destinations.length < 5) {
-      setDestinations([...destinations, '']);
-    }
   };
 
   const handleSubmit = (e) => {

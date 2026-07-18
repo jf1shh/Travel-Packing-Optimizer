@@ -15,10 +15,13 @@ export const geocodeLocation = async (locationName) => {
     const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=en&format=json`);
     const data = await response.json();
     if (data.results && data.results.length > 0) {
+      localStorage.setItem('geo_' + locationName, JSON.stringify(data.results[0]));
       return data.results[0]; // Returns { latitude, longitude, name, country }
     }
     throw new Error('Location not found');
   } catch (error) {
+    const cached = localStorage.getItem('geo_' + locationName);
+    if (cached) return JSON.parse(cached);
     console.error("Geocoding Error:", error);
     throw error;
   }
