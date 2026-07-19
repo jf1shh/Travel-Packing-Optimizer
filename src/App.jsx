@@ -15,6 +15,7 @@ import { fetchExchangeRates, getCurrencyForCountry, convertCost, formatCurrency 
 import { fetchTravelAdvisory } from './services/advisory';
 import { clearAllLocalData } from './services/db';
 import { useT } from './i18n/context.jsx';
+import { LANGUAGES } from './i18n/languages.js';
 import './index.css';
 
 const PREFS_KEY = 'travelPackerItemPrefs';
@@ -41,7 +42,7 @@ const recordItemRemoval = (name) => {
 };
 
 function App() {
-  const { t } = useT();
+  const { t, lang, setLang } = useT();
   const [theme, setTheme] = useState(() => {
     // Honour saved preference first, then OS-level prefers-color-scheme
     const saved = localStorage.getItem('travelPackerTheme');
@@ -427,13 +428,47 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header theme={theme} toggleTheme={toggleTheme} onOpenWardrobe={() => setIsWardrobeOpen(true)} />
+      {packingList && (
+        <Header theme={theme} toggleTheme={toggleTheme} onOpenWardrobe={() => setIsWardrobeOpen(true)} />
+      )}
       
       <main>
         {/* ── Hero: visible before packing list is generated ───────── */}
         {!packingList && (
           <div className="hero animate-fade-in">
             <div className="hero-orb" />
+            {/* Compact controls row */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem', position: 'relative' }}>
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value)}
+                style={{
+                  padding: '0.35rem 0.5rem', borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--surface-color)',
+                  color: 'var(--text-primary)', cursor: 'pointer',
+                  fontSize: '0.8rem', maxWidth: '100px', width: 'auto',
+                }}
+                aria-label="Select language"
+              >
+                {LANGUAGES.map(l => (
+                  <option key={l.code} value={l.code}>{l.native}</option>
+                ))}
+              </select>
+              <button 
+                onClick={() => setIsWardrobeOpen(true)}
+                style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--surface-color)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', boxShadow: 'none' }}
+              >
+                👕 {t('app.myCloset')}
+              </button>
+              <button 
+                className="theme-toggle" 
+                onClick={toggleTheme}
+                aria-label={t('common.toggleTheme')}
+              >
+                {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+            </div>
             <h1 className="gradient-text">{t('app.title')}</h1>
             <p className="tagline">{t('app.tagline')}</p>
             <div className="hero-badges">
