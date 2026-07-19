@@ -25,6 +25,7 @@ export const sanitizeWardrobeItem = (raw) => {
     name,
     category: WARDROBE_CATEGORIES.includes(raw.category) ? raw.category : 'top',
     bulkiness: BULKINESS_VALUES.includes(raw.bulkiness) ? raw.bulkiness : 'standard',
+    time: raw.time === 'evening' ? 'evening' : 'day',
     material: asString(raw.material, 'cotton', 30),
     color: asString(raw.color, 'black', 30),
     vol: asNumber(raw.vol, 400, 50000),

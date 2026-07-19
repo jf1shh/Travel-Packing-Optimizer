@@ -61,6 +61,12 @@ describe('sanitizeWardrobeItem', () => {
     expect(item.name).toHaveLength(100);
   });
 
+  it('preserves a valid evening tag and coerces anything else to day', () => {
+    expect(sanitizeWardrobeItem({ name: 'Silk Top', time: 'evening' }).time).toBe('evening');
+    expect(sanitizeWardrobeItem({ name: 'Tee', time: 'midnight' }).time).toBe('day');
+    expect(sanitizeWardrobeItem({ name: 'Tee' }).time).toBe('day');
+  });
+
   it('rejects non-objects', () => {
     expect(sanitizeWardrobeItem(null)).toBeNull();
     expect(sanitizeWardrobeItem('string')).toBeNull();

@@ -363,11 +363,11 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   bottomsNeeded = Math.max(1, Math.min(bottomsNeeded, pBottoms.length));
 
   for (let i = 0; i < topsNeeded; i++) {
-    if (userTops[i]) selectedTops.push({ name: userTops[i].name, color: userTops[i].color || 'black', time: 'day' });
+    if (userTops[i]) selectedTops.push({ name: userTops[i].name, color: userTops[i].color || 'black', time: userTops[i].time === 'evening' ? 'evening' : 'day' });
     else selectedTops.push(pTops[i % pTops.length]);
   }
   for (let i = 0; i < bottomsNeeded; i++) {
-    if (userBottoms[i]) selectedBottoms.push({ name: userBottoms[i].name, color: userBottoms[i].color || 'black', time: 'day' });
+    if (userBottoms[i]) selectedBottoms.push({ name: userBottoms[i].name, color: userBottoms[i].color || 'black', time: userBottoms[i].time === 'evening' ? 'evening' : 'day' });
     else selectedBottoms.push(pBottoms[i % pBottoms.length]);
   }
 
@@ -418,6 +418,9 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   const usedTops = new Set();
   const usedBottoms = new Set();
   const usedShoes = new Set();
+  // Dressy activities whose days were covered by a real evening outfit
+  // (so their generic "Formal Attire" placeholder items aren't packed too)
+  const dressyCovered = new Set();
   for (let d = 0; d < tripDuration; d++) {
     const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
     const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
@@ -460,34 +463,38 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
        }
     }
 
-    // Activity gear fully replaces the outfit for that day, so the chosen
-    // candidates only count as worn on days without a gear override.
-    const hasGearOverride = !!(act && ACTIVITY_GEAR[act]);
-    if (!hasGearOverride) {
+    // Dressy activities (formal / night out) wear the real evening outfit
+    // when the palette or wardrobe actually has evening pieces -- the
+    // generic gear placeholder is only a fallback. Specialized activities
+    // (ski, gym, hike...) always use their gear outfit.
+    const gearDef = act && ACTIVITY_GEAR[act] ? ACTIVITY_GEAR[act].outfit : null;
+    const isDressyAct = act === 'formal' || act === 'nightout';
+    const hasEveningOutfit = chosenOutfit.top.time === 'evening' || chosenOutfit.bottom.time === 'evening';
+    const useRealOutfit = !gearDef || (isDressyAct && hasEveningOutfit);
+
+    if (useRealOutfit) {
       wearCounts[chosenOutfit.top.name] = (wearCounts[chosenOutfit.top.name] || 0) + 1;
       wearCounts[chosenOutfit.bottom.name] = (wearCounts[chosenOutfit.bottom.name] || 0) + 1;
       usedTops.add(chosenOutfit.top.name);
       usedBottoms.add(chosenOutfit.bottom.name);
       usedShoes.add(chosenOutfit.shoe.name);
+      if (isDressyAct) dressyCovered.add(act);
     }
 
     let outfit = {
-      top: chosenOutfit.top.name, 
-      bottom: chosenOutfit.bottom.name, 
+      top: chosenOutfit.top.name,
+      bottom: chosenOutfit.bottom.name,
       shoe: chosenOutfit.shoe.name,
       outer: null
     };
 
-    if (act && ACTIVITY_GEAR[act]) {
-      const gear = ACTIVITY_GEAR[act].outfit;
-      if (gear) {
-        outfit = {
-          top: gear.top || outfit.top,
-          bottom: gear.bottom || outfit.bottom,
-          shoe: gear.shoe || outfit.shoe,
-          outer: gear.outer || outfit.outer
-        };
-      }
+    if (gearDef && !useRealOutfit) {
+      outfit = {
+        top: gearDef.top || outfit.top,
+        bottom: gearDef.bottom || outfit.bottom,
+        shoe: gearDef.shoe || outfit.shoe,
+        outer: gearDef.outer || outfit.outer
+      };
     }
 
     let displayWeather = 'Clear/Mild';
@@ -564,9 +571,11 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   addItem({ category: 'clothes', id: 'out1', name: finalOuter.name, vol: finalOuter.vol, weight: finalOuter.weight, priority: 8, isEssential: false, fold: 'bundle' });
   finalShoes.forEach((s, i) => addItem({ category: 'clothes', id: `shoe${i}`, name: s.name, vol: s.vol, weight: s.weight, priority: 8, isEssential: i === 0 })); 
 
-  // Activities (Daily configuration)
+  // Activities (Daily configuration). Dressy activities whose days are
+  // covered by real evening garments skip their generic placeholder items.
   const uniqueActivities = [...new Set(dailyActivities.filter(a => a))];
   uniqueActivities.forEach(act => {
+    if (dressyCovered.has(act)) return;
     if (ACTIVITY_GEAR[act]) {
       ACTIVITY_GEAR[act].items.forEach(item => addItem(item));
     }

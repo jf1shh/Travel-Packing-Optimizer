@@ -263,6 +263,43 @@ describe('generatePackingList', () => {
     expect(allItems.find(i => i.id === 't2').priority).toBe(10); // essential, untouched
   });
 
+  it('wears real evening garments on formal days instead of generic gear text', () => {
+    const weatherDataArray = [makeWeather('Anywhere', { days: 3 })];
+    const result = pack({ weatherDataArray, tripDuration: 3, formDestinations: ['Anywhere'], dailyActivities: [null, 'formal', null] });
+
+    const formalDay = result.outfitCombinations[1];
+    // quiet-luxury has real evening pieces, so no placeholder text
+    expect(formalDay.top).not.toBe('Dress Shirt / Blouse');
+    expect(
+      formalDay.top === 'Black Silk Button-down' || formalDay.bottom === 'Black Pleated Skirt'
+    ).toBe(true);
+
+    // ...and the generic "Formal Attire" placeholder item is not packed on top
+    const allNames = Object.values(result.list).flat().map(i => i.name);
+    expect(allNames).not.toContain('Formal Attire (Top & Bottom)');
+  });
+
+  it('prefers a user-owned evening piece for night-out days', () => {
+    const weatherDataArray = [makeWeather('Anywhere', { days: 3 })];
+    const userWardrobe = [{ name: 'Sequin Party Top', category: 'top', color: 'black', time: 'evening', vol: 300, weight: 150 }];
+    const result = pack({ weatherDataArray, tripDuration: 3, formDestinations: ['Anywhere'], dailyActivities: [null, 'nightout', null], userWardrobe });
+
+    expect(result.outfitCombinations[1].top).toBe('Sequin Party Top');
+    const allNames = Object.values(result.list).flat().map(i => i.name);
+    expect(allNames).toContain('Sequin Party Top');
+    expect(allNames).not.toContain('Evening Outfit');
+  });
+
+  it('still fully overrides outfits for specialized activities like ski', () => {
+    const weatherDataArray = [makeWeather('Aspen', { days: 3, maxTemps: [-5, -5, -5] })];
+    const result = pack({ weatherDataArray, tripDuration: 3, formDestinations: ['Aspen'], dailyActivities: ['ski', 'ski', 'ski'] });
+
+    expect(result.outfitCombinations[0].top).toBe('Thermal Base Layer');
+    const allNames = Object.values(result.list).flat().map(i => i.name);
+    expect(allNames).toContain('Snow Pants');
+    expect(allNames).toContain('Ski Jacket');
+  });
+
   it('excludes worn (travel-day) items from the reported suitcase volume', () => {
     const weatherDataArray = [makeWeather('Anywhere', { days: 5 })];
     const result = pack({ weatherDataArray, tripDuration: 5, formDestinations: ['Anywhere'] });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import OutfitEditor from './OutfitEditor';
+import { ACTIVITY_OPTIONS } from '../utils/activity';
 
 
 const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityChange, startDate }) => {
@@ -156,19 +157,16 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
             
             <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
               <span>Activity:</span>
-              <select 
-                onChange={handleActivitySelect} 
+              <select
+                onChange={handleActivitySelect}
                 value={outfit.activity || ''}
                 style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', background: 'var(--surface-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontSize: '0.75rem', outline: 'none' }}
               >
-                <option value="">Casual / Standard</option>
-                <option value="formal">Formal / Dinner</option>
-                <option value="gym">Gym / Workout</option>
-                <option value="beach">Beach / Pool</option>
-                <option value="hike">Hiking / Trail</option>
-                <option value="ski">Skiing / Snowboarding</option>
-                <option value="business">Business / Meeting</option>
-                <option value="nightout">Night Out / Clubbing</option>
+                {/* Same option set as the itinerary calendar pills -- this
+                    dropdown previously omitted sightseeing and transit */}
+                {ACTIVITY_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
           </div>

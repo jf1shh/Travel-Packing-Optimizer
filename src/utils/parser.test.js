@@ -51,3 +51,15 @@ describe('parseBulkText', () => {
     expect(items.filter(i => i.category === 'bottom')).toHaveLength(3);
   });
 });
+
+describe('day vs evening heuristic', () => {
+  it('tags dressy phrases as evening pieces', () => {
+    expect(parseBulkText('black cocktail top')[0].time).toBe('evening');
+    expect(parseBulkText('going-out silk blouse for evenings')[0].time).toBe('evening');
+  });
+
+  it('defaults everything else to day', () => {
+    expect(parseBulkText('white tee')[0].time).toBe('day');
+    expect(parseBulkText('3 blue jeans')[0].time).toBe('day');
+  });
+});

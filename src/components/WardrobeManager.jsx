@@ -4,8 +4,14 @@ import { parseBulkText } from '../utils/parser';
 import { getBulkStats } from '../utils/itemStats';
 
 
+const WARDROBE_COLORS = ['black', 'navy', 'khaki', 'beige', 'white', 'grey', 'olive', 'brown', 'blue', 'red', 'green', 'yellow', 'pink', 'purple'];
+const WARDROBE_MATERIALS = ['cotton', 'linen', 'wool', 'denim', 'leather', 'synthetic', 'silk'];
+
 const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
-  const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard', material: 'cotton' });
+  const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard', material: 'cotton', color: 'black', time: 'day' });
+  // Color/material/evening auto-derive from the typed name until the user
+  // explicitly picks one -- then their choice wins.
+  const [touched, setTouched] = useState({ color: false, material: false, time: false });
   const [bulkText, setBulkText] = useState('');
   const [itemImages, setItemImages] = useState({});
   const [isProcessing, setIsProcessing] = useState({});
@@ -103,17 +109,32 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const handleNameChange = (name) => {
+    setNewItem(prev => {
+      const next = { ...prev, name };
+      const parsed = name.trim() ? parseBulkText(name)[0] : null;
+      if (parsed) {
+        if (!touched.color) next.color = parsed.color;
+        if (!touched.material) next.material = parsed.material;
+        if (!touched.time) next.time = parsed.time;
+      }
+      return next;
+    });
+  };
+
   const handleAdd = (e) => {
     e.preventDefault();
     if (!newItem.name.trim()) return;
     const stats = getBulkStats(newItem.category, newItem.bulkiness);
-    
+
     const item = {
       id: `w-${Date.now()}`,
       name: newItem.name,
       category: newItem.category,
       bulkiness: newItem.bulkiness,
       material: newItem.material,
+      color: newItem.color,
+      time: newItem.time,
       vol: stats.vol,
       weight: stats.weight
     };
@@ -165,8 +186,8 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <div>
             <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Add Single Item</label>
-            <input 
-              type="text" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})}
+            <input
+              type="text" value={newItem.name} onChange={e => handleNameChange(e.target.value)}
               placeholder="e.g. Black Levis 501"
               style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem' }}
             />
@@ -188,6 +209,36 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
               </select>
             </div>
           </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Color (drives outfit matching)</label>
+              <select
+                value={newItem.color}
+                onChange={e => { setTouched({ ...touched, color: true }); setNewItem({ ...newItem, color: e.target.value }); }}
+                style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}
+              >
+                {WARDROBE_COLORS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Material</label>
+              <select
+                value={newItem.material}
+                onChange={e => { setTouched({ ...touched, material: true }); setNewItem({ ...newItem, material: e.target.value }); }}
+                style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}
+              >
+                {WARDROBE_MATERIALS.map(m => <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
+              </select>
+            </div>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={newItem.time === 'evening'}
+              onChange={e => { setTouched({ ...touched, time: true }); setNewItem({ ...newItem, time: e.target.checked ? 'evening' : 'day' }); }}
+            />
+            🍷 Evening / dressy piece (used for formal &amp; night-out days)
+          </label>
           <button type="submit" style={{ padding: '0.75rem', borderRadius: '8px' }}>
             + Add to Closet
           </button>
@@ -235,7 +286,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
                   <div>
                     <div style={{ fontWeight: 'bold' }}>{item.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {item.category.toUpperCase()} • {item.material} • {item.bulkiness} ({item.weight}g)
+                      {item.category.toUpperCase()} • {item.material} • {item.color || 'black'}{item.time === 'evening' ? ' • 🍷 evening' : ''} • {item.bulkiness} ({item.weight}g)
                     </div>
                   </div>
                 </div>

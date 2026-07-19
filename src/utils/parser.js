@@ -60,6 +60,9 @@ export const parseBulkText = (text) => {
     const colorMatch = lower.match(/(black|navy|khaki|beige|white|grey|gray|olive|brown|blue|red|green|yellow|pink|purple)/);
     if (colorMatch) col = colorMatch[0] === 'gray' ? 'grey' : colorMatch[0];
 
+    // Heuristics for Day vs Evening
+    const time = lower.match(/(evening|formal|dressy|cocktail|gown|going.?out|heels)/) ? 'evening' : 'day';
+
     // Clean up the name by removing generic filler words, but keep it readable
     let cleanName = phrase
       .replace(/^(\d+)\s+/, '') // remove leading digits
@@ -86,6 +89,7 @@ export const parseBulkText = (text) => {
         bulkiness: bulk,
         material: mat,
         color: col,
+        time,
         vol: stats.vol,
         weight: stats.weight
       });
