@@ -12,6 +12,11 @@ A mathematical packing assistant that builds weather-aware capsule wardrobes. En
 - **Digital closet** — add your real clothes with AI background removal (on-device)
 - **Airline baggage compliance** — 77 airlines, live suitcase validation against carry-on limits
 - **Suitcase scanner** — credit-card calibrated measurement + barcode scanner with 44-model database
+- **Photo outfit previews** — your actual wardrobe photos appear next to daily outfit combos
+- **Group trip sync** — live collaborative check-off across browser tabs via BroadcastChannel
+- **Visual suitcase layout** — draggable proportional packing cubes showing exactly how full your bag is
+- **Currency converter** — live exchange rates + estimated local costs (laundry, coffee, meals)
+- **Travel advisories** — GOV.UK safety summaries per destination country
 - **11 languages** — auto-detected from your OS, RTL support for Arabic
 - **100% local** — no accounts, no servers. Weather from Open-Meteo (free, no API key)
 - **PWA** — install to home screen, works offline. Strict Content-Security-Policy
@@ -47,8 +52,9 @@ npm run build    # production build with PWA + CSP
 | `currency.js` / `advisory.js` | Frankfurter exchange rates + GOV.UK travel advisories (free, no key) |
 | `share.js` | LZ-String compressed share links with full input sanitization |
 | `db.js` | IndexedDB photo storage with quota checking |
+| `logger.js` | On-device crash logger with error export |
 | `i18n/` | 11 languages with lazy-loaded JSON, browser auto-detect, RTL |
-| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `ItineraryCalendar`, `VolumeChart`, `CapacityBar`, `LogisticsPreferences` |
+| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `SuitcaseLayout`, `ItineraryCalendar`, `VolumeChart`, `CapacityBar`, `LogisticsPreferences` |
 
 ## Privacy
 
