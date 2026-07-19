@@ -164,8 +164,10 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem,
   const progressPercent = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
   const isFullyPacked = totalItems > 0 && checkedItems === totalItems;
 
+  const handlePrint = () => window.print();
+
   return (
-    <div className="packing-list animate-slide-up" style={{ animationDelay: '0.5s' }}>
+    <div className="packing-list print-area animate-slide-up" style={{ animationDelay: '0.5s' }}>
       {showTSAAlert && (
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span style={{ fontSize: '1.5rem' }}>⚠️</span>
@@ -208,8 +210,23 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem,
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('packingList.title')}</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button 
+        <div className="no-print" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            onClick={handlePrint}
+            style={{
+              background: 'var(--surface-color)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            🖨️ {t('packingList.print')}
+          </button>
+          <button
             onClick={broadcasting ? stopGroupSession : startGroupSession}
             style={{
               background: broadcasting ? 'rgba(34,197,94,0.15)' : 'var(--surface-color)',
@@ -266,7 +283,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem,
                     <span className="checkbox-label">{item.name}</span>
                   </label>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {item.fold && FOLD_TIPS[item.fold] && (
                       <button 
                         onClick={() => setSelectedTip(FOLD_TIPS[item.fold])}
@@ -298,7 +315,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem,
               ))}
               
               {/* Add Custom Item UI */}
-              <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem' }}>
+              <div className="no-print" style={{ marginTop: '0.5rem', paddingTop: '0.5rem' }}>
                 {addingCategory === cat.key ? (
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <input 

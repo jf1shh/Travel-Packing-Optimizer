@@ -70,6 +70,7 @@
   "scanner.cameraError": "Error de cámara: {msg}. Puedes cerrar esto e ingresar las dimensiones manualmente.",
   "packingList.title": "Tu lista optimizada",
   "packingList.copy": "Copiar lista",
+  "packingList.print": "Imprimir / Exportar",
   "packingList.copied": "¡Copiado!",
   "packingList.categoryPlane": "Usado el día de viaje (No en la maleta)",
   "packingList.categoryMain": "Cubo principal: Camisas y pantalones",

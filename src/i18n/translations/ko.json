@@ -70,6 +70,7 @@
   "scanner.cameraError": "카메라 오류: {msg}. 이 창을 닫고 수동으로 치수를 입력할 수 있습니다.",
   "packingList.title": "최적화된 리스트",
   "packingList.copy": "리스트 복사",
+  "packingList.print": "인쇄 / 내보내기",
   "packingList.copied": "복사됨!",
   "packingList.categoryPlane": "여행 당일 착용 (캐리어에 넣지 않음)",
   "packingList.categoryMain": "메인 큐브: 상의 및 하의",

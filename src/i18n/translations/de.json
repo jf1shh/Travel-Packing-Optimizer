@@ -70,6 +70,7 @@
   "scanner.cameraError": "Kamerafehler: {msg}. Sie können dies schließen und die Maße manuell eingeben.",
   "packingList.title": "Ihre optimierte Liste",
   "packingList.copy": "Liste kopieren",
+  "packingList.print": "Drucken / Exportieren",
   "packingList.copied": "Kopiert!",
   "packingList.categoryPlane": "Am Reisetag getragen (Nicht im Koffer)",
   "packingList.categoryMain": "Hauptwürfel: Oberteile & Hosen",

@@ -70,6 +70,7 @@
   "scanner.cameraError": "कैमरा त्रुटि: {msg}। आप इसे बंद करके मैन्युअल रूप से आयाम दर्ज कर सकते हैं।",
   "packingList.title": "आपकी अनुकूलित सूची",
   "packingList.copy": "सूची कॉपी करें",
+  "packingList.print": "प्रिंट / निर्यात",
   "packingList.copied": "कॉपी हो गया!",
   "packingList.categoryPlane": "यात्रा के दिन पहना (सूटकेस में नहीं)",
   "packingList.categoryMain": "मुख्य क्यूब: टॉप और बॉटम",

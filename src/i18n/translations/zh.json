@@ -70,6 +70,7 @@
   "scanner.cameraError": "相机错误：{msg}。您可以关闭此窗口并手动输入尺寸。",
   "packingList.title": "您的优化清单",
   "packingList.copy": "复制清单",
+  "packingList.print": "打印 / 导出",
   "packingList.copied": "已复制！",
   "packingList.categoryPlane": "旅行日穿着（不放入行李箱）",
   "packingList.categoryMain": "主收纳袋：上衣和裤子",

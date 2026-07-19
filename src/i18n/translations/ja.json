@@ -70,6 +70,7 @@
   "scanner.cameraError": "カメラエラー: {msg}。これを閉じて手動で寸法を入力できます。",
   "packingList.title": "最適化されたリスト",
   "packingList.copy": "リストをコピー",
+  "packingList.print": "印刷 / エクスポート",
   "packingList.copied": "コピーしました！",
   "packingList.categoryPlane": "旅行日に着用（スーツケースに入れない）",
   "packingList.categoryMain": "メインキューブ: トップス＆ボトムス",

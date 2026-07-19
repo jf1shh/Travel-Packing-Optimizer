@@ -70,6 +70,7 @@
   "scanner.cameraError": "Erreur de caméra : {msg}. Vous pouvez fermer cette fenêtre et saisir les dimensions manuellement.",
   "packingList.title": "Votre liste optimisée",
   "packingList.copy": "Copier la liste",
+  "packingList.print": "Imprimer / Exporter",
   "packingList.copied": "Copié !",
   "packingList.categoryPlane": "Porté le jour du voyage (Pas dans la valise)",
   "packingList.categoryMain": "Cube principal : Hauts et bas",

@@ -401,4 +401,36 @@ header {
   overflow: hidden;
   transition: border-color 0.3s ease;
 }
+
+/* ── Print / export view ──────────────────────────────────────────────────
+   Scopes printing to whatever carries .print-area (the packing list),
+   hiding the rest of the app (hero, form, charts, footer) regardless of
+   theme. Forces a plain light-on-white page since dark glassmorphism
+   backgrounds waste ink and can print as solid black. */
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area {
+    position: absolute; left: 0; top: 0; width: 100%;
+    margin: 0; padding: 0;
+  }
+  .no-print { display: none !important; }
+
+  :root, [data-theme='dark'] {
+    --bg-color: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --border-color: #ccc;
+    --surface-color: #ffffff;
+    --glass-bg: #ffffff;
+    --glass-border: #ccc;
+    --accent-color: #1d4ed8;
+  }
+  .glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  .category-card { break-inside: avoid; page-break-inside: avoid; }
+}
 .suitcase-grid.full { border-color: #ef4444; }

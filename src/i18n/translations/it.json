@@ -70,6 +70,7 @@
   "scanner.cameraError": "Errore fotocamera: {msg}. Puoi chiudere e inserire le dimensioni manualmente.",
   "packingList.title": "La tua lista ottimizzata",
   "packingList.copy": "Copia lista",
+  "packingList.print": "Stampa / Esporta",
   "packingList.copied": "Copiato!",
   "packingList.categoryPlane": "Indossato il giorno del viaggio (Non in valigia)",
   "packingList.categoryMain": "Cubo principale: Top e pantaloni",

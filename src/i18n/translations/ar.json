@@ -70,6 +70,7 @@
   "scanner.cameraError": "خطأ في الكاميرا: {msg}. يمكنك إغلاق هذا وإدخال الأبعاد يدويًا.",
   "packingList.title": "قائمتك المحسّنة",
   "packingList.copy": "نسخ القائمة",
+  "packingList.print": "طباعة / تصدير",
   "packingList.copied": "تم النسخ!",
   "packingList.categoryPlane": "ارتداء يوم السفر (ليس في الحقيبة)",
   "packingList.categoryMain": "المكعب الرئيسي: القمصان والبناطيل",
