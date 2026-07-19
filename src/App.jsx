@@ -1,10 +1,11 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { geocodeLocation, fetchWeather } from './services/api';
 import { generatePackingList, ACTIVITY_GEAR, deriveCube } from './services/packerLogic';
 import Header from './components/Header';
 import CapacityBar from './components/CapacityBar';
 import TripForm from './components/TripForm';
 import CapsuleVisualizer from './components/CapsuleVisualizer';
+import SuitcaseLayout from './components/SuitcaseLayout';
 import PackingList from './components/PackingList';
 const VolumeChart = React.lazy(() => import('./components/VolumeChart'));
 import WardrobeManager from './components/WardrobeManager';
@@ -95,6 +96,15 @@ function App() {
       return [];
     }
   });
+
+  // ── Wardrobe name → item lookup for photo previews ────────────────────
+  const wardrobeLookup = useMemo(() => {
+    const map = {};
+    (wardrobe || []).forEach(item => {
+      if (item && item.name) map[item.name] = item;
+    });
+    return map;
+  }, [wardrobe]);
 
   // Derived State (Dynamic Recalculation)
   const currentVolume = packingList ? Object.values(packingList).flat().filter(i => i.category !== 'plane').reduce((sum, item) => sum + (item.vol || 0), 0) : 0;
@@ -435,8 +445,7 @@ function App() {
           </div>
         )}
 
-        {outfits && (
-          <CapsuleVisualizer outfits={outfits} setOutfits={setOutfits} wardrobe={wardrobe} palette={activePalette} onActivityChange={handleActivitySwap} startDate={tripStartDate} />
+        {outfits && (              <CapsuleVisualizer outfits={outfits} setOutfits={setOutfits} wardrobe={wardrobe} palette={activePalette} onActivityChange={handleActivitySwap} startDate={tripStartDate} wardrobeMap={wardrobeLookup} />
         )}
 
         {suitcaseVolume > 0 && packingList && (
@@ -454,6 +463,12 @@ function App() {
               handleRemoveItem={handleRemoveItem}
               handleAddItem={handleAddItem}
             />
+            {suitcaseVolume > 0 && (
+              <SuitcaseLayout
+                packingList={packingList}
+                suitcaseDims={{ l: 55, w: 35, h: 22 }}
+              />
+            )}
             {/* ── Trip Wallet: currency exchange ───────────────────── */}
             {exchangeRates && exchangeRates.currencies.length > 0 && (
               <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>

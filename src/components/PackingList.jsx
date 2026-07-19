@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '../i18n/context.jsx';
 
@@ -29,10 +29,81 @@ const FOLD_TIPS = {
   }
 };
 
-const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem }) => {
+const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem, onGroupStart, onGroupStop }) => {
   const { t } = useT();
   const [selectedTip, setSelectedTip] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [peerCount, setPeerCount] = useState(0);
+  const channelRef = useRef(null);
+  const heartBeatRef = useRef(null);
+
+  // ── BroadcastChannel group sync ────────────────────────────────────────
+  const startGroupSession = useCallback(() => {
+    try {
+      const ch = new BroadcastChannel('travel-packer-sync');
+      channelRef.current = ch;
+
+      ch.onmessage = (ev) => {
+        const { type, catKey, itemId } = ev.data || {};
+        if (type === 'toggle' && catKey && itemId) {
+          toggleItem(catKey, itemId);
+        }
+        if (type === 'heartbeat') {
+          // Respond with ack so peers know we're here
+          ch.postMessage({ type: 'ack' });
+        }
+        if (type === 'ack') {
+          setPeerCount(p => p + 1);
+        }
+      };
+
+      // Announce presence + request peers
+      ch.postMessage({ type: 'heartbeat' });
+      // Periodic heartbeat to detect when peers leave
+      heartBeatRef.current = setInterval(() => {
+        setPeerCount(0);
+        ch.postMessage({ type: 'heartbeat' });
+      }, 3000);
+
+      setBroadcasting(true);
+      if (onGroupStart) onGroupStart();
+    } catch {
+      // BroadcastChannel not supported (e.g., some older browsers)
+    }
+  }, [toggleItem, onGroupStart]);
+
+  const stopGroupSession = useCallback(() => {
+    if (channelRef.current) {
+      channelRef.current.close();
+      channelRef.current = null;
+    }
+    if (heartBeatRef.current) {
+      clearInterval(heartBeatRef.current);
+      heartBeatRef.current = null;
+    }
+    setBroadcasting(false);
+    setPeerCount(0);
+    if (onGroupStop) onGroupStop();
+  }, [onGroupStop]);
+
+  // Override toggleItem to broadcast when group mode is active
+  const groupToggleItem = useCallback((catKey, itemId) => {
+    toggleItem(catKey, itemId);
+    if (channelRef.current) {
+      channelRef.current.postMessage({ type: 'toggle', catKey, itemId });
+    }
+  }, [toggleItem]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (channelRef.current) channelRef.current.close();
+      if (heartBeatRef.current) clearInterval(heartBeatRef.current);
+    };
+  }, []);
+
+  const effectiveToggle = broadcasting ? groupToggleItem : toggleItem;
   
   // Custom Add State
   const [addingCategory, setAddingCategory] = useState(null);
@@ -137,21 +208,40 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('packingList.title')}</h2>
-        <button 
-          onClick={handleCopy}
-          style={{
-            background: 'var(--surface-color)',
-            color: copied ? '#10b981' : 'var(--text-primary)',
-            border: `1px solid ${copied ? '#10b981' : 'var(--border-color)'}`,
-            padding: '0.5rem 1rem',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          {copied ? '✓ ' + t('packingList.copied') : '📋 ' + t('packingList.copy')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button 
+            onClick={broadcasting ? stopGroupSession : startGroupSession}
+            style={{
+              background: broadcasting ? 'rgba(34,197,94,0.15)' : 'var(--surface-color)',
+              color: broadcasting ? '#22c55e' : 'var(--text-primary)',
+              border: `1px solid ${broadcasting ? '#22c55e' : 'var(--border-color)'}`,
+              padding: '0.4rem 0.75rem',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              boxShadow: 'none',
+            }}
+            title="Sync checkmarks across browser tabs — pack together!"
+          >
+            {broadcasting ? '🟢 ' : '👥 '} {broadcasting ? 'Syncing' + (peerCount > 0 ? ` (${peerCount + 1})` : '') : 'Group'}
+          </button>
+          <button 
+            onClick={handleCopy}
+            style={{
+              background: 'var(--surface-color)',
+              color: copied ? '#10b981' : 'var(--text-primary)',
+              border: `1px solid ${copied ? '#10b981' : 'var(--border-color)'}`,
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            {copied ? '✓ ' + t('packingList.copied') : '📋 ' + t('packingList.copy')}
+          </button>
+        </div>
       </div>
       
       {categories.map((cat) => {
@@ -171,7 +261,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
                     <input 
                       type="checkbox" 
                       checked={item.checked} 
-                      onChange={() => toggleItem(cat.key, item.id)}
+                      onChange={() => effectiveToggle(cat.key, item.id)}
                     />
                     <span className="checkbox-label">{item.name}</span>
                   </label>

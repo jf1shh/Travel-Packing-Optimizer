@@ -1,10 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import OutfitEditor from './OutfitEditor';
 import { ACTIVITY_OPTIONS } from '../utils/activity';
 import { useT } from '../i18n/context.jsx';
+import { getItemImage } from '../services/db';
 
+const OutfitItemPhoto = ({ itemName, wardrobeMap }) => {
+  const [img, setImg] = useState(null);
+  const mounted = useRef(true);
 
-const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityChange, startDate }) => {
+  useEffect(() => {
+    mounted.current = true;
+    if (!wardrobeMap || !itemName) return;
+    // Find the wardrobe item whose name matches the outfit piece
+    const match = Object.values(wardrobeMap).find(w => w.name === itemName);
+    if (match && match.id) {
+      getItemImage(match.id).then(data => {
+        if (data && mounted.current) setImg(data);
+      });
+    }
+    return () => { mounted.current = false; };
+  }, [itemName, wardrobeMap]);
+
+  if (!img) return null;
+  return (
+    <img
+      src={img}
+      alt={itemName}
+      style={{
+        width: 44, height: 44, objectFit: 'contain',
+        borderRadius: 6, border: '1px solid var(--border-color)',
+        background: 'rgba(255,255,255,0.05)', flexShrink: 0,
+      }}
+    />
+  );
+};
+
+const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityChange, startDate, wardrobeMap }) => {
   const { t } = useT();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingDayIndex, setEditingDayIndex] = useState(null);
@@ -179,20 +210,24 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
             {outfit.outer && (
-              <div style={{ padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.outer, color.main)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
-                {outfit.outer}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.outer, color.main)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
+                <OutfitItemPhoto itemName={outfit.outer} wardrobeMap={wardrobeMap} />
+                <span>{outfit.outer}</span>
               </div>
             )}
             
-            <div style={{ padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.top, color.sec)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
-              {outfit.top}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.top, color.sec)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
+              <OutfitItemPhoto itemName={outfit.top} wardrobeMap={wardrobeMap} />
+              <span>{outfit.top}</span>
             </div>
             
-            <div style={{ padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.bottom, color.main)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
-              {outfit.bottom}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: `2px solid ${getItemColor(outfit.bottom, color.main)}`, borderRadius: '8px', fontSize: '0.875rem', width: 'fit-content' }}>
+              <OutfitItemPhoto itemName={outfit.bottom} wardrobeMap={wardrobeMap} />
+              <span>{outfit.bottom}</span>
             </div>
 
-            <div style={{ padding: '0.25rem 0.75rem', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+              <OutfitItemPhoto itemName={outfit.shoe} wardrobeMap={wardrobeMap} />
               + {outfit.shoe}
             </div>
           </div>
