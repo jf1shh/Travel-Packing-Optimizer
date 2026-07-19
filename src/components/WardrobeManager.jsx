@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { saveItemImage, getItemImage, deleteItemImage } from '../services/db';
 import { parseBulkText } from '../utils/parser';
 import { getBulkStats } from '../utils/itemStats';
+import { PromptDialog } from './Dialogs';
 import { useT } from '../i18n/context.jsx';
 
 
@@ -17,6 +18,8 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
   const [bulkText, setBulkText] = useState('');
   const [itemImages, setItemImages] = useState({});
   const [isProcessing, setIsProcessing] = useState({});
+  const [processingProgress, setProcessingProgress] = useState({}); // { [itemId]: percent|null }
+  const [pendingCameraFile, setPendingCameraFile] = useState(null); // File awaiting a description
 
   useEffect(() => {
     if (!isOpen) return;
@@ -33,6 +36,21 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     return () => { cancelled = true; };
   }, [wardrobe, isOpen]);
 
+  // Reports live download/inference progress from the ONNX background-removal
+  // model instead of leaving the UI on a static "AI..." label -- the model
+  // itself is a ~24MB one-time download, so first use can take a while.
+  const trackProgress = (itemId) => (key, current, total) => {
+    setProcessingProgress(p => ({ ...p, [itemId]: total > 0 ? Math.round((current / total) * 100) : null }));
+  };
+
+  const clearProgress = (itemId) => {
+    setProcessingProgress(p => {
+      const next = { ...p };
+      delete next[itemId];
+      return next;
+    });
+  };
+
   const handleImageUpload = async (itemId, e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -42,8 +60,8 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     try {
       const { removeBackground } = await import('@imgly/background-removal');
       const blobURL = URL.createObjectURL(file);
-      const imageBlob = await removeBackground(blobURL);
-      
+      const imageBlob = await removeBackground(blobURL, { progress: trackProgress(itemId) });
+
       const reader = new FileReader();
       reader.readAsDataURL(imageBlob);
       reader.onloadend = async () => {
@@ -51,21 +69,29 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         await saveItemImage(itemId, base64data);
         setItemImages(p => ({ ...p, [itemId]: base64data }));
         setIsProcessing(p => ({ ...p, [itemId]: false }));
+        clearProgress(itemId);
       };
     } catch (err) {
       console.error("BG Removal failed", err);
       setIsProcessing(p => ({ ...p, [itemId]: false }));
+      clearProgress(itemId);
     }
   };
 
-  const handleCameraAdd = async (e) => {
+  const handleCameraAdd = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Ask for a quick description via an in-app dialog (see PromptDialog
+    // render below) instead of a blocking window.prompt(); the file is
+    // already captured, so both Submit and Skip proceed with processing it.
+    setPendingCameraFile(file);
+    e.target.value = null;
+  };
 
-    // Ask for a quick description and reuse the brain-dump parser's
-    // heuristics for category/material/color/bulkiness -- otherwise every
-    // capture lands as an identical "Captured Item" top.
-    const description = window.prompt(t('wardrobe.cameraPrompt'), '');
+  const processCameraCapture = async (file, description) => {
+    // Reuse the brain-dump parser's heuristics for category/material/
+    // color/bulkiness -- otherwise every capture lands as an identical
+    // "Captured Item" top.
     const parsed = description && description.trim()
       ? parseBulkText(description)[0]
       : null;
@@ -86,14 +112,14 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         };
 
     setWardrobe(prev => [newItemObj, ...prev]);
-    
+
     // Process the image
     setIsProcessing(prev => ({ ...prev, [newId]: true }));
     try {
       const { removeBackground } = await import('@imgly/background-removal');
       const blobURL = URL.createObjectURL(file);
-      const imageBlob = await removeBackground(blobURL);
-      
+      const imageBlob = await removeBackground(blobURL, { progress: trackProgress(newId) });
+
       const reader = new FileReader();
       reader.readAsDataURL(imageBlob);
       reader.onloadend = async () => {
@@ -101,11 +127,25 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         await saveItemImage(newId, base64data);
         setItemImages(p => ({ ...p, [newId]: base64data }));
         setIsProcessing(p => ({ ...p, [newId]: false }));
+        clearProgress(newId);
       };
     } catch (err) {
       console.error('BG removal failed on camera add:', err);
       setIsProcessing(p => ({ ...p, [newId]: false }));
+      clearProgress(newId);
     }
+  };
+
+  const handleCameraPromptSubmit = (description) => {
+    const file = pendingCameraFile;
+    setPendingCameraFile(null);
+    if (file) processCameraCapture(file, description);
+  };
+
+  const handleCameraPromptSkip = () => {
+    const file = pendingCameraFile;
+    setPendingCameraFile(null);
+    if (file) processCameraCapture(file, '');
   };
 
 
@@ -277,7 +317,9 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
                     {itemImages[item.id] ? (
                        <img src={itemImages[item.id]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : isProcessing[item.id] ? (
-                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>AI...</span>
+                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                         {t('wardrobe.aiProcessing')}{processingProgress[item.id] != null ? ` ${processingProgress[item.id]}%` : ''}
+                       </span>
                     ) : (
                        <label style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                          <span style={{ fontSize: '1.2rem' }}>📷</span>
@@ -300,6 +342,18 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
           </div>
         )}
       </div>
+
+      {pendingCameraFile && (
+        <PromptDialog
+          title={t('wardrobe.cameraPromptTitle')}
+          message={t('wardrobe.cameraPrompt')}
+          placeholder={t('wardrobe.namePlaceholder')}
+          submitLabel={t('wardrobe.cameraPromptSubmit')}
+          cancelLabel={t('wardrobe.cameraPromptSkip')}
+          onSubmit={handleCameraPromptSubmit}
+          onCancel={handleCameraPromptSkip}
+        />
+      )}
     </div>
   );
 };

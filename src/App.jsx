@@ -9,6 +9,7 @@ import SuitcaseLayout from './components/SuitcaseLayout';
 import PackingList from './components/PackingList';
 const VolumeChart = React.lazy(() => import('./components/VolumeChart'));
 import WardrobeManager from './components/WardrobeManager';
+import { ConfirmDialog, CopyFallbackDialog, Toast } from './components/Dialogs';
 import { Logger } from './services/logger';
 import { encodeTripData, decodeTripData } from './services/share';
 import { fetchExchangeRates, getCurrencyForCountry, convertCost, formatCurrency } from './services/currency';
@@ -66,6 +67,12 @@ function App() {
   const [exchangeRates, setExchangeRates] = useState(null);
   const [advisories, setAdvisories] = useState(null);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
+
+  // ── In-app dialogs/toast (replace native alert/confirm/prompt) ──────────
+  const [toast, setToast] = useState(null); // { message, type }
+  const [shareConfirmData, setShareConfirmData] = useState(null); // { data, message }
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [copyFallbackUrl, setCopyFallbackUrl] = useState(null);
 
   // ── Floating generate button: show when scrolled past the form ──────────
   useEffect(() => {
@@ -158,29 +165,35 @@ function App() {
     const shareCode = hash.startsWith('#share=')
       ? hash.slice('#share='.length)
       : new URLSearchParams(window.location.search).get('share');
+    // Clean URL either way
+    window.history.replaceState({}, document.title, window.location.pathname);
     if (!shareCode) return;
 
     const data = decodeTripData(shareCode);
     if (data) {
-      const sharedCount = data.w ? data.w.length : 0;
-      const message = sharedCount > 0
-        ? t('app.shareConfirmItems').replace('{wardrobe}', wardrobe.length).replace('{shared}', sharedCount)
-        : t('app.shareConfirmNoItems');
-      if (window.confirm(message)) {
-        if (data.w) {
-          setWardrobe(data.w);
-          localStorage.setItem('travelPackerWardrobe', JSON.stringify(data.w));
-        }
-        if (data.s) {
-          localStorage.setItem('travelPackerState', JSON.stringify(data.s));
-          alert(t('app.shareLoaded'));
-        }
-      }
+      // Store the raw ingredients rather than a baked message string: this
+      // effect runs once on mount, before the async i18n translation JSON
+      // has necessarily finished loading, so t() would return the untranslated
+      // key. Computing the message at render time (below) instead means it
+      // reflects whatever translations are loaded by the time this actually
+      // renders, and updates automatically once loading finishes.
+      setShareConfirmData({ data, sharedCount: data.w ? data.w.length : 0 });
     }
-    // Clean URL either way
-    window.history.replaceState({}, document.title, window.location.pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleConfirmShareLoad = () => {
+    const { data } = shareConfirmData;
+    if (data.w) {
+      setWardrobe(data.w);
+      localStorage.setItem('travelPackerWardrobe', JSON.stringify(data.w));
+    }
+    if (data.s) {
+      localStorage.setItem('travelPackerState', JSON.stringify(data.s));
+      setToast({ message: t('app.shareLoaded'), type: 'success' });
+    }
+    setShareConfirmData(null);
+  };
 
 
   useEffect(() => {
@@ -292,12 +305,13 @@ function App() {
     localStorage.removeItem('travelPackerState');
   };
 
-  const handleDeleteAllData = async () => {
-    if (window.confirm(t('app.deleteConfirm'))) {
-      await clearAllLocalData(); // wipes IndexedDB (wardrobe photos + crash logs)
-      localStorage.clear();
-      window.location.reload();
-    }
+  const handleDeleteAllData = () => setShowDeleteConfirm(true);
+
+  const confirmDeleteAllData = async () => {
+    setShowDeleteConfirm(false);
+    await clearAllLocalData(); // wipes IndexedDB (wardrobe photos + crash logs)
+    localStorage.clear();
+    window.location.reload();
   };
 
   const toggleItem = (category, itemId) => {
@@ -418,11 +432,11 @@ function App() {
       // so the payload can't land in request logs.
       const url = `${window.location.origin}${window.location.pathname}#share=${shareCode}`;
       navigator.clipboard.writeText(url).then(
-        () => alert(t('app.shareCopied')),
-        () => window.prompt(t('app.shareClipboardFail'), url)
+        () => setToast({ message: t('app.shareCopied'), type: 'success' }),
+        () => setCopyFallbackUrl(url)
       );
     } else {
-      alert(t('app.shareFailed'));
+      setToast({ message: t('app.shareFailed'), type: 'error' });
     }
   };
 
@@ -678,6 +692,45 @@ function App() {
         <button className="floating-btn" onClick={scrollToGenerate}>
           ⚡ {t('app.generateList')}
         </button>
+      )}
+
+      {shareConfirmData && (
+        <ConfirmDialog
+          title={t('app.shareConfirmTitle')}
+          message={shareConfirmData.sharedCount > 0
+            ? t('app.shareConfirmItems').replace('{wardrobe}', wardrobe.length).replace('{shared}', shareConfirmData.sharedCount)
+            : t('app.shareConfirmNoItems')}
+          confirmLabel={t('common.confirm')}
+          cancelLabel={t('common.cancel')}
+          onConfirm={handleConfirmShareLoad}
+          onCancel={() => setShareConfirmData(null)}
+        />
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title={t('app.deleteConfirmTitle')}
+          message={t('app.deleteConfirm')}
+          confirmLabel={t('common.delete')}
+          cancelLabel={t('common.cancel')}
+          danger
+          onConfirm={confirmDeleteAllData}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+
+      {copyFallbackUrl && (
+        <CopyFallbackDialog
+          title={t('app.shareClipboardFailTitle')}
+          message={t('app.shareClipboardFail')}
+          value={copyFallbackUrl}
+          closeLabel={t('common.close')}
+          onClose={() => setCopyFallbackUrl(null)}
+        />
+      )}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
     </div>
   );
