@@ -151,7 +151,7 @@ describe('generatePackingList', () => {
   });
 
   it('has a palette for every Fashion Archetype option in the UI (regression: "streetwear" silently fell back to quiet-luxury)', () => {
-    const uiOptions = ['quiet-luxury', 'gorpcore', 'scandi', 'streetwear', 'dark-academia', 'athleisure', 'bohemian'];
+    const uiOptions = ['quiet-luxury', 'gorpcore', 'scandi', 'streetwear', 'dark-academia', 'athleisure', 'bohemian', 'preppy', 'rock', 'whimsigoth', 'coastal', 'cottagecore'];
     uiOptions.forEach(key => {
       expect(PALETTES[key], `missing palette for UI option: ${key}`).toBeDefined();
     });

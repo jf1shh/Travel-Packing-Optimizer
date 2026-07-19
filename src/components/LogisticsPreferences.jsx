@@ -28,6 +28,11 @@ const LogisticsPreferences = ({
           <option value="dark-academia">Dark Academia</option>
           <option value="athleisure">Performance Athleisure</option>
           <option value="bohemian">Resort / Bohemian</option>
+          <option value="preppy">Ivy League Prep</option>
+          <option value="rock">Rock Chic</option>
+          <option value="whimsigoth">Whimsigoth</option>
+          <option value="coastal">Coastal Maritime</option>
+          <option value="cottagecore">Cottagecore</option>
         </select>
       </div>
 

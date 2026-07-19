@@ -64,7 +64,12 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
     'streetwear': { main: '#8b5cf6', sec: '#22c55e' },
     'dark-academia': { main: '#78350f', sec: '#9f1239' },
     'athleisure': { main: '#06b6d4', sec: '#171717' },
-    'bohemian': { main: '#d97706', sec: '#9a3412' }
+    'bohemian': { main: '#d97706', sec: '#9a3412' },
+    'preppy': { main: '#1e3a8a', sec: '#b8860b' },
+    'rock': { main: '#dc2626', sec: '#0a0a0a' },
+    'whimsigoth': { main: '#6b21a8', sec: '#0a0a0a' },
+    'coastal': { main: '#1e3a8a', sec: '#d4b886' },
+    'cottagecore': { main: '#4d7c0f', sec: '#a0522d' }
   };
   
   const color = paletteColors[palette] || paletteColors['quiet-luxury'];

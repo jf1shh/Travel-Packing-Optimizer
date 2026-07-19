@@ -225,6 +225,23 @@ describe('Stress tests', () => {
     expect(deriveCube({ category: 'unknown', name: 'Widget' })).toBe('main');
   });
 
+  it('all 12 palettes produce valid outfit combinations without fallback', () => {
+    const allPalettes = ['quiet-luxury', 'gorpcore', 'scandi', 'streetwear', 'dark-academia', 'athleisure', 'bohemian', 'preppy', 'rock', 'whimsigoth', 'coastal', 'cottagecore'];
+    allPalettes.forEach(key => {
+      const weatherDataArray = [makeWeather('Anywhere', { days: 3 })];
+      const result = pack({
+        weatherDataArray, tripDuration: 3, formDestinations: ['Anywhere'],
+        paletteKey: key
+      });
+      expect(result.outfitCombinations.length).toBeGreaterThanOrEqual(1);
+      result.outfitCombinations.forEach(day => {
+        expect(day.top).toBeTruthy();
+        expect(day.bottom).toBeTruthy();
+        expect(day.shoe).toBeTruthy();
+      });
+    });
+  });
+
   it('yellow, pink, and purple wardrobe items can form outfits (regression: missing COLOR_MATCHES entries)', () => {
     const weatherDataArray = [makeWeather('Anywhere', { days: 3 })];
     // Each previously-excluded color gets one top + one bottom; all should
