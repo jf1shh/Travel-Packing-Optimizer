@@ -25,6 +25,8 @@ npm install
 npm run dev
 ```
 
+Run `npm test` for the Vitest suite covering the packing algorithm and wardrobe parser, or `npm run build` for a production build. Both run in CI on every push.
+
 ## Architecture
 
 - `App.jsx`: Orchestrates state and handles UI persistence via `localStorage`.
