@@ -5,6 +5,7 @@ import SuitcaseSelector from './SuitcaseSelector';
 import SuitcaseScanner from './SuitcaseScanner';
 import ItineraryCalendar from './ItineraryCalendar';
 import LogisticsPreferences from './LogisticsPreferences';
+import { getAllAirlines, getRegions } from '../utils/airlineBaggage';
 
 const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit = 'C', toggleTempUnit }) => {
   const [destinations, setDestinations] = useState(['']);
@@ -72,6 +73,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   // Scanner state
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedModelName, setScannedModelName] = useState(null);
+  const [airlineCode, setAirlineCode] = useState('');
 
   const handleScannedDimensions = (dims) => {
     setPreset(dims.preset || 'custom');
@@ -275,6 +277,28 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
         </select>
       </div>
 
+      <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label htmlFor="airline" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
+          Airline (optional — validates suitcase against carry-on limits)
+        </label>
+        <select
+          id="airline"
+          value={airlineCode}
+          onChange={(e) => setAirlineCode(e.target.value)}
+        >
+          <option value="">No airline selected</option>
+          {getRegions().map(region => (
+            <optgroup key={region} label={region}>
+              {getAllAirlines(region).map(airline => (
+                <option key={airline.code} value={airline.code}>
+                  {airline.code} — {airline.name}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
       <SuitcaseSelector 
         preset={preset} setPreset={setPreset}
         length={length} setLength={setLength}
@@ -283,6 +307,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
         lengthUnit={lengthUnit} toggleLengthUnit={toggleLengthUnit}
         onOpenScanner={() => setIsScannerOpen(true)}
         scannedModel={scannedModelName}
+        airlineCode={airlineCode}
       />
 
       <SuitcaseScanner

@@ -1,4 +1,5 @@
 import React from 'react';
+import { checkBaggageCompliance } from '../utils/airlineBaggage';
 
 const SuitcaseSelector = ({ 
   preset, setPreset, 
@@ -7,8 +8,17 @@ const SuitcaseSelector = ({
   height, setHeight, 
   lengthUnit, toggleLengthUnit,
   onOpenScanner,
-  scannedModel
+  scannedModel,
+  airlineCode
 }) => {
+
+  // ── Airline baggage compliance check ──────────────────────────────────
+  const compliance = airlineCode
+    ? checkBaggageCompliance(
+        { l: parseFloat(length) || 0, w: parseFloat(width) || 0, h: parseFloat(height) || 0 },
+        airlineCode
+      )
+    : null;
 
   const handlePresetChange = (e) => {
     const val = e.target.value;
@@ -36,6 +46,45 @@ const SuitcaseSelector = ({
           {lengthUnit}
         </button>
       </div>
+
+      {/* ── Airline carry-on compliance warning ────────────────────────── */}
+      {compliance && !compliance.compliant && (
+        <div style={{
+          marginBottom: '0.75rem',
+          padding: '0.75rem 1rem',
+          borderRadius: '10px',
+          backgroundColor: 'rgba(239, 68, 68, 0.08)',
+          border: '1px solid rgba(239, 68, 68, 0.25)',
+          fontSize: '0.8rem',
+          color: '#ef4444',
+        }}>
+          <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
+            ⚠️ Exceeds {compliance.airline.name} carry-on limits
+          </div>
+          {compliance.warnings.map((w, i) => (
+            <div key={i} style={{ opacity: 0.85 }}>{w}</div>
+          ))}
+          {!compliance.airline.carryOnInBasic && (
+            <div style={{ marginTop: '0.35rem', opacity: 0.7, fontStyle: 'italic' }}>
+              Note: {compliance.airline.name} may charge extra for carry-on on basic fares.
+            </div>
+          )}
+        </div>
+      )}
+      {compliance && compliance.compliant && (
+        <div style={{
+          marginBottom: '0.75rem',
+          padding: '0.5rem 1rem',
+          borderRadius: '10px',
+          backgroundColor: 'rgba(34, 197, 94, 0.08)',
+          border: '1px solid rgba(34, 197, 94, 0.2)',
+          fontSize: '0.8rem',
+          color: '#22c55e',
+          fontWeight: 500,
+        }}>
+          ✅ Fits {compliance.airline.name} carry-on limits ({compliance.airline.carryOn.l}×{compliance.airline.carryOn.w}×{compliance.airline.carryOn.h} cm)
+        </div>
+      )}
 
       {onOpenScanner && (
         <button
