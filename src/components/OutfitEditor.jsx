@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
 import { getItemImage } from '../services/db';
+import { useT } from '../i18n/context.jsx';
 
 const DraggableItem = ({ item }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -54,7 +55,7 @@ const DraggableItem = ({ item }) => {
   );
 };
 
-const DroppableSlot = ({ id, label, currentItem }) => {
+const DroppableSlot = ({ id, label, t, currentItem }) => {
   const { isOver, setNodeRef } = useDroppable({ id });
   const [image, setImage] = useState(null);
 
@@ -86,7 +87,7 @@ const DroppableSlot = ({ id, label, currentItem }) => {
     <div
       ref={setNodeRef}
       role="region"
-      aria-label={`${label} slot${slotName ? `: ${slotName}` : ' — empty'}`}
+      aria-label={`${label} slot${slotName ? `: ${slotName}` : ' ' + t('outfit.empty')}`}
       aria-dropeffect="move"
       style={style}
     >
@@ -101,13 +102,14 @@ const DroppableSlot = ({ id, label, currentItem }) => {
           <div style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>{currentItem.name}</div>
         </div>
       ) : (
-        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Drag {String(label).toLowerCase()} here</div>
+        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{t('outfit.dragHere').replace('{slot}', String(label).toLowerCase())}</div>
       )}
     </div>
   );
 };
 
 const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
+  const { t } = useT();
   const [editedOutfit, setEditedOutfit] = useState(dayOutfit);
 
   const handleDragEnd = (event) => {
@@ -141,10 +143,10 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
         flexDirection: 'column', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' 
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <h2>Edit Outfit - {dayOutfit.name}</h2>
+          <h2>{t('outfit.editTitle').replace('{name}', dayOutfit.name)}</h2>
           <div>
-            <button onClick={onCancel} style={{ marginRight: '1rem', background: 'transparent', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-            <button onClick={() => onSave(editedOutfit)} style={{ background: 'var(--primary-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Save Outfit</button>
+            <button onClick={onCancel} style={{ marginRight: '1rem', background: 'transparent', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>{t('outfit.cancel')}</button>
+            <button onClick={() => onSave(editedOutfit)} style={{ background: 'var(--primary-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>{t('outfit.save')}</button>
           </div>
         </div>
 
@@ -155,7 +157,7 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
               aria-label="Your closet items"
               style={{ flex: 1, overflowY: 'auto', borderRight: '1px solid var(--border-color)', paddingRight: '1rem' }}
             >
-              <h3 style={{ marginTop: 0 }}>Your Closet</h3>
+              <h3 style={{ marginTop: 0 }}>{t('outfit.yourCloset')}</h3>
               {wardrobe.filter(i => ['top', 'bottom', 'outer', 'shoe'].includes(i.category)).map(item => (
                 <DraggableItem key={item.id} item={item} />
               ))}
@@ -166,11 +168,11 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
               aria-label="Outfit slots"
               style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}
             >
-              <h3 style={{ marginTop: 0 }}>Outfit Slots</h3>
-              <DroppableSlot id="top" label="Top" currentItem={editedOutfit.top} />
-              <DroppableSlot id="bottom" label="Bottom" currentItem={editedOutfit.bottom} />
-              <DroppableSlot id="outer" label="Outerwear" currentItem={editedOutfit.outer} />
-              <DroppableSlot id="shoe" label="Shoes" currentItem={editedOutfit.shoe} />
+              <h3 style={{ marginTop: 0 }}>{t('outfit.outfitSlots')}</h3>
+              <DroppableSlot id="top" label={t('outfit.slotTop')} t={t} currentItem={editedOutfit.top} />
+              <DroppableSlot id="bottom" label={t('outfit.slotBottom')} t={t} currentItem={editedOutfit.bottom} />
+              <DroppableSlot id="outer" label={t('outfit.slotOuter')} t={t} currentItem={editedOutfit.outer} />
+              <DroppableSlot id="shoe" label={t('outfit.slotShoes')} t={t} currentItem={editedOutfit.shoe} />
             </div>
           </div>
         </DndContext>

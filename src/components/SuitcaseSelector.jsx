@@ -1,5 +1,6 @@
 import React from 'react';
 import { checkBaggageCompliance } from '../utils/airlineBaggage';
+import { useT } from '../i18n/context.jsx';
 
 const SuitcaseSelector = ({ 
   preset, setPreset, 
@@ -11,6 +12,7 @@ const SuitcaseSelector = ({
   scannedModel,
   airlineCode
 }) => {
+  const { t } = useT();
 
   // ── Airline baggage compliance check ──────────────────────────────────
   const compliance = airlineCode
@@ -36,7 +38,7 @@ const SuitcaseSelector = ({
   return (
     <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: 'var(--surface-color)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', margin: 0 }}>Suitcase Optimization</label>
+        <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)', display: 'block', margin: 0 }}>{t('suitcase.title')}</label>
         <button 
           type="button" 
           className="theme-toggle" 
@@ -57,17 +59,15 @@ const SuitcaseSelector = ({
           border: '1px solid rgba(239, 68, 68, 0.25)',
           fontSize: '0.8rem',
           color: '#ef4444',
-        }}>
-          <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
-            ⚠️ Exceeds {compliance.airline.name} carry-on limits
-          </div>
+        }}>              <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
+                ⚠️ {t('suitcase.exceedsLimits').replace('{airline}', compliance.airline.name)}
+              </div>
           {compliance.warnings.map((w, i) => (
             <div key={i} style={{ opacity: 0.85 }}>{w}</div>
           ))}
-          {!compliance.airline.carryOnInBasic && (
-            <div style={{ marginTop: '0.35rem', opacity: 0.7, fontStyle: 'italic' }}>
-              Note: {compliance.airline.name} may charge extra for carry-on on basic fares.
-            </div>
+          {!compliance.airline.carryOnInBasic && (              <div style={{ marginTop: '0.35rem', opacity: 0.7, fontStyle: 'italic' }}>
+                {t('suitcase.carryOnExtraNote').replace('{airline}', compliance.airline.name)}
+              </div>
           )}
         </div>
       )}
@@ -82,7 +82,7 @@ const SuitcaseSelector = ({
           color: '#22c55e',
           fontWeight: 500,
         }}>
-          ✅ Fits {compliance.airline.name} carry-on limits ({compliance.airline.carryOn.l}×{compliance.airline.carryOn.w}×{compliance.airline.carryOn.h} cm)
+          ✅ {t('suitcase.fitsLimits').replace('{airline}', compliance.airline.name).replace('{dims}', compliance.airline.carryOn.l + '×' + compliance.airline.carryOn.w + '×' + compliance.airline.carryOn.h)}
         </div>
       )}
 
@@ -116,7 +116,7 @@ const SuitcaseSelector = ({
           }}
         >
           <span style={{ fontSize: '1.2rem' }}>{scannedModel ? '✅' : '📸'}</span>
-          {scannedModel ? `Identified: ${scannedModel}` : 'Scan Suitcase with Camera'}
+          {scannedModel ? `Identified: ${scannedModel}` : t('suitcase.scanButton')}
         </button>
       )}
 
@@ -128,13 +128,12 @@ const SuitcaseSelector = ({
         <option value="rimowa-cabin">Rimowa: Cabin {lengthUnit === 'in' ? '(21.7 x 15.7 x 9.1)' : '(55 x 40 x 23)'}</option>
         <option value="osprey-40">Osprey: Farpoint 40L Backpack {lengthUnit === 'in' ? '(21.7 x 13.8 x 9.1)' : '(55 x 35 x 23)'}</option>
         <option value="peak-45">Peak Design: Travel Backpack 45L {lengthUnit === 'in' ? '(22 x 13 x 9.5)' : '(56 x 33 x 24)'}</option>
-        <option value="samsonite-check">Samsonite: Check-In Large {lengthUnit === 'in' ? '(29.5 x 20.1 x 12.2)' : '(75 x 51 x 31)'}</option>
-        <option value="custom">Custom Dimensions</option>
+        <option value="samsonite-check">Samsonite: Check-In Large {lengthUnit === 'in' ? '(29.5 x 20.1 x 12.2)' : '(75 x 51 x 31)'}</option>          <option value="custom">{t('suitcase.custom')}</option>
       </select>
       
       <div style={{ display: 'flex', gap: '0.5rem', width: '100%', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>L</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('suitcase.length')}</span>
           <input 
             style={{ width: '100%', boxSizing: 'border-box' }} 
             type="number" 
@@ -148,7 +147,7 @@ const SuitcaseSelector = ({
           />
         </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>W</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('suitcase.width')}</span>
           <input 
             style={{ width: '100%', boxSizing: 'border-box' }} 
             type="number" 
@@ -162,7 +161,7 @@ const SuitcaseSelector = ({
           />
         </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>H</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('suitcase.height')}</span>
           <input 
             style={{ width: '100%', boxSizing: 'border-box' }} 
             type="number" 

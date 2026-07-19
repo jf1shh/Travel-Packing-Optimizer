@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '../i18n/context.jsx';
 
 const FOLD_TIPS = {
   ranger: {
@@ -29,6 +30,7 @@ const FOLD_TIPS = {
 };
 
 const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem }) => {
+  const { t } = useT();
   const [selectedTip, setSelectedTip] = useState(null);
   const [copied, setCopied] = useState(false);
   
@@ -40,17 +42,17 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
   if (!packingList) return null;
 
   const categories = [
-    { key: 'plane', label: '✈️ Worn on Travel Day (Not in Suitcase)' },
-    { key: 'main', label: '👕 Main Cube: Tops & Bottoms' },
-    { key: 'base', label: '🧦 Small Cube: Base Layers & Socks' },
-    { key: 'loose', label: '🧥 Loose in Suitcase (Shoes, Jackets)' },
-    { key: 'liquid', label: '🪥 TSA 1-Quart Liquids Bag' },
-    { key: 'dry', label: '🧴 Dry Toiletries Bag' },
-    { key: 'tech', label: '🔌 Tech Dopp Kit' },
+    { key: 'plane', label: '✈️ ' + t('packingList.categoryPlane') },
+    { key: 'main', label: '👕 ' + t('packingList.categoryMain') },
+    { key: 'base', label: '🧦 ' + t('packingList.categoryBase') },
+    { key: 'loose', label: '🧥 ' + t('packingList.categoryLoose') },
+    { key: 'liquid', label: '🪥 ' + t('packingList.categoryLiquid') },
+    { key: 'dry', label: '🧴 ' + t('packingList.categoryDry') },
+    { key: 'tech', label: '🔌 ' + t('packingList.categoryTech') },
   ];
 
   const handleCopy = () => {
-    let textToCopy = "My Travel Packing List\n\n";
+    let textToCopy = t('packingList.clipboardTitle') + "\n\n";
     categories.forEach(cat => {
       const items = packingList[cat.key];
       if (items && items.length > 0) {
@@ -97,7 +99,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span style={{ fontSize: '1.5rem' }}>⚠️</span>
           <div>
-            <strong>TSA Security Alert:</strong> Your liquids bag exceeds the 1-Quart (~1000cm³) limit for carry-ons. You are currently at {Math.round(liquidVolume)}cm³. You must remove some liquids or check your bag.
+            <strong>{t('packingList.tsaAlert').split(':')[0]}:</strong> {t('packingList.tsaAlert').split(': ').slice(1).join(': ').replace('{volume}', Math.round(liquidVolume))}
           </div>
         </div>
       )}
@@ -107,10 +109,10 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
         <div className="glass" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              {isFullyPacked ? '🎉 All packed!' : 'Packing progress'}
+              {isFullyPacked ? '🎉 ' + t('packingList.allPacked') : t('packingList.progress')}
             </span>
             <span style={{ fontSize: '0.8rem', fontWeight: 500, color: isFullyPacked ? '#22c55e' : 'var(--text-secondary)' }}>
-              {checkedItems}/{totalItems} items {isFullyPacked ? '✓' : ''}
+              {checkedItems}/{totalItems} {t('packingList.items')} {isFullyPacked ? '✓' : ''}
             </span>
           </div>
           <div style={{
@@ -134,7 +136,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
       )}
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Your Optimized List</h2>
+        <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('packingList.title')}</h2>
         <button 
           onClick={handleCopy}
           style={{
@@ -148,7 +150,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
             gap: '0.5rem'
           }}
         >
-          {copied ? '✓ Copied!' : '📋 Copy List'}
+          {copied ? '✓ ' + t('packingList.copied') : '📋 ' + t('packingList.copy')}
         </button>
       </div>
       
@@ -191,13 +193,13 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
                           gap: '0.25rem',
                         }}
                       >
-                        {FOLD_TIPS[item.fold].icon} Fold Tip
+                        {FOLD_TIPS[item.fold].icon} {t('packingList.foldTip')}
                       </button>
                     )}
                     <button 
                       onClick={() => handleRemoveItem(cat.key, item.id)}
                       style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', padding: '0.25rem', fontSize: '1rem', boxShadow: 'none' }}
-                      title="Remove Item"
+                      title={t('packingList.removeItem')}
                     >
                       🗑️
                     </button>
@@ -211,27 +213,27 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <input 
                       type="text" 
-                      placeholder="Item name (e.g. Leather Jacket)" 
+                      placeholder={t('packingList.itemNamePlaceholder')} 
                       value={newItemName}
                       onChange={e => setNewItemName(e.target.value)}
                       style={{ flex: 2, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', minWidth: '150px' }}
                     />
                     <input 
                       type="number" 
-                      placeholder="Weight (g)" 
+                      placeholder={t('packingList.weightPlaceholder')} 
                       value={newItemWeight}
                       onChange={e => setNewItemWeight(e.target.value)}
                       style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', minWidth: '80px' }}
                     />
-                    <button onClick={() => submitAddItem(cat.key)} style={{ padding: '0.5rem 1rem', background: 'var(--accent-color)', color: '#fff', borderRadius: '4px', border: 'none' }}>Add</button>
-                    <button onClick={() => setAddingCategory(null)} style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}>Cancel</button>
+                    <button onClick={() => submitAddItem(cat.key)} style={{ padding: '0.5rem 1rem', background: 'var(--accent-color)', color: '#fff', borderRadius: '4px', border: 'none' }}>{t('packingList.add')}</button>
+                    <button onClick={() => setAddingCategory(null)} style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}>{t('packingList.cancel')}</button>
                   </div>
                 ) : (
                   <button 
                     onClick={() => { setAddingCategory(cat.key); setNewItemName(''); setNewItemWeight(''); }}
                     style={{ background: 'transparent', border: '1px dashed var(--accent-color)', color: 'var(--accent-color)', width: '100%', padding: '0.75rem', borderRadius: '8px', boxShadow: 'none', fontWeight: 'bold' }}
                   >
-                    + Add Custom Item
+                    + {t('packingList.addCustom')}
                   </button>
                 )}
               </div>

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useT } from '../i18n/context.jsx';
 
 const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode, packingList }) => {
+  const { t } = useT();
   if (!maxVolume || maxVolume <= 0) return null;
 
   const percentage = Math.min(100, Math.round((currentVolume / maxVolume) * 100));
@@ -9,8 +11,6 @@ const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode, pack
   if (percentage >= 90) barColor = '#f59e0b'; // warning orange
   if (percentage >= 100) barColor = '#ef4444'; // error red
 
-  // Convert cm³ to Liters for display
-  const currentLiters = (currentVolume / 1000).toFixed(1);
   const maxLiters = (maxVolume / 1000).toFixed(1);
   
   // Weight logic (7,000g = 7kg budget airline limit)
@@ -56,7 +56,7 @@ const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode, pack
       
       <div className="glass animate-slide-up" style={{ padding: '1.5rem', animationDelay: '0.45s' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Suitcase Capacity</h3>
+          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{t('suitcase.title')}</h3>
           <span style={{ fontWeight: '600', color: percentage >= 100 ? '#ef4444' : 'inherit' }}>
             {percentage}% Full
           </span>
@@ -74,8 +74,8 @@ const CapacityBar = ({ currentVolume, currentWeight, maxVolume, travelMode, pack
         </div>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          <span>Used: {currentLiters} L</span>
-          <span>Total: {maxLiters} L</span>
+          <span>{t('capacity.mlUsed').replace('{used}', currentVolume).replace('{max}', maxVolume).replace('ml', 'L').replace('/  ', '/ ')}</span>
+          <span>{t('capacity.volume')}: {maxLiters} L</span>
         </div>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', fontSize: '0.875rem' }}>

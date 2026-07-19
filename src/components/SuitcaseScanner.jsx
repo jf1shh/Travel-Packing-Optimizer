@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { measureFromTaps, formatDimensions, REFERENCE_CARD_MM } from '../utils/measurement';
 import { lookupByBarcode, searchByBrand } from '../utils/suitcaseDatabase';
+import { useT } from '../i18n/context.jsx';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const PHASE = {
@@ -18,13 +19,6 @@ const MODE = {
   BARCODE: 'barcode',
 };
 
-const INSTRUCTION = {
-  [PHASE.CAPTURING]: 'Place a credit card on top of your suitcase, then tap Capture',
-  [PHASE.CALIBRATE]: 'Tap each end of the credit card (long edge)',
-  [PHASE.MEASURE_L]: 'Tap each end of the suitcase — the longer side',
-  [PHASE.MEASURE_W]: 'Tap each end of the suitcase — the shorter side',
-};
-
 const DOT_RADIUS = 10;
 const LINE_COLOR = '#3b82f6';
 const DOT_COLOR = '#2563eb';
@@ -34,6 +28,7 @@ const BARCODE_SCAN_COLOR = '#22c55e';
 const BARCODE_DETECT_INTERVAL = 200; // ms between barcode detection attempts
 
 const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
+  const { t } = useT();
   // ── Shared state ───────────────────────────────────────────────────────────
   const [scannerMode, setScannerMode] = useState(MODE.MEASURE);
   const [phase, setPhase] = useState(PHASE.SETUP);
@@ -119,15 +114,15 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
       if (scannerMode === MODE.MEASURE) setPhase(PHASE.CAPTURING);
     } catch (err) {
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setErrorMsg('Camera permission was denied. Please allow camera access in your browser settings and try again.');
+        setErrorMsg(t('scanner.cameraDenied'));
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setErrorMsg('No camera found on this device. You can still enter dimensions manually.');
+        setErrorMsg(t('scanner.noCamera'));
       } else {
-        setErrorMsg(`Camera error: ${err.message}. You can close this and enter dimensions manually.`);
+        setErrorMsg(t('scanner.cameraError').replace('{msg}', err.message));
       }
       if (scannerMode === MODE.MEASURE) setPhase(PHASE.ERROR);
     }
-  }, [stopCamera, scannerMode]);
+  }, [stopCamera, scannerMode, t]);
 
   // Start/stop camera on mount and mode switch
   useEffect(() => {
@@ -572,7 +567,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
           background: 'none', border: 'none', color: 'white', fontSize: '16px',
           padding: '8px 12px', cursor: 'pointer', boxShadow: 'none',
         }}>
-          ✕ Close
+          ✕ {t('common.close')}
         </button>
 
         {/* Mode tabs */}
@@ -587,7 +582,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
               transition: 'all 0.15s ease',
             }}
           >
-            📏 Measure
+            📏 {scannerMode === MODE.MEASURE ? t('scanner.creditCardGuide').split(',')[0] : 'Measure'}
           </button>
           <button
             onClick={() => switchMode(MODE.BARCODE)}
@@ -629,10 +624,13 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
             color: 'white', textAlign: 'center', fontSize: '15px', fontWeight: 500,
             backdropFilter: 'blur(8px)', pointerEvents: 'none',
           }}>
-            {INSTRUCTION[phase]}
+            {phase === PHASE.CAPTURING ? t('scanner.creditCardGuide') :
+             phase === PHASE.CALIBRATE ? t('scanner.tapCardEnds') :
+             phase === PHASE.MEASURE_L ? t('scanner.tapLongSide') :
+             phase === PHASE.MEASURE_W ? t('scanner.tapShortSide') : ''}
             {isMeasuring && (
               <div style={{ marginTop: 6, fontSize: 13, opacity: 0.7 }}>
-                {tapPoints.length}/2 points placed
+                {tapPoints.length}/2
               </div>
             )}
           </div>
@@ -649,7 +647,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
           }}>
             Barcode detected: {barcodeValue}
             <div style={{ fontSize: 12, fontWeight: 400, opacity: 0.7, marginTop: 4 }}>
-              {scannedModel ? 'Model found!' : 'No model match — try brand search below'}
+              {scannedModel ? '✓' : 'Try brand search below'}
             </div>
           </div>
         )}
@@ -663,7 +661,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
             padding: '8px 14px', fontSize: 13, cursor: 'pointer', boxShadow: 'none',
             backdropFilter: 'blur(8px)',
           }}>
-            ↩ Undo
+            ↩
           </button>
         )}
       </div>
@@ -681,7 +679,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
               padding: '10px 24px', backgroundColor: '#3b82f6', color: 'white',
               border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', boxShadow: 'none',
             }}>
-              Enter Dimensions Manually
+              OK
             </button>
           </div>
         )}
@@ -728,8 +726,8 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
                   value={brandQuery}
                   onChange={(e) => handleBrandSearch(e.target.value)}
                   placeholder={barcodeValue && !scannedModel
-                    ? `Barcode ${barcodeValue.slice(0, 12)}... — search brand?`
-                    : 'Or type brand name...'}
+                    ? `Barcode ${barcodeValue.slice(0, 12)}...`
+                    : 'Search brand...'}
                   style={{
                     flex: 1, padding: '10px 14px', borderRadius: 10,
                     backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
@@ -773,7 +771,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
             {/* Barcode not supported message */}
             {barcodeSupported === false && !barcodeValue && (
               <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 12, padding: '4px 0' }}>
-                Barcode scanning not supported in this browser — use brand search above
+                Barcode scanning not supported — use brand search above
               </div>
             )}
           </div>
@@ -786,7 +784,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
             border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10,
             fontSize: 14, fontWeight: 500, cursor: 'pointer', boxShadow: 'none',
           }}>
-            Retake Photo
+            Retake
           </button>
         )}
 
@@ -806,10 +804,9 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
 
             {/* Dimensions */}
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', color: 'white', fontSize: 14 }}>
-              <DimDisplay label="Length (cm)" value={measurements.lengthCm} color="#3b82f6" />
-              <DimDisplay label="Width (cm)" value={measurements.widthCm} color="#3b82f6" />
-              <DimDisplay label="Height (cm)" value={measurements.heightCm} color={scannedModel ? '#22c55e' : '#8b5cf6'}
-                suffix={!scannedModel ? ' (est.)' : ''} />
+              <DimDisplay label={t('suitcase.length')} value={measurements.lengthCm} color="#3b82f6" />
+              <DimDisplay label={t('suitcase.width')} value={measurements.widthCm} color="#3b82f6" />
+              <DimDisplay label={t('suitcase.height')} value={measurements.heightCm} color={scannedModel ? '#22c55e' : '#8b5cf6'} />
             </div>
 
             {/* Actions */}
@@ -826,7 +823,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
                 border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600,
                 cursor: 'pointer', boxShadow: 'none',
               }}>
-                ✓ Use These Dimensions
+                ✓ Use
               </button>
             </div>
           </div>

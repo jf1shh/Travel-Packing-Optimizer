@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useT } from '../i18n/context.jsx';
 
 const VolumeChart = ({ packingList, suitcaseVolume }) => {
+  const { t } = useT();
   const data = useMemo(() => {
     let clothes = 0;
     let tech = 0;
@@ -54,7 +56,7 @@ const VolumeChart = ({ packingList, suitcaseVolume }) => {
       return (
         <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <p style={{ margin: 0, fontWeight: 'bold', color: data.color }}>{data.name}</p>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-color)' }}>{Math.round(data.value / 1000)} Liters</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-color)' }}>{Math.round(data.value / 1000)} {t('capacity.volume')}</p>
         </div>
       );
     }
@@ -63,7 +65,7 @@ const VolumeChart = ({ packingList, suitcaseVolume }) => {
 
   return (
     <div style={{ padding: '2rem', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '2rem 0' }}>
-      <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--text-color)' }}>Suitcase Capacity Analytics</h3>
+      <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--text-color)' }}>{t('chart.title')}</h3>
       <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Your bag is <strong>{percentage}% full</strong> ({Math.round(totalUsed / 1000)}L out of {Math.round(capacity / 1000)}L used). Worn items (travel day outfit) are excluded from suitcase volume.
       </p>

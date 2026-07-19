@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { saveItemImage, getItemImage, deleteItemImage } from '../services/db';
 import { parseBulkText } from '../utils/parser';
 import { getBulkStats } from '../utils/itemStats';
+import { useT } from '../i18n/context.jsx';
 
 
 const WARDROBE_COLORS = ['black', 'navy', 'khaki', 'beige', 'white', 'grey', 'olive', 'brown', 'blue', 'red', 'green', 'yellow', 'pink', 'purple'];
 const WARDROBE_MATERIALS = ['cotton', 'linen', 'wool', 'denim', 'leather', 'synthetic', 'silk'];
 
 const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
+  const { t } = useT();
   const [newItem, setNewItem] = useState({ name: '', category: 'top', bulkiness: 'standard', material: 'cotton', color: 'black', time: 'day' });
   // Color/material/evening auto-derive from the typed name until the user
   // explicitly picks one -- then their choice wins.
@@ -63,7 +65,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     // Ask for a quick description and reuse the brain-dump parser's
     // heuristics for category/material/color/bulkiness -- otherwise every
     // capture lands as an identical "Captured Item" top.
-    const description = window.prompt('Describe this item (e.g. "blue denim jacket"):', '');
+    const description = window.prompt(t('wardrobe.cameraPrompt'), '');
     const parsed = description && description.trim()
       ? parseBulkText(description)[0]
       : null;
@@ -169,7 +171,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
       zIndex: 1000, display: 'flex', flexDirection: 'column'
     }}>
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem' }}>My Digital Closet</h2>
+        <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('wardrobe.title')}</h2>
         <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>✕</button>
       </div>
 
@@ -177,7 +179,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
            <div style={{ flex: 1 }}>
              <label style={{ display: 'block', padding: '1rem', textAlign: 'center', background: 'var(--accent-color)', color: 'white', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>
-               📸 Quick Add via Camera
+               📸 {t('wardrobe.quickAdd')}
                <input type="file" accept="image/*" capture="environment" onChange={handleCameraAdd} style={{ display: 'none' }} />
              </label>
            </div>
@@ -185,33 +187,33 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
 
         <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <div>
-            <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Add Single Item</label>
+            <label style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>{t('wardrobe.addSingle')}</label>
             <input
               type="text" value={newItem.name} onChange={e => handleNameChange(e.target.value)}
-              placeholder="e.g. Black Levis 501"
+              placeholder={t('wardrobe.namePlaceholder')}
               style={{ width: '100%', padding: '0.75rem', marginTop: '0.25rem' }}
             />
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div style={{ flex: 1 }}>
               <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}>
-                <option value="top">Top</option>
-                <option value="bottom">Bottom</option>
-                <option value="outer">Outerwear</option>
-                <option value="shoe">Shoes</option>
+                <option value="top">{t('wardrobe.categoryTop')}</option>
+                <option value="bottom">{t('wardrobe.categoryBottom')}</option>
+                <option value="outer">{t('wardrobe.categoryOuter')}</option>
+                <option value="shoe">{t('wardrobe.categoryShoe')}</option>
               </select>
             </div>
             <div style={{ flex: 1 }}>
               <select value={newItem.bulkiness} onChange={e => setNewItem({...newItem, bulkiness: e.target.value})} style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem' }}>
-                <option value="light">Light</option>
-                <option value="standard">Standard</option>
-                <option value="bulky">Bulky</option>
+                <option value="light">{t('wardrobe.bulkinessLight')}</option>
+                <option value="standard">{t('wardrobe.bulkinessStandard')}</option>
+                <option value="bulky">{t('wardrobe.bulkinessBulky')}</option>
               </select>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Color (drives outfit matching)</label>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('wardrobe.colorLabel')}</label>
               <select
                 value={newItem.color}
                 onChange={e => { setTouched({ ...touched, color: true }); setNewItem({ ...newItem, color: e.target.value }); }}
@@ -221,7 +223,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Material</label>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('wardrobe.materialLabel')}</label>
               <select
                 value={newItem.material}
                 onChange={e => { setTouched({ ...touched, material: true }); setNewItem({ ...newItem, material: e.target.value }); }}
@@ -237,19 +239,19 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
               checked={newItem.time === 'evening'}
               onChange={e => { setTouched({ ...touched, time: true }); setNewItem({ ...newItem, time: e.target.checked ? 'evening' : 'day' }); }}
             />
-            🍷 Evening / dressy piece (used for formal &amp; night-out days)
+            🍷 {t('wardrobe.eveningLabel')}
           </label>
           <button type="submit" style={{ padding: '0.75rem', borderRadius: '8px' }}>
-            + Add to Closet
+            {t('wardrobe.addButton')}
           </button>
         </form>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>✨ AI Brain Dump (Bulk Add)</label>
+          <label style={{ fontSize: '0.875rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>{t('wardrobe.bulkTitle')}</label>
           <textarea 
             value={bulkText}
             onChange={(e) => setBulkText(e.target.value)}
-            placeholder="Paste your packing list here! e.g., '3 pairs of blue jeans, 5 black cotton shirts, 1 heavy wool jacket...'"
+            placeholder={t('wardrobe.bulkPlaceholder')}
             style={{ 
               width: '100%', minHeight: '100px', padding: '0.75rem', borderRadius: '12px', 
               border: '1px solid var(--border-color)', background: 'var(--bg-color)', 
@@ -257,15 +259,15 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
             }}
           />
           <button type="button" onClick={handleBulkUpload} style={{ padding: '0.75rem', borderRadius: '8px' }}>
-            Parse & Add Items
+            {t('wardrobe.bulkButton')}
           </button>
         </div>
 
         <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
-          Your Items
+          {t('wardrobe.yourItems')}
         </h3>
         {wardrobe.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>Your closet is empty. Add items above!</p>
+          <p style={{ color: 'var(--text-secondary)' }}>{t('wardrobe.empty')}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {wardrobe.map(item => (

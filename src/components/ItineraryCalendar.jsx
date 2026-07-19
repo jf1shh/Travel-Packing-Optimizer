@@ -1,5 +1,6 @@
 import React from 'react';
 import { guessActivityFromDestination, ACTIVITY_OPTIONS } from '../utils/activity';
+import { useT } from '../i18n/context.jsx';
 
 const ItineraryCalendar = ({
   duration,
@@ -13,10 +14,11 @@ const ItineraryCalendar = ({
   tempUnit,
   toggleTempUnit
 }) => {
+  const { t } = useT();
   return (
     <div style={{ marginBottom: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <label style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>Itinerary & Forecast</label>
+        <label style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>{t('itinerary.title')}</label>
         {toggleTempUnit && (
           <button 
             type="button"
@@ -60,7 +62,7 @@ const ItineraryCalendar = ({
           return (
             <div key={i} className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day {i + 1}</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('itinerary.day').replace('{n}', i + 1)}</span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{dateStr}</span>
               </div>
               
@@ -71,9 +73,9 @@ const ItineraryCalendar = ({
                   <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{min}°</span>
                 </div>
                 {rain > 0 ? (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>{rain.toFixed(1)}mm rain</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>{t('itinerary.mmRain').replace('{rain}', rain.toFixed(1))}</div>
                 ) : (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>0mm rain</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{t('itinerary.noRain')}</div>
                 )}
               </div>
 

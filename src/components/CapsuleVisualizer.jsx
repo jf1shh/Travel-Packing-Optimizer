@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import OutfitEditor from './OutfitEditor';
 import { ACTIVITY_OPTIONS } from '../utils/activity';
+import { useT } from '../i18n/context.jsx';
 
 
 const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityChange, startDate }) => {
+  const { t } = useT();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingDayIndex, setEditingDayIndex] = useState(null);
 
@@ -117,18 +119,17 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
         />
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Daily Outfit Combos</h3>
+        <h3 style={{ fontSize: '1.25rem', margin: 0 }}>{t('capsule.title')}</h3>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {startDate && (
             <button onClick={handleExportICS} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
-              📅 Export .ics
+              📅 {t('capsule.exportIcs')}
             </button>
           )}
-          <button onClick={() => setEditingDayIndex(currentIndex)} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
-            ✏️ Edit
+          <button onClick={() => setEditingDayIndex(currentIndex)} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>              ✏️ {t('capsule.edit')}
           </button>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            {currentIndex + 1} of {outfits.length}
+            {currentIndex + 1} {t('capsule.ofCount').split('{n}')[0]}{outfits.length}{t('capsule.ofCount').split('{total}')[1] || ''}
           </span>
         </div>
       </div>
@@ -156,12 +157,12 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
             
             {outfit.isLaundryDay && (
               <div style={{ marginTop: '0.5rem', display: 'inline-block', background: 'var(--accent-color)', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                👕 Laundry Day
+                👕 {t('capsule.laundryDay')}
               </div>
             )}
             
             <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-              <span>Activity:</span>
+              <span>{t('capsule.activity')}:</span>
               <select
                 onChange={handleActivitySelect}
                 value={outfit.activity || ''}
