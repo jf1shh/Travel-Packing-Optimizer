@@ -106,7 +106,7 @@ const SuitcaseLayout = ({ packingList, suitcaseDims, onReorder }) => {
   if (!packingList) return null;
 
   return (
-    <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginBottom: '1.5rem', animationDelay: '0.6s' }}>
+    <div className="glass glass-lift animate-slide-up" style={{ padding: '1.25rem', marginBottom: '1.5rem', animationDelay: '0.6s' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
         <h3 style={{ margin: 0, fontSize: '1.15rem' }}>🧳 {t('suitcaseLayout.title')}</h3>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -127,20 +127,7 @@ const SuitcaseLayout = ({ packingList, suitcaseDims, onReorder }) => {
 
       {/* Suitcase grid */}
       <DndContext onDragEnd={handleDragEnd}>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 8,
-          padding: 12,
-          background: 'var(--surface-color)',
-          borderRadius: 12,
-          border: `2px solid ${volPct > 0.95 ? '#ef4444' : 'var(--border-color)'}`,
-          minHeight: 200,
-          alignItems: 'flex-end',
-          justifyContent: 'center',
-          maxWidth: '100%',
-          overflow: 'hidden',
-        }}>
+        <div className={`suitcase-grid${volPct > 0.95 ? ' full' : ''}`}>
           {cubes.map(({ key, items }) =>
             items.length > 0 ? (
               <DraggableCube
