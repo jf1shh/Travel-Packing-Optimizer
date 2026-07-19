@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -61,4 +62,9 @@ export default defineConfig({
       }
     })
   ],
+  test: {
+    // Playwright e2e specs also match *.spec.js -- exclude that directory
+    // so vitest doesn't try to run them (different globals/API entirely).
+    exclude: [...configDefaults.exclude, 'e2e/**'],
+  },
 })
