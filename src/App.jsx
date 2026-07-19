@@ -10,6 +10,8 @@ const VolumeChart = React.lazy(() => import('./components/VolumeChart'));
 import WardrobeManager from './components/WardrobeManager';
 import { Logger } from './services/logger';
 import { encodeTripData, decodeTripData } from './services/share';
+import { fetchExchangeRates, getCurrencyForCountry, convertCost, formatCurrency } from './services/currency';
+import { fetchTravelAdvisory } from './services/advisory';
 import { clearAllLocalData } from './services/db';
 import './index.css';
 
@@ -57,6 +59,8 @@ function App() {
   const [lengthUnit, setLengthUnit] = useState('cm');
   const [tripStartDate, setTripStartDate] = useState(null);
   const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState(null);
+  const [advisories, setAdvisories] = useState(null);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
 
   // ── Floating generate button: show when scrolled past the form ──────────
@@ -235,6 +239,28 @@ function App() {
       
       setPackingList(result.list);
       setOutfits(result.outfitCombinations);
+
+      // ── Fetch currency rates for destination countries ──────────
+      try {
+        const currencies = [...new Set(countryCodes.map(cc => getCurrencyForCountry(cc)).filter(Boolean))];
+        if (currencies.length > 0) {
+          const ratesData = await fetchExchangeRates('USD', currencies);
+          setExchangeRates({ base: 'USD', rates: ratesData.rates, currencies });
+        }
+      } catch { /* currency fetch is best-effort */ }
+
+      // ── Fetch travel advisories ─────────────────────────────────
+      try {
+        const uniqueCC = [...new Set(countryCodes.filter(Boolean))];
+        const advisoryResults = await Promise.all(
+          uniqueCC.slice(0, 3).map(async (cc) => {
+            const adv = await fetchTravelAdvisory(cc);
+            return adv ? { countryCode: cc, ...adv } : null;
+          })
+        );
+        const valid = advisoryResults.filter(Boolean);
+        if (valid.length > 0) setAdvisories(valid);
+      } catch { /* advisory fetch is best-effort */ }
       
     } catch (err) {
       setError(err.message || "Failed to generate plan. Please try again.");
@@ -248,6 +274,8 @@ function App() {
     setPackingList(null);
     setOutfits(null);
     setSuitcaseVolume(0);
+    setExchangeRates(null);
+    setAdvisories(null);
     localStorage.removeItem('travelPackerState');
   };
 
@@ -424,6 +452,88 @@ function App() {
               handleRemoveItem={handleRemoveItem}
               handleAddItem={handleAddItem}
             />
+            {/* ── Trip Wallet: currency exchange ───────────────────── */}
+            {exchangeRates && exchangeRates.currencies.length > 0 && (
+              <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>
+                <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>💱 Trip Wallet</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  {exchangeRates.currencies.map(curr => {
+                    const rate = exchangeRates.rates[curr];
+                    if (!rate) return null;
+                    return (
+                      <div key={curr} style={{
+                        backgroundColor: 'var(--surface-color)', padding: '0.5rem 0.75rem',
+                        borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600,
+                        display: 'flex', gap: '0.5rem', alignItems: 'center',
+                      }}>
+                        <span style={{ color: 'var(--accent-color)' }}>1 USD =</span>
+                        <span>{formatCurrency(rate, curr)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <details style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Estimated local costs</summary>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    {exchangeRates.currencies.map(curr => {
+                      const rate = exchangeRates.rates[curr];
+                      if (!rate) return null;
+                      const costs = ['laundry', 'coffee', 'meal', 'toiletries', 'sunscreen'];
+                      return costs.map(key => {
+                        const c = convertCost(key, rate, curr);
+                        return (
+                          <div key={`${curr}-${key}`} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{
+                              key === 'laundry' ? '🧺 Laundry' :
+                              key === 'coffee' ? '☕ Coffee' :
+                              key === 'meal' ? '🍽️ Meal' :
+                              key === 'toiletries' ? '🧴 Toiletries' :
+                              '🧴 Sunscreen'
+                            }</span>
+                            <span style={{ fontWeight: 500 }}>{c.display}</span>
+                          </div>
+                        );
+                      });
+                    })}
+                  </div>
+                </details>
+              </div>
+            )}
+
+            {/* ── Travel advisories ────────────────────────────────── */}
+            {advisories && advisories.length > 0 && (
+              <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>
+                <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>🛡️ Travel Advisories</h4>
+                {advisories.map(adv => (
+                  <div key={adv.countryCode} style={{
+                    marginBottom: '0.75rem', padding: '0.75rem',
+                    backgroundColor: 'var(--surface-color)', borderRadius: '8px',
+                    fontSize: '0.8rem',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>
+                        {adv.countryCode}
+                      </span>
+                      <a href={adv.url} target="_blank" rel="noopener noreferrer" style={{
+                        color: 'var(--text-secondary)', fontSize: '0.75rem',
+                        textDecoration: 'underline',
+                      }}>
+                        Full advisory →
+                      </a>
+                    </div>
+                    <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      {adv.summary.length > 250 ? adv.summary.slice(0, 250) + '…' : adv.summary}
+                    </p>
+                    {adv.updated && (
+                      <div style={{ marginTop: '0.35rem', fontSize: '0.7rem', opacity: 0.6 }}>
+                        Updated: {new Date(adv.updated).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
               <button 
                 onClick={handleReset} 
