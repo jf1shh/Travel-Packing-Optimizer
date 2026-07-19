@@ -19,7 +19,9 @@ export const PLUG_TYPES = {
  * or destinations with different outlet types).
  */
 export const getAdapterSuggestion = (countryCodes = []) => {
-  const known = [...new Set(countryCodes.filter(Boolean).map(c => String(c).toUpperCase()))];
+  if (!countryCodes) return null;
+  const valid = Array.isArray(countryCodes) ? countryCodes : [];
+  const known = [...new Set(valid.filter(Boolean).map(c => String(c).toUpperCase()))];
   if (known.length === 0) return null;
   const plugSets = known.map(cc => PLUG_TYPES[cc]);
   if (plugSets.some(p => !p)) return null;
