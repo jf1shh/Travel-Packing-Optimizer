@@ -82,6 +82,15 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
   const isCarryOn = totalSuitcaseVol < 60000;
   const showTSAAlert = isCarryOn && liquidVolume > 1000;
 
+  // Packing progress: count checked vs total items (excluding 'plane' — worn items)
+  const allPackable = packingList
+    ? Object.entries(packingList).filter(([key]) => key !== 'plane').flatMap(([, items]) => items)
+    : [];
+  const totalItems = allPackable.length;
+  const checkedItems = allPackable.filter(i => i.checked).length;
+  const progressPercent = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+  const isFullyPacked = totalItems > 0 && checkedItems === totalItems;
+
   return (
     <div className="packing-list animate-slide-up" style={{ animationDelay: '0.5s' }}>
       {showTSAAlert && (
@@ -89,6 +98,37 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem 
           <span style={{ fontSize: '1.5rem' }}>⚠️</span>
           <div>
             <strong>TSA Security Alert:</strong> Your liquids bag exceeds the 1-Quart (~1000cm³) limit for carry-ons. You are currently at {Math.round(liquidVolume)}cm³. You must remove some liquids or check your bag.
+          </div>
+        </div>
+      )}
+
+      {/* ── Packing progress bar ────────────────────────────────────────── */}
+      {totalItems > 0 && (
+        <div className="glass" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              {isFullyPacked ? '🎉 All packed!' : 'Packing progress'}
+            </span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 500, color: isFullyPacked ? '#22c55e' : 'var(--text-secondary)' }}>
+              {checkedItems}/{totalItems} items {isFullyPacked ? '✓' : ''}
+            </span>
+          </div>
+          <div style={{
+            width: '100%',
+            height: 8,
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            borderRadius: 999,
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              width: `${progressPercent}%`,
+              height: '100%',
+              borderRadius: 999,
+              background: isFullyPacked
+                ? 'linear-gradient(135deg, #22c55e, #10b981)'
+                : 'var(--accent-gradient)',
+              transition: 'width 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+            }} />
           </div>
         </div>
       )}

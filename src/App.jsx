@@ -37,7 +37,12 @@ const recordItemRemoval = (name) => {
 };
 
 function App() {
-  const [theme, setTheme] = useState('dark'); 
+  const [theme, setTheme] = useState(() => {
+    // Honour saved preference first, then OS-level prefers-color-scheme
+    const saved = localStorage.getItem('travelPackerTheme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   
@@ -52,6 +57,27 @@ function App() {
   const [lengthUnit, setLengthUnit] = useState('cm');
   const [tripStartDate, setTripStartDate] = useState(null);
   const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
+  const [showFloatingButton, setShowFloatingButton] = useState(false);
+
+  // ── Floating generate button: show when scrolled past the form ──────────
+  useEffect(() => {
+    const handleScroll = () => {
+      const formEl = document.querySelector('.trip-form');
+      if (!formEl) return;
+      const formBottom = formEl.getBoundingClientRect().bottom;
+      setShowFloatingButton(formBottom < -50);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToGenerate = () => {
+    const btn = document.querySelector('.trip-form button[type="submit"]');
+    if (btn) {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      btn.focus();
+    }
+  };
   const [wardrobe, setWardrobe] = useState(() => {
     // Guarded: corrupted storage here previously crashed the app on every
     // load, with no way to reach "Delete All My Data" to recover.
@@ -145,7 +171,11 @@ function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prev => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('travelPackerTheme', next);
+      return next;
+    });
   };
 
   const toggleTempUnit = () => {
@@ -473,6 +503,44 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* Floating generate button — appears when scrolled past the form */}
+      {showFloatingButton && !packingList && (
+        <button
+          onClick={scrollToGenerate}
+          style={{
+            position: 'fixed',
+            bottom: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 900,
+            padding: '12px 28px',
+            fontSize: '0.95rem',
+            fontWeight: 700,
+            borderRadius: '999px',
+            background: 'var(--accent-gradient)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 24px rgba(37, 99, 235, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateX(-50%) translateY(-2px)';
+            e.target.style.boxShadow = '0 6px 32px rgba(37, 99, 235, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateX(-50%)';
+            e.target.style.boxShadow = '0 4px 24px rgba(37, 99, 235, 0.4)';
+          }}
+        >
+          ⚡ Generate List
+        </button>
+      )}
     </div>
   );
 }
