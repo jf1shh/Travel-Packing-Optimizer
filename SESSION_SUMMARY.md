@@ -1,61 +1,116 @@
-# Session Summary — Full Pass: Bugs, Features, Scanner, Tests & UX Polish
+# Session Summary — Multi-Session Build: From Bug Fixes to Production-Ready App
 
-## What We Accomplished
+## State at a Glance
 
-### 1. Bug Fixes (all verified by executing the code, then fixed)
-- **Activity pills couldn't be toggled off** in `ItineraryCalendar.jsx`. Clicking an already-active pill now deselects it — Casual reverts to auto-guess, others clear to explicit-none.
-- **Yellow, pink, and purple wardrobe items silently excluded.** `COLOR_MATCHES` in `packerLogic.js` had no entries for these three colors, so `doColorsMatch()` returned `false` for every pairing — those garments never formed outfits. Added full compatibility entries.
-- **Duplicate `{...style, ...style}` spread** in `OutfitEditor.jsx` — removed.
-- **`getAdapterSuggestion(null)` threw `TypeError`** in `plugs.js` — added null/array guard.
-- **188 lines of dead Vite scaffold CSS** in `App.css` (`.counter`, `.hero`, `.framework`, `#center`, `#next-steps`, `#docs`, `#spacer`, `.ticks`) — removed, verified zero JSX references.
+| Metric | Value |
+|---|---|
+| Tests | 210 (13 files) |
+| Lint | 0 warnings, 0 errors |
+| Build | Clean (PWA + CSP) |
+| Source files | 58 |
+| Components | 14 |
+| Languages | 11 (ar, de, en, es, fr, hi, it, ja, ko, pt, zh) |
+| Airlines | 77 |
+| Suitcase models | 44 |
+| Fashion palettes | 12 |
 
-### 2. Accessibility
-- **OutfitEditor.jsx** now has full ARIA annotations: `role="dialog"`, `aria-modal`, `role="list"`/`role="listitem"` on draggable closet items, `aria-grabbed`, `tabIndex={0}`, `aria-dropeffect` on drop zones.
+---
 
-### 3. Fashion Archetypes — 5 New Palettes
-- Added **Ivy League Prep**, **Rock Chic**, **Whimsigoth**, **Coastal Maritime**, and **Cottagecore** to `PALETTES` (7 → 12 total).
-- Each has 4 tops, 3 bottoms, 2 outerwear, and 2–3 shoes in curated, mathematically-compatible colors.
-- Wired into `LogisticsPreferences.jsx` dropdown and `CapsuleVisualizer.jsx` gradient display.
-- Stress test verifies all 12 palettes produce valid outfit combinations without fallback.
+## Features Built
 
-### 4. Suitcase Camera Scanner — Full Suite
-- **`SuitcaseScanner.jsx`** — dual-mode full-screen camera scanner:
-  - **📏 Measure mode:** Credit-card calibration photography. Take a photo → tap card edges (known 85.60mm) → tap suitcase L/W → computes real-world dimensions via pixel-scale math. Includes undo, retake, torch toggle, camera switch.
-  - **📷 Barcode/Scan mode:** Live `BarcodeDetector` API (Chrome-native, supports UPC-A/EAN-13/Code 128/QR). Auto-detects barcodes from camera feed with green bounding-box overlay. Auto-lookups in a 44-model database. Brand search dropdown with typeahead. Graceful fallback when BarcodeDetector unavailable.
-- **`src/utils/measurement.js`** — pixel math: `pixelDistance`, `calibrateScale` (zero-guard), `pixelsToCm`, `estimateHeight`, `measureFromTaps` full pipeline, `formatDimensions`.
-- **`src/utils/suitcaseDatabase.js`** — 44 suitcase models across 16 brands (Away, Rimowa, Samsonite, Monos, Travelpro, BÉIS, Osprey, Peak Design, Tumi, Delsey, July, Arlo Skye, Paravel, Roam, American Tourister, Briggs & Riley) with dimensions, type, preset, and UPC prefix matching. `lookupByBarcode()`, `searchByBrand()`, `getAllBrands()`, `getModelsForBrand()`.
-- `TripForm.jsx` wired with scanner open/close state + scanned dimension callback with preset auto-selection.
-- `SuitcaseSelector.jsx` shows green "✅ Identified: Away — The Carry-On" badge when a model is found.
+### Core Engine
+- **Weather-aware packing** — live Open-Meteo forecasts + 3-year climate normals for trips >16 days
+- **Two-constraint knapsack** — volume *and* 7 kg carry-on weight limit when flying
+- **Laundry cycle math** — 5-day laundry on a 30-day trip packs 5 days of clothes, not 30
+- **Color-matched capsule wardrobes** — 14×14 color compatibility matrix, all colors now supported (yellow, pink, purple were missing — fixed)
+- **12 fashion archetypes** — Quiet Luxury, Gorpcore, Scandi, Streetwear, Dark Academia, Athleisure, Bohemian, Prep, Rock, Whimsigold, Coastal, Cottagecore
+- **Activity-aware gear injection** — Beach/Hike/Ski/Formal/Night Out/Business/Sightseeing/Transit
 
-### 5. Test Suite — 62 → 157 Tests (95 New)
-| File | Tests | Coverage |
-|---|---|---|
-| `measurement.test.js` | 25 | pixelDistance, calibrateScale (zero/negative guards), pixelsToCm rounding, estimateHeight bounds, measureFromTaps pipeline, formatDimensions |
-| `suitcaseDatabase.test.js` | 27 | lookupByBarcode (full/prefix/no-match/null/short/whitespace), searchByBrand (partial/dedup/limit), getAllBrands, getModelsForBrand, MODELS integrity |
-| `activity.test.js` | 15 | guessActivityFromDestination (ski/beach/hike/nightout/business/sightseeing/unknown/null, case-insensitive, substring), ACTIVITY_OPTIONS uniqueness |
-| `plugs.test.js` | 17 | getAdapterSuggestion (single/multi/same/diff/null/unknown/dedup/case-insensitive), PLUG_TYPES integrity |
-| `fuzz.test.js` | 9 | 100-iteration random trip (no crash/NaN, valid shape), 36 palette×gender combos, all travel modes, all strategies×lengths, laundry cycle enforcement, 7kg weight limit, extreme temp swings, color symmetry (14×14 pairs) |
+### Data & Integrations
+- **Zip/postal code geocoding** — Open-Meteo first, Nominatim fallback for codes like 90210 and SW1A 1AA
+- **Destination autocomplete** — debounced Open-Meteo suggestions dropdown with keyboard navigation while typing
+- **Currency converter** — Frankfurter API (free, no key), live exchange rates + estimated local costs
+- **Travel advisories** — GOV.UK safety summaries per destination country, with packing relevance extraction
+- **Airline baggage compliance** — 77-airline static dataset, live validation against user's suitcase dimensions
+- **Power plug adapter advisor** — per-country plug type lookup with adapter suggestions
 
-### 6. UX Quick Wins
-- **Packing progress bar** (`PackingList.jsx`): animated gradient bar showing "12/25 items packed", turns green with "🎉 All packed!" at 100%.
-- **Floating generate button** (`App.jsx`): sticky "⚡ Generate List" pill appears when scrolled past the form, smooth-scrolls back to the submit button.
-- **Dark/light auto-detect** (`App.jsx`): respects `prefers-color-scheme` on first visit; manual toggle preference persisted to localStorage.
+### Suitcase Scanner
+- **Dual-mode full-screen camera** — credit-card calibrated measurement + live BarcodeDetector API
+- **44-model database** — Away, Rimowa, Samsonite, Monos, Travelpro, BÉIS, Osprey, Peak Design, Tumi, Delsey, July, Arlo Skye, Paravel, Roam, American Tourister, Briggs & Riley
+- **Brand search** — typeahead dropdown across all brands
+- **Auto-preset selection** — scanned model fills suitcase dimensions automatically
 
-### 7. Documentation
-- **README.md** rewritten: full feature list across 6 categories, 7-entry plain-English FAQ (how packing works, color matching, scanner accuracy, offline support, data privacy, laundry cycle, archetypes), architecture table with all 20+ source files, updated test count (157) and commands.
+### Wow-Factor UX
+- **Photo outfit previews** — wardrobe photos from IndexedDB appear as thumbnails next to daily outfit pieces in CapsuleVisualizer
+- **Group trip sync** — BroadcastChannel live collaborative check-off across browser tabs ("🟢 Syncing (3)")
+- **Visual suitcase layout** — proportional draggable packing cubes with fill percentage bar (green/yellow/red)
+- **Packing progress bar** — animated gradient showing "12/25 items packed", turns green at 100%
+- **Floating generate button** — sticky pill appears when scrolled past the form
+- **Hero section** — animated gradient orb, 6 feature badges, title + controls in one row
+- **Dark/light auto-detect** — respects `prefers-color-scheme`, manual toggle persisted to localStorage
 
-## Current State
-- **10 test files, 157 tests** — all passing
-- **Oxlint** — 0 warnings, 0 errors across 37 files
-- **Production build** — clean
-- **Git** — pushed to `origin/main`
+### UI Polish
+- **Premium glassmorphism** — `blur(28px)`, translucent borders, 3-stop accent gradient (blue→purple→pink)
+- **Animations** — `pulse-glow` on generate, `float` orb, `shimmer` skeleton loading, staggered children
+- **Card lift** — `.glass-lift` hover class with `translateY(-3px)`
+- **Custom form controls** — select dropdown arrows, larger focus rings, softer accent colors
 
-## On the Backburner
-- Quick-fill trip templates (one-click "Weekend in Paris" etc.)
-- "Forgot anything?" post-generation verification checklist
-- Wardrobe photo thumbnails in CapsuleVisualizer outfit slots
-- Side-view photo measurement for suitcase height (currently estimated)
-- A4 paper as alternative scanner reference object
-- Save/load named trip presets
-- Component-level React tests (App.jsx orchestration, WardrobeManager, etc.)
-- PWA manifest with real 192/512 PNG icons
+### i18n
+- **11 languages** — React Context + lazy-loaded JSON, browser auto-detect, RTL support
+- **Project rule** — `.agents/rules/i18n-required.md` ensures no future hardcoded strings slip through
+
+### Privacy & Security
+- **100% local** — no accounts, no servers, no telemetry. Weather from Open-Meteo (free, no API key)
+- **PWA** — install to home screen, offline support, strict Content-Security-Policy
+- **Share links** — LZ-String compressed in URL fragment (never sent to server)
+- **Crash logger** — on-device error logging with JSON export (no more `alert()` popups)
+- **Storage quota check** — warns before IndexedDB silent failures
+- **Input sanitization** — share payload validation, MAX_WARDROBE_ITEMS=500 guard against crafted links
+- **Translation fallback** — corrupt/missing JSON gracefully falls back to English
+
+---
+
+## Bug Fixes Applied
+
+| Bug | Fix |
+|---|---|
+| Activity pills couldn't be toggled off | Deselect on re-click; Casual reverts to auto-guess |
+| Yellow/pink/purple items silently excluded from outfits | Added COLOR_MATCHES entries for all three |
+| Duplicate `{...style, ...style}` spread in OutfitEditor | Removed duplicate |
+| `getAdapterSuggestion(null)` threw TypeError | Added null/array guard |
+| 188 lines dead Vite scaffold CSS in App.css | Removed (zero JSX references) |
+| Missing ARIA on OutfitEditor | Full `role="dialog"`, `aria-modal`, `aria-grabbed`, etc. |
+| `alert()` popups from crash logger | Replaced with `console.log`/`console.error` |
+| No guard on wardrobe size in packerLogic | MAX_WARDROBE_ITEMS=500 cap |
+| Corrupt translation JSON crashed the app | try/catch wrapper falls back to English |
+
+---
+
+## Architecture
+
+| File | Role |
+|---|---|
+| `packerLogic.js` | Core engine — outfit generation, knapsack, weather injection, color matching |
+| `App.jsx` | Root orchestrator — state, persistence, theme, share links, hero section |
+| `api.js` | Open-Meteo weather/geocoding + Nominatim zip code fallback |
+| `airlineBaggage.js` | 77-airline dataset with carry-on compliance validation |
+| `suitcaseDatabase.js` | 44-model barcode/name lookup |
+| `measurement.js` | Credit-card calibrated pixel-to-cm math |
+| `currency.js` / `advisory.js` | Frankfurter exchange rates + GOV.UK advisories (free, no key) |
+| `share.js` | LZ-String compressed share links with full input sanitization |
+| `db.js` | IndexedDB photo storage with quota checking |
+| `logger.js` | On-device crash logger with error export |
+| `i18n/` | 11 languages with lazy-loaded JSON, browser auto-detect, RTL |
+| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `SuitcaseLayout`, `ItineraryCalendar`, `VolumeChart`, `CapacityBar`, `LogisticsPreferences`, `SuitcaseSelector`, `Header`, `ErrorBoundary` |
+
+---
+
+## Commands
+
+```bash
+npm install
+npm run dev        # start dev server
+npm test           # 210 tests
+npm run lint       # Oxlint
+npm run build      # production build with PWA + CSP
+```
