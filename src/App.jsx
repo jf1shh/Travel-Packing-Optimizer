@@ -13,6 +13,7 @@ import { encodeTripData, decodeTripData } from './services/share';
 import { fetchExchangeRates, getCurrencyForCountry, convertCost, formatCurrency } from './services/currency';
 import { fetchTravelAdvisory } from './services/advisory';
 import { clearAllLocalData } from './services/db';
+import { useT } from './i18n/context.jsx';
 import './index.css';
 
 const PREFS_KEY = 'travelPackerItemPrefs';
@@ -39,6 +40,7 @@ const recordItemRemoval = (name) => {
 };
 
 function App() {
+  const { t } = useT();
   const [theme, setTheme] = useState(() => {
     // Honour saved preference first, then OS-level prefers-color-scheme
     const saved = localStorage.getItem('travelPackerTheme');
@@ -151,8 +153,8 @@ function App() {
     if (data) {
       const sharedCount = data.w ? data.w.length : 0;
       const message = sharedCount > 0
-        ? `Load shared trip data? This will replace your closet (currently ${wardrobe.length} items) with ${sharedCount} shared items and overwrite your saved trip settings.`
-        : 'Load shared trip data? This will overwrite your saved trip settings.';
+        ? t('app.shareConfirmItems').replace('{wardrobe}', wardrobe.length).replace('{shared}', sharedCount)
+        : t('app.shareConfirmNoItems');
       if (window.confirm(message)) {
         if (data.w) {
           setWardrobe(data.w);
@@ -160,7 +162,7 @@ function App() {
         }
         if (data.s) {
           localStorage.setItem('travelPackerState', JSON.stringify(data.s));
-          alert("Shared trip loaded successfully! Click Generate to view the packing list.");
+          alert(t('app.shareLoaded'));
         }
       }
     }
@@ -263,7 +265,7 @@ function App() {
       } catch { /* advisory fetch is best-effort */ }
       
     } catch (err) {
-      setError(err.message || "Failed to generate plan. Please try again.");
+      setError(err.message || t('app.generateError'));
     } finally {
       setIsLoading(false);
     }
@@ -280,7 +282,7 @@ function App() {
   };
 
   const handleDeleteAllData = async () => {
-    if (window.confirm("Are you sure you want to completely delete all saved data, including your Wardrobe and Trip preferences? This cannot be undone.")) {
+    if (window.confirm(t('app.deleteConfirm'))) {
       await clearAllLocalData(); // wipes IndexedDB (wardrobe photos + crash logs)
       localStorage.clear();
       window.location.reload();
@@ -405,11 +407,11 @@ function App() {
       // so the payload can't land in request logs.
       const url = `${window.location.origin}${window.location.pathname}#share=${shareCode}`;
       navigator.clipboard.writeText(url).then(
-        () => alert("Share link copied to clipboard! Send this to your travel partner."),
-        () => window.prompt("Clipboard unavailable -- copy this share link manually:", url)
+        () => alert(t('app.shareCopied')),
+        () => window.prompt(t('app.shareClipboardFail'), url)
       );
     } else {
-      alert("Failed to generate share link.");
+      alert(t('app.shareFailed'));
     }
   };
 
@@ -443,7 +445,7 @@ function App() {
 
         {packingList && (
           <div style={{ paddingBottom: '2rem' }}>
-            <Suspense fallback={<div style={{ textAlign: 'center', padding: '2rem' }}>Loading Chart...</div>}>
+            <Suspense fallback={<div style={{ textAlign: 'center', padding: '2rem' }}>{t('app.loadingChart')}</div>}>
               <VolumeChart packingList={packingList} suitcaseVolume={suitcaseVolume} />
             </Suspense>
             <PackingList 
@@ -455,7 +457,7 @@ function App() {
             {/* ── Trip Wallet: currency exchange ───────────────────── */}
             {exchangeRates && exchangeRates.currencies.length > 0 && (
               <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>
-                <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>💱 Trip Wallet</h4>
+                <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>💱 {t('app.tripWallet')}</h4>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
                   {exchangeRates.currencies.map(curr => {
                     const rate = exchangeRates.rates[curr];
@@ -473,7 +475,7 @@ function App() {
                   })}
                 </div>
                 <details style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Estimated local costs</summary>
+                  <summary style={{ cursor: 'pointer', fontWeight: 500 }}>{t('app.estimatedCosts')}</summary>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
                     {exchangeRates.currencies.map(curr => {
                       const rate = exchangeRates.rates[curr];
@@ -503,7 +505,7 @@ function App() {
             {/* ── Travel advisories ────────────────────────────────── */}
             {advisories && advisories.length > 0 && (
               <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>
-                <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>🛡️ Travel Advisories</h4>
+                <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>🛡️ {t('app.travelAdvisories')}</h4>
                 {advisories.map(adv => (
                   <div key={adv.countryCode} style={{
                     marginBottom: '0.75rem', padding: '0.75rem',
@@ -517,16 +519,14 @@ function App() {
                       <a href={adv.url} target="_blank" rel="noopener noreferrer" style={{
                         color: 'var(--text-secondary)', fontSize: '0.75rem',
                         textDecoration: 'underline',
-                      }}>
-                        Full advisory →
+                      }}>{t('app.fullAdvisory')} →
                       </a>
                     </div>
                     <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                       {adv.summary.length > 250 ? adv.summary.slice(0, 250) + '…' : adv.summary}
                     </p>
                     {adv.updated && (
-                      <div style={{ marginTop: '0.35rem', fontSize: '0.7rem', opacity: 0.6 }}>
-                        Updated: {new Date(adv.updated).toLocaleDateString()}
+                      <div style={{ marginTop: '0.35rem', fontSize: '0.7rem', opacity: 0.6 }}>{t('app.updated')}: {new Date(adv.updated).toLocaleDateString()}
                       </div>
                     )}
                   </div>
@@ -544,9 +544,7 @@ function App() {
                   padding: '0.75rem 2rem', 
                   fontWeight: '600',
                   boxShadow: 'none'
-                }}
-              >
-                Clear Data & Start Over
+                }}>{t('app.clearData')}
               </button>
             </div>
           </div>
@@ -560,9 +558,8 @@ function App() {
         />
 
         <div style={{ marginTop: '4rem', padding: '2rem 0', borderTop: '1px solid var(--border-color)', textAlign: 'center', opacity: 0.7 }}>
-          <h4 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>Data & Privacy</h4>
-          <p style={{ fontSize: '0.875rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            This app runs 100% locally on your device. We do not store or transmit your data to any databases.
+          <h4 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>{t('app.dataPrivacy')}</h4>
+          <p style={{ fontSize: '0.875rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>{t('app.localOnly')}
           </p>
           <div style={{ marginBottom: '1rem' }}>
             <button 
@@ -576,9 +573,7 @@ function App() {
                 fontSize: '0.875rem',
                 cursor: 'pointer',
                 marginRight: '1rem'
-              }}
-            >
-              🔗 Copy Share Link
+              }}>🔗 {t('app.copyShareLink')}
             </button>
           </div>
           <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
@@ -592,9 +587,7 @@ function App() {
                 borderRadius: '8px',
                 fontSize: '0.875rem',
                 cursor: 'pointer'
-              }}
-            >
-              Delete All My Data
+              }}>{t('app.deleteAllData')}
             </button>
             <button 
               onClick={() => Logger.exportLogs()} 
@@ -606,9 +599,7 @@ function App() {
                 borderRadius: '8px',
                 fontSize: '0.875rem',
                 cursor: 'pointer'
-              }}
-            >
-              Download Diagnostic Logs
+              }}>{t('app.downloadLogs')}
             </button>
           </div>
         </div>
@@ -646,9 +637,7 @@ function App() {
           onMouseLeave={(e) => {
             e.target.style.transform = 'translateX(-50%)';
             e.target.style.boxShadow = '0 4px 24px rgba(37, 99, 235, 0.4)';
-          }}
-        >
-          ⚡ Generate List
+          }}>⚡ {t('app.generateList')}
         </button>
       )}
     </div>

@@ -6,8 +6,10 @@ import SuitcaseScanner from './SuitcaseScanner';
 import ItineraryCalendar from './ItineraryCalendar';
 import LogisticsPreferences from './LogisticsPreferences';
 import { getAllAirlines, getRegions } from '../utils/airlineBaggage';
+import { useT } from '../i18n/context.jsx';
 
 const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit = 'C', toggleTempUnit }) => {
+  const { t } = useT();
   const [destinations, setDestinations] = useState(['']);
   
   const todayStr = new Date().toISOString().split('T')[0];
@@ -206,9 +208,9 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   return (
     <form onSubmit={handleSubmit} className="trip-form glass animate-slide-up">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Trip Details</h3>
+        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{t('tripForm.title')}</h3>
         <label style={{ cursor: 'pointer', fontSize: '0.875rem', background: 'var(--primary-color)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold' }}>
-          Import Calendar (.ics)
+          {t('tripForm.importIcs')}
           <input type="file" accept=".ics" onChange={handleIcsUpload} style={{ display: 'none' }} />
         </label>
       </div>
@@ -217,14 +219,14 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
-            Destinations
-            {isFetchingWeather && <span style={{ marginLeft: '0.5rem', color: 'var(--accent-color)', fontWeight: 'normal' }}>• Fetching weather...</span>}
+            {t('tripForm.destinations')}
+            {isFetchingWeather && <span style={{ marginLeft: '0.5rem', color: 'var(--accent-color)', fontWeight: 'normal' }}>{t('tripForm.fetchingWeather')}</span>}
           </label>
           {destinations.map((dest, idx) => (
             <input 
               key={idx}
               type="text" 
-              placeholder={idx === 0 ? "e.g., London, or 40.71, -74.00" : "Add another city..."}
+              placeholder={idx === 0 ? t('tripForm.destinationPlaceholder') : t('tripForm.addDestinationPlaceholder')}
               value={dest}
               onChange={(e) => updateDestination(idx, e.target.value)}
               required={idx === 0}
@@ -236,14 +238,14 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
               onClick={addDestination}
               style={{ background: 'transparent', color: 'var(--accent-color)', border: '1px dashed var(--accent-color)', padding: '0.5rem', marginTop: '0.25rem' }}
             >
-              + Add Destination
+              + {t('tripForm.addDestination')}
             </button>
           )}
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label htmlFor="startDate" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Start Date</label>
+            <label htmlFor="startDate" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>{t('tripForm.startDate')}</label>
             <input 
               id="startDate"
               type="date" 
@@ -254,7 +256,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
             />
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label htmlFor="endDate" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>End Date</label>
+            <label htmlFor="endDate" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>{t('tripForm.endDate')}</label>
             <input 
               id="endDate"
               type="date" 
@@ -268,25 +270,25 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
       </div>
 
       <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label htmlFor="travelMode" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>Travel Mode</label>
+        <label htmlFor="travelMode" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>{t('tripForm.travelMode')}</label>
         <select id="travelMode" value={travelMode} onChange={(e) => setTravelMode(e.target.value)}>
-          <option value="flying">✈️ Flying (Strict Airline Limits)</option>
-          <option value="driving">🚗 Driving / Road Trip</option>
-          <option value="train">🚂 Train / Bus</option>
-          <option value="biking">🚴 Biking / Backpacking</option>
+          <option value="flying">✈️ {t('tripForm.travelModeFlying')}</option>
+          <option value="driving">🚗 {t('tripForm.travelModeDriving')}</option>
+          <option value="train">🚂 {t('tripForm.travelModeTrain')}</option>
+          <option value="biking">🚴 {t('tripForm.travelModeBiking')}</option>
         </select>
       </div>
 
       <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label htmlFor="airline" style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
-          Airline (optional — validates suitcase against carry-on limits)
+          {t('tripForm.airlineLabel')}
         </label>
         <select
           id="airline"
           value={airlineCode}
           onChange={(e) => setAirlineCode(e.target.value)}
         >
-          <option value="">No airline selected</option>
+          <option value="">{t('tripForm.airlineNone')}</option>
           {getRegions().map(region => (
             <optgroup key={region} label={region}>
               {getAllAirlines(region).map(airline => (
@@ -338,7 +340,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
       />
 
       <button type="submit" disabled={isLoading} style={{ width: '100%', fontSize: '1.1rem', padding: '1rem' }}>
-        {isLoading ? 'Optimizing...' : 'Generate Optimized List'}
+        {isLoading ? t('tripForm.optimizing') : t('tripForm.generate')}
       </button>
     </form>
   );
