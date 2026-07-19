@@ -13,7 +13,7 @@ function ErrorFallback({ error: _error }) {
       <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
         <button 
           onClick={() => window.location.reload()}
-          style={{ padding: '0.75rem 1.5rem', background: 'var(--primary-color, #3b82f6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+          style={{ padding: '0.75rem 1.5rem', background: 'var(--accent-color, #3b82f6)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
         >
           {t('error.reload')}
         </button>

@@ -281,7 +281,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     <form onSubmit={handleSubmit} className="trip-form glass animate-slide-up">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{t('tripForm.title')}</h3>
-        <label style={{ cursor: 'pointer', fontSize: '0.875rem', background: 'var(--primary-color)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold' }}>
+        <label style={{ cursor: 'pointer', fontSize: '0.875rem', background: 'var(--accent-color)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold' }}>
           {t('tripForm.importIcs')}
           <input type="file" accept=".ics" onChange={handleIcsUpload} style={{ display: 'none' }} />
         </label>

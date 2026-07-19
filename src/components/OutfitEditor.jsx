@@ -72,10 +72,10 @@ const DroppableSlot = ({ id, label, t, currentItem }) => {
   const slotName = currentItem ? currentItem.name || currentItem : null;
   const style = {
     padding: '1rem',
-    border: '2px dashed ' + (isOver ? 'var(--primary-color)' : 'var(--border-color)'),
+    border: '2px dashed ' + (isOver ? 'var(--accent-color)' : 'var(--border-color)'),
     borderRadius: '12px',
     textAlign: 'center',
-    background: isOver ? 'var(--bg-secondary)' : 'transparent',
+    background: isOver ? 'var(--surface-color)' : 'transparent',
     minHeight: '100px',
     display: 'flex',
     flexDirection: 'column',
@@ -146,7 +146,7 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
           <h2>{t('outfit.editTitle').replace('{name}', dayOutfit.name)}</h2>
           <div>
             <button onClick={onCancel} style={{ marginRight: '1rem', background: 'transparent', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>{t('outfit.cancel')}</button>
-            <button onClick={() => onSave(editedOutfit)} style={{ background: 'var(--primary-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>{t('outfit.save')}</button>
+            <button onClick={() => onSave(editedOutfit)} style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>{t('outfit.save')}</button>
           </div>
         </div>
 

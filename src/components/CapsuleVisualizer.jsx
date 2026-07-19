@@ -153,11 +153,11 @@ const CapsuleVisualizer = ({ outfits, setOutfits, wardrobe, palette, onActivityC
         <h3 style={{ fontSize: '1.25rem', margin: 0 }}>{t('capsule.title')}</h3>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {startDate && (
-            <button onClick={handleExportICS} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
+            <button onClick={handleExportICS} style={{ background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>
               📅 {t('capsule.exportIcs')}
             </button>
           )}
-          <button onClick={() => setEditingDayIndex(currentIndex)} style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>              ✏️ {t('capsule.edit')}
+          <button onClick={() => setEditingDayIndex(currentIndex)} style={{ background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer' }}>              ✏️ {t('capsule.edit')}
           </button>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             {currentIndex + 1} {t('capsule.ofCount').split('{n}')[0]}{outfits.length}{t('capsule.ofCount').split('{total}')[1] || ''}

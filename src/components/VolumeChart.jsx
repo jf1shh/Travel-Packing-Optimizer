@@ -71,7 +71,7 @@ const VolumeChart = ({ packingList, suitcaseVolume }) => {
       { name: 'Tech', value: tech, color: '#8b5cf6' },       // Purple
       { name: 'Toiletries', value: toiletries, color: '#10b981' }, // Green
       { name: 'Other', value: other, color: '#f59e0b' },     // Orange
-      { name: 'Free Space', value: free, color: '#e5e7eb' }, // Gray
+      { name: 'Free Space', value: free, color: '#94a3b8' }, // Slate gray -- visible against both light and dark backgrounds, unlike the previous near-white gray which washed out on dark
     ].filter(d => d.value > 0);
   }, [packingList, suitcaseVolume]);
 
@@ -96,7 +96,7 @@ const VolumeChart = ({ packingList, suitcaseVolume }) => {
 
   return (
     <div style={{ padding: '2rem', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--border-color)', margin: '2rem 0' }}>
-      <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--text-color)' }}>{t('chart.title')}</h3>
+      <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{t('chart.title')}</h3>
       <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Your bag is <strong>{percentage}% full</strong> ({Math.round(totalUsed / 1000)}L out of {Math.round(capacity / 1000)}L used). Worn items (travel day outfit) are excluded from suitcase volume.
       </p>

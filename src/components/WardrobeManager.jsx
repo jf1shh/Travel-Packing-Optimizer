@@ -313,7 +313,7 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
             {wardrobe.map(item => (
               <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative' }}>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '8px', background: 'var(--surface-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative' }}>
                     {itemImages[item.id] ? (
                        <img src={itemImages[item.id]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : isProcessing[item.id] ? (

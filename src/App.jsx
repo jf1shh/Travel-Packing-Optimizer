@@ -647,10 +647,10 @@ function App() {
             <button 
               onClick={handleCopyShareLink}
               style={{ 
-                background: 'transparent', 
-                color: 'var(--primary-color)', 
-                border: '1px solid var(--primary-color)', 
-                padding: '0.5rem 1rem', 
+                background: 'transparent',
+                color: 'var(--accent-color)',
+                border: '1px solid var(--accent-color)',
+                padding: '0.5rem 1rem',
                 borderRadius: '8px',
                 fontSize: '0.875rem',
                 cursor: 'pointer',
