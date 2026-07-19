@@ -437,39 +437,41 @@ function App() {
         {!packingList && (
           <div className="hero animate-fade-in">
             <div className="hero-orb" />
-            {/* Compact controls row */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem', position: 'relative' }}>
-              <select
-                value={lang}
-                onChange={(e) => setLang(e.target.value)}
-                style={{
-                  padding: '0.35rem 0.5rem', borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--surface-color)',
-                  color: 'var(--text-primary)', cursor: 'pointer',
-                  fontSize: '0.8rem', maxWidth: '100px', width: 'auto',
-                }}
-                aria-label="Select language"
-              >
-                {LANGUAGES.map(l => (
-                  <option key={l.code} value={l.code}>{l.native}</option>
-                ))}
-              </select>
-              <button 
-                onClick={() => setIsWardrobeOpen(true)}
-                style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--surface-color)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', boxShadow: 'none' }}
-              >
-                👕 {t('app.myCloset')}
-              </button>
-              <button 
-                className="theme-toggle" 
-                onClick={toggleTheme}
-                aria-label={t('common.toggleTheme')}
-              >
-                {theme === 'light' ? '🌙' : '☀️'}
-              </button>
+            {/* Title + controls in one row: title left, controls right */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem', position: 'relative' }}>
+              <h1 className="gradient-text" style={{ margin: 0, fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', textAlign: 'left' }}>{t('app.title')}</h1>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  style={{
+                    padding: '0.35rem 0.5rem', borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--surface-color)',
+                    color: 'var(--text-primary)', cursor: 'pointer',
+                    fontSize: '0.8rem', maxWidth: '100px', width: 'auto',
+                  }}
+                  aria-label="Select language"
+                >
+                  {LANGUAGES.map(l => (
+                    <option key={l.code} value={l.code}>{l.native}</option>
+                  ))}
+                </select>
+                <button 
+                  onClick={() => setIsWardrobeOpen(true)}
+                  style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--surface-color)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', boxShadow: 'none', whiteSpace: 'nowrap' }}
+                >
+                  👕 {t('app.myCloset')}
+                </button>
+                <button 
+                  className="theme-toggle" 
+                  onClick={toggleTheme}
+                  aria-label={t('common.toggleTheme')}
+                >
+                  {theme === 'light' ? '🌙' : '☀️'}
+                </button>
+              </div>
             </div>
-            <h1 className="gradient-text">{t('app.title')}</h1>
             <p className="tagline">{t('app.tagline')}</p>
             <div className="hero-badges">
               <span className="hero-badge">🌤️ Weather-aware</span>
