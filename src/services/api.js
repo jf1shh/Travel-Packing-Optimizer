@@ -41,11 +41,73 @@ const rememberGeoKey = (key) => {
   }
 };
 
+const COORD_REGEX = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/;
+
+/**
+ * Live destination suggestions for the autocomplete dropdown. Uses only
+ * Open-Meteo's geocoding search (never Nominatim -- its usage policy
+ * explicitly forbids client-side autocomplete: "you must not implement
+ * such a service on the client side using the API",
+ * https://operations.osmfoundation.org/policies/nominatim/).
+ */
+export const searchLocations = async (query, count = 5) => {
+  const trimmed = (query || '').trim();
+  if (trimmed.length < 2 || COORD_REGEX.test(trimmed)) return [];
+  try {
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=${count}&language=en&format=json`);
+    const data = await response.json();
+    return Array.isArray(data.results) ? data.results : [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Fallback geocoder for postal/zip codes Open-Meteo doesn't recognize.
+ * Open-Meteo's geocoder already resolves many well-known postcodes (e.g.
+ * US "90210" -> Beverly Hills, indexed directly on the city entry), but
+ * returns nothing for formats like UK ("SW1A 1AA") or Canadian codes.
+ * Nominatim (OpenStreetMap) covers those -- used here only as a one-off
+ * lookup when Open-Meteo already came back empty, never on every
+ * keystroke, keeping well within Nominatim's 1 req/sec policy and its
+ * ban on client-side autocomplete. The browser's default Referer header
+ * (the app's own origin) satisfies the policy's "identify your
+ * application" requirement, since JS cannot set a custom User-Agent.
+ *
+ * Known limitation: bare numeric postcodes are ambiguous worldwide (a
+ * "90210" also exists as a village postcode in Ukraine) and Nominatim's
+ * free-text search can return the wrong country for those. This path
+ * only runs when Open-Meteo has nothing, so common numeric codes (which
+ * Open-Meteo already resolves correctly) never reach it in practice.
+ */
+export const geocodeViaNominatim = async (locationName) => {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationName)}&format=jsonv2&addressdetails=1&limit=1`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const item = data[0];
+    const address = item.address || {};
+    const lat = parseFloat(item.lat);
+    const lon = parseFloat(item.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    return {
+      latitude: lat,
+      longitude: lon,
+      name: address.city || address.town || address.village || address.municipality
+        || (item.display_name ? item.display_name.split(',')[0] : locationName),
+      country: address.country || 'Unknown',
+      country_code: address.country_code ? address.country_code.toUpperCase() : undefined
+    };
+  } catch {
+    return null;
+  }
+};
+
 export const geocodeLocation = async (locationName) => {
   try {
     // Check if user inputted raw coordinates e.g., "40.71, -74.00"
-    const coordRegex = /^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/;
-    const match = locationName.match(coordRegex);
+    const match = locationName.match(COORD_REGEX);
     if (match) {
       return {
         latitude: parseFloat(match[1]),
@@ -57,10 +119,17 @@ export const geocodeLocation = async (locationName) => {
 
     const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1&language=en&format=json`);
     const data = await response.json();
-    if (data.results && data.results.length > 0) {
-      localStorage.setItem('geo_' + locationName, JSON.stringify(data.results[0]));
+    let result = data.results && data.results.length > 0 ? data.results[0] : null;
+
+    // Zip/postal code fallback: Open-Meteo found nothing, try Nominatim.
+    if (!result) {
+      result = await geocodeViaNominatim(locationName);
+    }
+
+    if (result) {
+      localStorage.setItem('geo_' + locationName, JSON.stringify(result));
       rememberGeoKey('geo_' + locationName);
-      return data.results[0]; // Returns { latitude, longitude, name, country, country_code }
+      return result; // Returns { latitude, longitude, name, country, country_code }
     }
     throw new Error('Location not found');
   } catch (error) {

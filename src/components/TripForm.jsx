@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { geocodeLocation, fetchWeather } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { geocodeLocation, fetchWeather, searchLocations } from '../services/api';
 import { guessActivityFromDestination } from '../utils/activity';
 import SuitcaseSelector from './SuitcaseSelector';
 import SuitcaseScanner from './SuitcaseScanner';
@@ -11,7 +11,65 @@ import { useT } from '../i18n/context.jsx';
 const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit = 'C', toggleTempUnit }) => {
   const { t } = useT();
   const [destinations, setDestinations] = useState(['']);
-  
+
+  // ── Destination autocomplete ────────────────────────────────────────────
+  const [suggestions, setSuggestions] = useState({}); // { [destIndex]: Location[] }
+  const [activeSuggestionIdx, setActiveSuggestionIdx] = useState({}); // { [destIndex]: number }
+  const [openDropdownFor, setOpenDropdownFor] = useState(null); // destIndex with an open dropdown, or null
+  const suggestionTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current); };
+  }, []);
+
+  // Richer label for the dropdown list itself (disambiguates same-named
+  // places with their region).
+  const formatLocationLabel = (loc) => {
+    const parts = [loc.name];
+    if (loc.admin1 && loc.admin1 !== loc.name) parts.push(loc.admin1);
+    if (loc.country) parts.push(loc.country);
+    return parts.join(', ');
+  };
+
+  // Plain "name, country" for the value actually written into the input.
+  // Confirmed via live testing that a 3-part "name, region, country" string
+  // can make Open-Meteo's geocoder return zero matches, which then falls
+  // through to the Nominatim fallback and can resolve somewhere completely
+  // unrelated (a street with the city's name in it, a different country
+  // entirely) -- "name, country" round-trips through geocodeLocation()
+  // reliably, so that's what gets stored/submitted.
+  const formatSelectedDestination = (loc) => (loc.country ? `${loc.name}, ${loc.country}` : loc.name);
+
+  const selectSuggestion = (index, loc) => {
+    const newDest = [...destinations];
+    newDest[index] = formatSelectedDestination(loc);
+    setDestinations(newDest);
+    setSuggestions(prev => ({ ...prev, [index]: [] }));
+    setActiveSuggestionIdx(prev => ({ ...prev, [index]: -1 }));
+    setOpenDropdownFor(null);
+  };
+
+  const handleDestinationKeyDown = (e, index) => {
+    const list = suggestions[index] || [];
+    if (openDropdownFor !== index || list.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestionIdx(prev => ({ ...prev, [index]: Math.min((prev[index] ?? -1) + 1, list.length - 1) }));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestionIdx(prev => ({ ...prev, [index]: Math.max((prev[index] ?? -1) - 1, 0) }));
+    } else if (e.key === 'Enter') {
+      const active = activeSuggestionIdx[index];
+      if (active != null && active >= 0 && list[active]) {
+        e.preventDefault();
+        selectSuggestion(index, list[active]);
+      }
+    } else if (e.key === 'Escape') {
+      setOpenDropdownFor(null);
+    }
+  };
+
   const todayStr = new Date().toISOString().split('T')[0];
   const defaultEnd = new Date();
   defaultEnd.setDate(defaultEnd.getDate() + 2);
@@ -96,6 +154,20 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     const newDest = [...destinations];
     newDest[index] = value;
     setDestinations(newDest);
+    setActiveSuggestionIdx(prev => ({ ...prev, [index]: -1 }));
+
+    if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
+    const trimmed = value.trim();
+    if (trimmed.length < 2) {
+      setSuggestions(prev => ({ ...prev, [index]: [] }));
+      setOpenDropdownFor(prev => (prev === index ? null : prev));
+      return;
+    }
+    suggestionTimerRef.current = setTimeout(async () => {
+      const results = await searchLocations(trimmed, 5);
+      setSuggestions(prev => ({ ...prev, [index]: results }));
+      setOpenDropdownFor(results.length > 0 ? index : null);
+    }, 300);
   };
 
   const addDestination = () => {
@@ -222,16 +294,63 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
             {t('tripForm.destinations')}
             {isFetchingWeather && <span style={{ marginLeft: '0.5rem', color: 'var(--accent-color)', fontWeight: 'normal' }}>{t('tripForm.fetchingWeather')}</span>}
           </label>
-          {destinations.map((dest, idx) => (
-            <input 
-              key={idx}
-              type="text" 
-              placeholder={idx === 0 ? t('tripForm.destinationPlaceholder') : t('tripForm.addDestinationPlaceholder')}
-              value={dest}
-              onChange={(e) => updateDestination(idx, e.target.value)}
-              required={idx === 0}
-            />
-          ))}
+          {destinations.map((dest, idx) => {
+            const destSuggestions = suggestions[idx] || [];
+            const isOpen = openDropdownFor === idx && destSuggestions.length > 0;
+            const activeIdx = activeSuggestionIdx[idx] ?? -1;
+            return (
+              <div key={idx} style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder={idx === 0 ? t('tripForm.destinationPlaceholder') : t('tripForm.addDestinationPlaceholder')}
+                  value={dest}
+                  onChange={(e) => updateDestination(idx, e.target.value)}
+                  onKeyDown={(e) => handleDestinationKeyDown(e, idx)}
+                  onFocus={() => { if (destSuggestions.length > 0) setOpenDropdownFor(idx); }}
+                  onBlur={() => setTimeout(() => setOpenDropdownFor(prev => (prev === idx ? null : prev)), 150)}
+                  required={idx === 0}
+                  role="combobox"
+                  aria-expanded={isOpen}
+                  aria-controls={`dest-listbox-${idx}`}
+                  aria-autocomplete="list"
+                  aria-activedescendant={isOpen && activeIdx >= 0 ? `dest-option-${idx}-${activeIdx}` : undefined}
+                  style={{ width: '100%' }}
+                />
+                {isOpen && (
+                  <ul
+                    id={`dest-listbox-${idx}`}
+                    role="listbox"
+                    aria-label={t('tripForm.destinationSuggestionsLabel')}
+                    style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20,
+                      margin: '4px 0 0', padding: '4px', listStyle: 'none',
+                      background: 'var(--surface-color)', border: '1px solid var(--border-color)',
+                      borderRadius: '8px', maxHeight: '220px', overflowY: 'auto',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    {destSuggestions.map((loc, i) => (
+                      <li
+                        key={`${loc.latitude}-${loc.longitude}-${i}`}
+                        id={`dest-option-${idx}-${i}`}
+                        role="option"
+                        aria-selected={activeIdx === i}
+                        onMouseDown={(e) => { e.preventDefault(); selectSuggestion(idx, loc); }}
+                        style={{
+                          padding: '0.5rem 0.6rem', borderRadius: '6px', cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          background: activeIdx === i ? 'var(--accent-color)' : 'transparent',
+                          color: activeIdx === i ? 'white' : 'var(--text-primary)',
+                        }}
+                      >
+                        {formatLocationLabel(loc)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
           {destinations.length < 5 && (
             <button 
               type="button" 
