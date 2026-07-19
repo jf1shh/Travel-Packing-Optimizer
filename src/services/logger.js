@@ -52,7 +52,7 @@ export const Logger = {
     try {
       const logs = await get(LOG_KEY);
       if (!logs || logs.length === 0) {
-        alert("No errors found in the local log.");
+        console.log("[Logger] No errors found in the local log.");
         return;
       }
 
@@ -71,8 +71,7 @@ export const Logger = {
       link.click();
       document.body.removeChild(link);
     } catch (e) {
-      console.error("Failed to export logs", e);
-      alert("Failed to export logs. See console.");
+      console.error("[Logger] Failed to export logs", e);
     }
   }
 };

@@ -23,8 +23,15 @@ const translationCache = {};
 
 const loadTranslations = async (lang) => {
   if (translationCache[lang]) return translationCache[lang];
-  const mod = await import(`./translations/${lang}.json`);
-  translationCache[lang] = mod.default || mod;
+  try {
+    const mod = await import(`./translations/${lang}.json`);
+    translationCache[lang] = mod.default || mod;
+  } catch {
+    // Corrupt or missing translation file — fall back to English silently
+    console.warn(`[i18n] Failed to load "${lang}" translations, falling back to en`);
+    if (lang !== 'en') return loadTranslations('en');
+    translationCache[lang] = {};
+  }
   return translationCache[lang];
 };
 
@@ -46,6 +53,13 @@ export const I18nProvider = ({ children }) => {
     loadTranslations(lang).then(t => {
       if (!cancelled) {
         setTranslations(t);
+        setLoading(false);
+      }
+    }).catch(() => {
+      // Shouldn't happen (loadTranslations catches internally), but
+      // guard against a stray rejection so the app doesn't white-screen.
+      if (!cancelled) {
+        setTranslations({});
         setLoading(false);
       }
     });

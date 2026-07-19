@@ -344,8 +344,14 @@ export const deriveCube = (item) => {
   return 'main';
 };
 
+const MAX_WARDROBE_ITEMS = 500;
+
 export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = [], laundryCycle = 7, options = {}) => {
   const { countryCodes = [], itemPreferences = {} } = options;
+  // Guard against runaway memory in the Cartesian product loop — a share
+  // link could theoretically inject thousands of items. The engine is
+  // O(tops × bottoms) so 500 keeps worst-case at ~62k combos.
+  const wardrobe = Array.isArray(userWardrobe) ? userWardrobe.slice(0, MAX_WARDROBE_ITEMS) : [];
   let allItems = [];
 
   const p = PALETTES[paletteKey] || PALETTES['quiet-luxury'];
@@ -399,11 +405,11 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     return tv;
   };
 
-  // 1. Prioritize userWardrobe items (Graph-based Bipartite Selection)
-  const userTopsRaw = userWardrobe.filter(i => i.category === 'top');
-  const userBottomsRaw = userWardrobe.filter(i => i.category === 'bottom');
-  const userShoesRaw = userWardrobe.filter(i => i.category === 'shoe');
-  const userOuter = userWardrobe.filter(i => i.category === 'outer').sort((a,b) => b.priority - a.priority);
+  // 1. Prioritize wardrobe items (Graph-based Bipartite Selection)
+  const userTopsRaw = wardrobe.filter(i => i.category === 'top');
+  const userBottomsRaw = wardrobe.filter(i => i.category === 'bottom');
+  const userShoesRaw = wardrobe.filter(i => i.category === 'shoe');
+  const userOuter = wardrobe.filter(i => i.category === 'outer').sort((a,b) => b.priority - a.priority);
 
   // Score tops and bottoms based on how many color matches they have in the opposite pool
   const scoreTopMatch = (top, bottomsPool) => bottomsPool.filter(b => doColorsMatch(top.color || 'black', b.color || 'black')).length;
@@ -629,7 +635,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   const getSelectedItems = (names, catKey, defVol, defWeight) => {
     return names.map(n => {
       const nameStr = typeof n === 'string' ? n : (n.name || 'Unknown Item');
-      const w = userWardrobe.find(item => item.name === nameStr && item.category === catKey);
+      const w = wardrobe.find(item => item.name === nameStr && item.category === catKey);
       if (w) return { name: nameStr, vol: w.vol, weight: w.weight };
       return { name: nameStr, vol: defVol, weight: defWeight };
     });

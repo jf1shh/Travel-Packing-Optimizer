@@ -1,5 +1,23 @@
 import { get, set, del, clear } from 'idb-keyval';
 
+const MIN_FREE_BYTES = 10 * 1024 * 1024; // warn if <10 MB free
+
+/**
+ * Checks remaining IndexedDB quota. Returns { quota, usage, lowSpace }
+ * so callers can warn the user before saving large images fails silently.
+ */
+export const checkStorageQuota = async () => {
+  if (!navigator.storage || !navigator.storage.estimate) {
+    return { quota: 0, usage: 0, lowSpace: false };
+  }
+  try {
+    const { quota = 0, usage = 0 } = await navigator.storage.estimate();
+    return { quota, usage, lowSpace: quota - usage < MIN_FREE_BYTES };
+  } catch {
+    return { quota: 0, usage: 0, lowSpace: false };
+  }
+};
+
 /**
  * Saves a base64 image or blob to IndexedDB
  * @param {string} itemId The unique ID of the wardrobe item
