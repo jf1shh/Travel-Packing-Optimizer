@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { measureFromTaps, formatDimensions, REFERENCE_CARD_MM } from '../utils/measurement';
 import { lookupByBarcode, searchByBrand } from '../utils/suitcaseDatabase';
 import { useT } from '../i18n/context.jsx';
@@ -99,6 +100,15 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     setErrorMsg('');
     if (scannerMode === MODE.MEASURE) setPhase(PHASE.SETUP);
 
+    // getUserMedia only exists in secure contexts (https / localhost / the
+    // packaged app). On plain http (e.g. testing over LAN IP) mediaDevices is
+    // undefined and the old code threw a cryptic TypeError.
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setErrorMsg(t('scanner.cameraError').replace('{msg}', 'camera requires HTTPS or the installed app'));
+      if (scannerMode === MODE.MEASURE) setPhase(PHASE.ERROR);
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: mode, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -164,9 +174,14 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     }
   }, [stopCamera]);
 
-  // ── Live camera → Canvas render loop ───────────────────────────────────────
+  // ── Live camera → transparent overlay render loop ──────────────────────────
+  // The live feed is shown by the <video> element itself (mobile browsers and
+  // WebViews don't reliably decode frames for a hidden video, which made the
+  // old draw-video-to-canvas approach render black). The canvas sits on top,
+  // fully transparent, and only draws the mask/guides/bounding boxes — its
+  // clearRect "windows" reveal the real video underneath.
   useEffect(() => {
-    if (!isLiveCamera) return;
+    if (!isLiveCamera || !isOpen) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -175,11 +190,13 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     const ctx = canvas.getContext('2d');
 
     const drawFrame = () => {
-      if (!video || video.readyState < 2) {
+      if (!video || video.readyState < 2 || !video.videoWidth) {
         animationRef.current = requestAnimationFrame(drawFrame);
         return;
       }
 
+      // Displayed video rect under object-fit: contain (same math the video
+      // element uses), so overlay geometry lines up with the visible feed.
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       const cw = canvas.parentElement?.clientWidth || canvas.width;
@@ -190,19 +207,11 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
       const dx = (cw - dw) / 2;
       const dy = (ch - dh) / 2;
 
-      canvas.width = cw;
-      canvas.height = ch;
-
-      // Mirror for front camera
-      if (facingMode === 'user') {
-        ctx.save();
-        ctx.translate(cw, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, vw, vh, -dx, dy, dw, dh);
-        ctx.restore();
-      } else {
-        ctx.drawImage(video, 0, 0, vw, vh, dx, dy, dw, dh);
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
       }
+      ctx.clearRect(0, 0, cw, ch);
 
       // Mode-specific overlay
       if (scannerMode === MODE.MEASURE) {
@@ -226,8 +235,12 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
         animationRef.current = null;
       }
     };
+    // isOpen must be a dep: the component renders null when closed, so on
+    // reopen the refs point at fresh DOM nodes and the loop must restart
+    // (in barcode mode isLiveCamera never changes, so without this the
+    // second open had a dead, black overlay).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLiveCamera, scannerMode, facingMode, detectedBarcodes]);
+  }, [isOpen, isLiveCamera, scannerMode, facingMode, detectedBarcodes]);
 
   // ── Overlay: Measure mode (card guide) ─────────────────────────────────────
   const drawMeasureOverlay = (ctx, cw, ch, dw, dh) => {
@@ -348,7 +361,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     setCapturedImage(null);
     setTapPoints([]);
     allPointsRef.current = { calibrate: null, measureL: null, measureW: null };
-    if (mode === MODE.MEASURE) setPhase(PHASE.SETUP);
+    setPhase(PHASE.SETUP);
   }, []);
 
   // ── Capture photo (measure mode) ───────────────────────────────────────────
@@ -552,8 +565,15 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
 
   const showBarcodeScanning = scannerMode === MODE.BARCODE && !measurements && !scannedModel;
   const showResult = measurements && (phase === PHASE.RESULT || scannedModel);
+  // Camera failures must be visible in BOTH modes — barcode mode used to
+  // swallow them and just show a black screen.
+  const showError = phase === PHASE.ERROR || (scannerMode === MODE.BARCODE && !!errorMsg);
 
-  return (
+  // Portal to <body>: position:fixed is anchored to the nearest transformed
+  // ancestor, and the app's animated wrappers have transforms — rendered
+  // in place, the "fullscreen" scanner became a page-sized black box on
+  // mobile instead of a viewport overlay.
+  return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000, backgroundColor: '#000',
       display: 'flex', flexDirection: 'column', fontFamily: 'Outfit, sans-serif',
@@ -603,14 +623,27 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
 
       {/* ── Camera / Canvas area ───────────────────────────────────────────── */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#111' }}>
-        <video ref={videoRef} playsInline muted style={{ display: 'none' }} />
+        {/* The video element itself renders the live feed — it must stay
+            visible (not display:none) or mobile browsers stop decoding it. */}
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          autoPlay
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'contain',
+            transform: facingMode === 'user' ? 'scaleX(-1)' : 'none',
+            display: isLiveCamera && !errorMsg ? 'block' : 'none',
+          }}
+        />
 
         <canvas
           ref={canvasRef}
           onMouseDown={isMeasuring ? handleCanvasTap : undefined}
           onTouchStart={isMeasuring ? handleCanvasTap : undefined}
           style={{
-            width: '100%', height: '100%', display: 'block',
+            position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block',
             cursor: isMeasuring ? 'crosshair' : 'default',
             touchAction: isMeasuring ? 'none' : 'auto',
           }}
@@ -672,15 +705,24 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
         display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', zIndex: 10,
       }}>
         {/* Error state */}
-        {phase === PHASE.ERROR && (
+        {showError && (
           <div style={{ color: '#ef4444', textAlign: 'center', padding: 8 }}>
             <p style={{ margin: '0 0 12px', fontSize: 14 }}>{errorMsg}</p>
-            <button onClick={handleClose} style={{
-              padding: '10px 24px', backgroundColor: '#3b82f6', color: 'white',
-              border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', boxShadow: 'none',
-            }}>
-              OK
-            </button>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button onClick={() => startCamera(facingMode)} style={{
+                padding: '10px 24px', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white',
+                border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10,
+                fontSize: 14, fontWeight: 500, cursor: 'pointer', boxShadow: 'none',
+              }}>
+                Try Again
+              </button>
+              <button onClick={handleClose} style={{
+                padding: '10px 24px', backgroundColor: '#3b82f6', color: 'white',
+                border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', boxShadow: 'none',
+              }}>
+                OK
+              </button>
+            </div>
           </div>
         )}
 
@@ -700,7 +742,9 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
         {/* Barcode mode: live camera controls + brand search */}
         {showBarcodeScanning && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* Camera controls */}
+            {/* Camera controls — hidden on camera failure, but brand search
+                below stays available as the manual fallback */}
+            {!errorMsg && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, alignItems: 'center' }}>
               <CameraSideBtn onClick={switchCamera} title="Switch camera" icon="🔄" />
               <div style={{
@@ -717,6 +761,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
               </div>
               <CameraSideBtn onClick={toggleTorch} title="Toggle flashlight" icon={torchOn ? '🔦' : '💡'} active={torchOn} />
             </div>
+            )}
 
             {/* Brand search input */}
             <div style={{ position: 'relative', width: '100%', maxWidth: 360, margin: '0 auto' }}>
@@ -829,7 +874,8 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
