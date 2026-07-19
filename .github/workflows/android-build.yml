@@ -23,10 +23,15 @@ jobs:
         java-version: '21'
         
     - name: Install dependencies
-      run: npm install
-      
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
+
     - name: Build Web
       run: npm run build
+      env:
+        CAPACITOR: "1"
       
     - name: Sync Capacitor
       run: npx cap sync
