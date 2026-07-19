@@ -22,9 +22,12 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run preview -- --port 4310',
+    // Builds first so `npm run test:e2e` is self-sufficient -- without
+    // this, running it without a prior manual `npm run build` would 404
+    // (vite preview serves whatever's already in dist/, it doesn't build).
+    command: 'npm run build && npm run preview -- --port 4310',
     url: 'http://localhost:4310/Travel-Packing-Optimizer/',
     reuseExistingServer: !process.env.CI,
-    timeout: 30000,
+    timeout: 60000,
   },
 });

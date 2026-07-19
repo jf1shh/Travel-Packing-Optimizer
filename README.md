@@ -2,6 +2,8 @@
 
 A mathematical packing assistant that builds weather-aware capsule wardrobes. Enter your destinations, dates, travel mode, and style preference — the engine generates a day-by-day outfit schedule and an optimized packing list that fits your suitcase.
 
+**Web**: live at [jf1shh.github.io/Travel-Packing-Optimizer](https://jf1shh.github.io/Travel-Packing-Optimizer/), no install needed. **Android**: an APK is attached to each [GitHub Release](../../releases/latest) (unsigned debug build via Capacitor — for trying it out, not a Play Store install).
+
 ## Features
 
 - **Weather-proof outfits** — live forecasts + 3-year climate normals for trips beyond 16 days
@@ -19,6 +21,7 @@ A mathematical packing assistant that builds weather-aware capsule wardrobes. En
 - **Destination autocomplete** — real-time suggestions dropdown as you type, keyboard-navigable
 - **Currency converter** — live exchange rates + estimated local costs (laundry, coffee, meals)
 - **Travel advisories** — GOV.UK safety summaries per destination country
+- **Print / export** — a dedicated print stylesheet for the packing list, independent of light/dark theme
 - **11 languages** — auto-detected from your OS, RTL support for Arabic
 - **100% local** — no accounts, no servers. Weather from Open-Meteo (free, no API key)
 - **PWA** — install to home screen, works offline. Strict Content-Security-Policy
@@ -28,7 +31,8 @@ A mathematical packing assistant that builds weather-aware capsule wardrobes. En
 ```bash
 npm install
 npm run dev      # start dev server
-npm test         # 210 tests
+npm test         # 217 unit tests (vitest)
+npm run test:e2e # 4 end-to-end tests (playwright, against a production build)
 npm run lint     # Oxlint
 npm run build    # production build with PWA + CSP
 ```
@@ -56,7 +60,9 @@ npm run build    # production build with PWA + CSP
 | `db.js` | IndexedDB photo storage with quota checking |
 | `logger.js` | On-device crash logger with error export |
 | `i18n/` | 11 languages with lazy-loaded JSON, browser auto-detect, RTL |
-| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `SuitcaseLayout`, `ItineraryCalendar`, `VolumeChart`, `CapacityBar`, `LogisticsPreferences` |
+| `Dialogs.jsx` | Confirm/Prompt/CopyFallback/Toast — replaces native `alert()`/`confirm()`/`prompt()` app-wide |
+| `VolumeChart.jsx` | Hand-rolled SVG donut chart (no charting library — a recharts version of this was a 329KB chunk for one chart; this is 3KB) |
+| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `SuitcaseLayout`, `ItineraryCalendar`, `CapacityBar`, `LogisticsPreferences` |
 
 ## Privacy
 

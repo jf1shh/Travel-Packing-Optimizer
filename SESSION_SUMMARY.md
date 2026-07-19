@@ -4,7 +4,8 @@
 
 | Metric | Value |
 |---|---|
-| Tests | 210 (13 files) |
+| Version | 0.1.0 (tagged release, Android APK attached) |
+| Tests | 217 unit (vitest, 13 files) + 4 e2e (Playwright, against a production build) |
 | Lint | 0 warnings, 0 errors |
 | Build | Clean (PWA + CSP) |
 | Source files | 58 |
@@ -57,16 +58,26 @@
 
 ### i18n
 - **11 languages** — React Context + lazy-loaded JSON, browser auto-detect, RTL support
-- **Project rule** — `.agents/rules/i18n-required.md` ensures no future hardcoded strings slip through
 
 ### Privacy & Security
 - **100% local** — no accounts, no servers, no telemetry. Weather from Open-Meteo (free, no API key)
-- **PWA** — install to home screen, offline support, strict Content-Security-Policy
+- **PWA** — install to home screen, offline support, strict Content-Security-Policy, allowlisting exactly the hosts the app calls (Open-Meteo, Nominatim, Frankfurter, GOV.UK, img.ly)
 - **Share links** — LZ-String compressed in URL fragment (never sent to server)
 - **Crash logger** — on-device error logging with JSON export (no more `alert()` popups)
 - **Storage quota check** — warns before IndexedDB silent failures
 - **Input sanitization** — share payload validation, MAX_WARDROBE_ITEMS=500 guard against crafted links
 - **Translation fallback** — corrupt/missing JSON gracefully falls back to English
+
+### UX Reliability
+- **In-app dialogs** — `Dialogs.jsx` (Confirm/Prompt/CopyFallback/Toast) replaces every native `alert()`/`confirm()`/`prompt()` call app-wide, styled to match the rest of the app instead of a jarring native popup
+- **Background-removal progress** — the on-device ONNX model reports live download/inference progress instead of a static "AI..." label
+- **Print / export** — dedicated `@media print` stylesheet for the packing list, forced to plain light-on-white regardless of the active theme
+
+### Performance
+- **VolumeChart**: replaced recharts (a ~329KB/97KB-gzip chunk for one 5-segment donut chart) with a hand-rolled SVG version — same visuals and hover-to-see-detail behavior, **3KB/1.5KB-gzip** chunk
+
+### Testing
+- **Playwright e2e suite** (`e2e/trip-flow.spec.js`) — 4 tests against the actual production build (not the dev server), hitting live external APIs like the existing vitest tests do: destination autocomplete → generate → packing list renders, a postal code resolving via the live Nominatim fallback, the print button, and a regression test proving delete-all-data never triggers a native `confirm()`. Wired into CI after the build step.
 
 ---
 
@@ -83,6 +94,12 @@
 | `alert()` popups from crash logger | Replaced with `console.log`/`console.error` |
 | No guard on wardrobe size in packerLogic | MAX_WARDROBE_ITEMS=500 cap |
 | Corrupt translation JSON crashed the app | try/catch wrapper falls back to English |
+| CSP missing 2 hosts the app already called (Frankfurter, GOV.UK) — silently broke currency conversion and travel advisories in the deployed build, no console error since it's indistinguishable from a network failure | Added both hosts to `connect-src` |
+| Frankfurter's API had moved to a `/v1/` path; the app's `API_BASE` still pointed at the old one | Updated `API_BASE`, verified live against the real endpoint |
+| README claimed zip-code support and destination autocomplete that didn't exist in the code at all | Removed the claims, then implemented both features for real and restored the (now true) claims |
+| Android APK missing the `CAMERA` permission — the suitcase scanner's `getUserMedia()` calls worked fine in the browser/PWA build but silently failed in the packaged app only | Declared `android.permission.CAMERA` (confirmed against Capacitor's own `BridgeWebChromeClient.java` that it already handles the runtime-permission prompt, it just needs the manifest entry) |
+| Share-load confirm dialog could show the raw untranslated i18n key instead of real text — the message was built with `t()` inside a mount-only effect, before the async translation JSON necessarily finished loading | Moved the message computation to render time so it recomputes once translations are ready |
+| Unused `puppeteer` devDependency (leftover from recording the demo GIF) | Removed |
 
 ---
 
@@ -101,7 +118,10 @@
 | `db.js` | IndexedDB photo storage with quota checking |
 | `logger.js` | On-device crash logger with error export |
 | `i18n/` | 11 languages with lazy-loaded JSON, browser auto-detect, RTL |
-| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `SuitcaseLayout`, `ItineraryCalendar`, `VolumeChart`, `CapacityBar`, `LogisticsPreferences`, `SuitcaseSelector`, `Header`, `ErrorBoundary` |
+| `Dialogs.jsx` | Confirm/Prompt/CopyFallback/Toast — replaces native `alert()`/`confirm()`/`prompt()` app-wide |
+| `VolumeChart.jsx` | Hand-rolled SVG donut chart (was recharts, 329KB → 3KB) |
+| Components | `TripForm`, `PackingList`, `CapsuleVisualizer`, `OutfitEditor`, `WardrobeManager`, `SuitcaseScanner`, `SuitcaseLayout`, `ItineraryCalendar`, `CapacityBar`, `LogisticsPreferences`, `SuitcaseSelector`, `Header`, `ErrorBoundary` |
+| `e2e/` | Playwright end-to-end tests against a production build |
 
 ---
 
@@ -110,7 +130,8 @@
 ```bash
 npm install
 npm run dev        # start dev server
-npm test           # 210 tests
+npm test           # 217 unit tests (vitest)
+npm run test:e2e   # 4 end-to-end tests (playwright; builds + previews automatically)
 npm run lint       # Oxlint
 npm run build      # production build with PWA + CSP
 ```
