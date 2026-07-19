@@ -34,8 +34,11 @@ An intelligent, mathematical packing assistant built with React and Vite. It tak
 ### 📊 Visual Feedback
 
 - **Interactive Donut Chart:** See exactly how full your suitcase is by volume, broken down by packing cube group.
+- **Packing Progress Bar:** Check items off as you pack. An animated progress bar shows "12/25 items packed" and turns green with "🎉 All packed!" when complete.
 - **Capacity Bar:** Live volume and weight tracking with 7 kg carry-on warning.
 - **Day-by-Day Itinerary Calendar:** Visual calendar showing your trip with weather icons, activity tags, and laundry day markers.
+- **Floating Generate Button:** A sticky "⚡ Generate List" pill appears when you scroll past the form — tap to scroll back and regenerate without hunting for the button.
+- **Auto Dark/Light Mode:** Respects your OS color scheme on first visit. Your manual toggle preference is remembered.
 
 ### 🔒 Privacy & Sharing
 
@@ -105,7 +108,7 @@ npm run dev
 
 | File | Role |
 |---|---|
-| `App.jsx` | Root orchestrator — state management, localStorage persistence, share-link parsing |
+| `App.jsx` | Root orchestrator — state management, localStorage persistence, theme auto-detection, floating generate button, share-link parsing |
 | `packerLogic.js` | Mathematical packing engine — outfit generation, knapsack optimization, weather-driven item injection, palette-to-outfit matching |
 | `measurement.js` | Pixel-scale math for camera-based suitcase measurement using credit card calibration |
 | `suitcaseDatabase.js` | 44-model lookup table with barcode prefix matching and brand search |
@@ -115,7 +118,8 @@ npm run dev
 | `OutfitEditor.jsx` | Drag-and-drop canvas for manual outfit customization (full ARIA accessibility) |
 | `VolumeChart.jsx` | Recharts donut chart for suitcase volume visualization |
 | `CapacityBar.jsx` | Live volume/weight bar with 7 kg warning |
-| `ItineraryCalendar.jsx` | Wrapping calendar with weather icons, activity tags, and laundry markers |
+| `PackingList.jsx` | Categorized checklist with animated progress bar, copy-to-clipboard, fold tips, and custom item add |
+| `ItineraryCalendar.jsx` | Wrapping calendar with weather icons, toggleable activity tags, and laundry markers |
 | `LogisticsPreferences.jsx` | Traveler profile configuration (gender, palette, packing strategy, laundry cycle) |
 | `TripForm.jsx` | Main trip input form with .ics calendar import |
 | `SuitcaseSelector.jsx` | Suitcase preset picker with scan button and L×W×H inputs |
