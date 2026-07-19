@@ -2,7 +2,7 @@
 // Data sourced from 84 central banks (European Central Bank primary).
 // Docs: https://www.frankfurter.app/
 
-const API_BASE = 'https://api.frankfurter.dev';
+const API_BASE = 'https://api.frankfurter.dev/v1';
 
 /** Currency codes mapped to common travel destinations */
 export const COUNTRY_CURRENCY = {

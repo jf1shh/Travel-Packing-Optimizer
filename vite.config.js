@@ -11,7 +11,7 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' data: blob: https://geocoding-api.open-meteo.com https://api.open-meteo.com https://archive-api.open-meteo.com https://staticimgly.com",
+  "connect-src 'self' data: blob: https://geocoding-api.open-meteo.com https://api.open-meteo.com https://archive-api.open-meteo.com https://staticimgly.com https://api.frankfurter.dev https://www.gov.uk",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "object-src 'none'",
