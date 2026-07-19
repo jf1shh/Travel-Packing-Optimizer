@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { saveItemImage, getItemImage, deleteItemImage } from '../services/db';
 import { parseBulkText } from '../utils/parser';
+import { getBulkStats } from '../utils/itemStats';
 
 
 const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
@@ -10,15 +11,18 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
   const [isProcessing, setIsProcessing] = useState({});
 
   useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
     const loadImages = async () => {
-      const images = {};
-      for (const item of wardrobe) {
-        const img = await getItemImage(item.id);
-        if (img) images[item.id] = img;
+      const entries = await Promise.all(
+        wardrobe.map(async item => [item.id, await getItemImage(item.id)])
+      );
+      if (!cancelled) {
+        setItemImages(Object.fromEntries(entries.filter(([, img]) => img)));
       }
-      setItemImages(images);
     };
-    if (isOpen) loadImages();
+    loadImages();
+    return () => { cancelled = true; };
   }, [wardrobe, isOpen]);
 
   const handleImageUpload = async (itemId, e) => {
@@ -50,19 +54,29 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Ask for a quick description and reuse the brain-dump parser's
+    // heuristics for category/material/color/bulkiness -- otherwise every
+    // capture lands as an identical "Captured Item" top.
+    const description = window.prompt('Describe this item (e.g. "blue denim jacket"):', '');
+    const parsed = description && description.trim()
+      ? parseBulkText(description)[0]
+      : null;
+
     // Create a new item instantly
     const newId = `w-${Date.now()}-${Math.random()}`;
-    const newItemObj = {
-      id: newId,
-      name: 'Captured Item',
-      category: 'top',
-      bulkiness: 'standard',
-      material: 'cotton',
-      color: 'black',
-      vol: 400,
-      weight: 200
-    };
-    
+    const newItemObj = parsed
+      ? { ...parsed, id: newId }
+      : {
+          id: newId,
+          name: 'Captured Item',
+          category: 'top',
+          bulkiness: 'standard',
+          material: 'cotton',
+          color: 'black',
+          vol: 400,
+          weight: 200
+        };
+
     setWardrobe(prev => [newItemObj, ...prev]);
     
     // Process the image
@@ -88,17 +102,6 @@ const WardrobeManager = ({ wardrobe, setWardrobe, isOpen, onClose }) => {
 
 
   if (!isOpen) return null;
-
-  const getBulkStats = (category, bulkiness) => {
-    const base = {
-      top: { light: { v: 200, w: 100 }, standard: { v: 400, w: 200 }, bulky: { v: 800, w: 400 } },
-      bottom: { light: { v: 400, w: 200 }, standard: { v: 800, w: 400 }, bulky: { v: 1200, w: 600 } },
-      outer: { light: { v: 800, w: 300 }, standard: { v: 1500, w: 800 }, bulky: { v: 3000, w: 1500 } },
-      shoe: { light: { v: 1500, w: 600 }, standard: { v: 2500, w: 1000 }, bulky: { v: 3500, w: 1500 } }
-    };
-    const b = base[category][bulkiness];
-    return { vol: b.v, weight: b.w };
-  };
 
   const handleAdd = (e) => {
     e.preventDefault();
