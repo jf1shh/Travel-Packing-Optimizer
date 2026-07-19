@@ -201,5 +201,13 @@
 
   "common.toggleTheme": "Toggle theme",
   "common.toggleUnit": "Toggle Temperature Unit",
-  "common.close": "Close"
+  "common.close": "Close",
+
+  "suitcaseLayout.title": "Suitcase Layout",
+  "suitcaseLayout.fill": "Fill",
+  "suitcaseLayout.empty": "No items packed yet — generate a packing list to see your suitcase layout",
+  "suitcaseLayout.dragHint": "Drag cubes to rearrange — sizes are proportional to volume",
+
+  "packingList.group": "Group",
+  "packingList.syncing": "Syncing"
 }

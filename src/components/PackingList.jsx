@@ -224,7 +224,7 @@ const PackingList = ({ packingList, toggleItem, handleRemoveItem, handleAddItem,
             }}
             title="Sync checkmarks across browser tabs — pack together!"
           >
-            {broadcasting ? '🟢 ' : '👥 '} {broadcasting ? 'Syncing' + (peerCount > 0 ? ` (${peerCount + 1})` : '') : 'Group'}
+            {broadcasting ? '🟢 ' : '👥 '} {broadcasting ? t('packingList.syncing') + (peerCount > 0 ? ` (${peerCount + 1})` : '') : t('packingList.group')}
           </button>
           <button 
             onClick={handleCopy}

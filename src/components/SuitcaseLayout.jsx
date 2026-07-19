@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DndContext, useDraggable } from '@dnd-kit/core';
+import { useT } from '../i18n/context.jsx';
 
 const CUBE_COLORS = {
   main: '#3b82f6',
@@ -65,6 +66,7 @@ const DraggableCube = ({ cubeKey, items, totalVol, suitcaseVol, maxWidth }) => {
 };
 
 const SuitcaseLayout = ({ packingList, suitcaseDims, onReorder }) => {
+  const { t } = useT();
   const [cubes, setCubes] = useState(() => {
     if (!packingList) return [];
     return Object.entries(packingList).map(([key, items]) => ({
@@ -106,7 +108,7 @@ const SuitcaseLayout = ({ packingList, suitcaseDims, onReorder }) => {
   return (
     <div className="glass animate-slide-up" style={{ padding: '1.25rem', marginBottom: '1.5rem', animationDelay: '0.6s' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.15rem' }}>🧳 Suitcase Layout</h3>
+        <h3 style={{ margin: 0, fontSize: '1.15rem' }}>🧳 {t('suitcaseLayout.title')}</h3>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
           {Math.round(totalVol / 1000 * 10) / 10}L / {Math.round(suitcaseVol / 1000 * 10) / 10}L
         </span>
@@ -115,7 +117,7 @@ const SuitcaseLayout = ({ packingList, suitcaseDims, onReorder }) => {
       {/* Volume fill bar */}
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Fill</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t('suitcaseLayout.fill')}</span>
           <span style={{ fontSize: '0.7rem', fontWeight: 600, color: fillColor }}>{Math.round(volPct * 100)}%</span>
         </div>
         <div style={{ width: '100%', height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 999, overflow: 'hidden' }}>
@@ -153,14 +155,14 @@ const SuitcaseLayout = ({ packingList, suitcaseDims, onReorder }) => {
           )}
           {cubes.every(c => c.items.length === 0) && (
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '1rem' }}>
-              No items packed yet — generate a packing list to see your suitcase layout
+              {t('suitcaseLayout.empty')}
             </div>
           )}
         </div>
       </DndContext>
 
       <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.5rem' }}>
-        Drag cubes to rearrange — sizes are proportional to volume
+        {t('suitcaseLayout.dragHint')}
       </div>
     </div>
   );
