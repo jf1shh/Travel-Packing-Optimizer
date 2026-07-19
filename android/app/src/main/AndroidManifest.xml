@@ -41,4 +41,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for the WebView's getUserMedia() calls (suitcase measurement +
+         barcode scanner). Capacitor's BridgeWebChromeClient already prompts the
+         user and forwards grant/deny to the page, but only if this is declared. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>
