@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { geocodeLocation, fetchWeather } from '../services/api';
 import { guessActivityFromDestination } from '../utils/activity';
 import SuitcaseSelector from './SuitcaseSelector';
+import SuitcaseScanner from './SuitcaseScanner';
 import ItineraryCalendar from './ItineraryCalendar';
 import LogisticsPreferences from './LogisticsPreferences';
 
@@ -67,6 +68,18 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   const [length, setLength] = useState('55');
   const [width, setWidth] = useState('34.8');
   const [height, setHeight] = useState('22.8');
+
+  // Scanner state
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannedModelName, setScannedModelName] = useState(null);
+
+  const handleScannedDimensions = (dims) => {
+    setPreset(dims.preset || 'custom');
+    setLength(dims.length);
+    setWidth(dims.width);
+    setHeight(dims.height);
+    setScannedModelName(dims.model || null);
+  };
 
   const getDuration = () => {
     const start = new Date(startDate);
@@ -268,6 +281,14 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
         width={width} setWidth={setWidth}
         height={height} setHeight={setHeight}
         lengthUnit={lengthUnit} toggleLengthUnit={toggleLengthUnit}
+        onOpenScanner={() => setIsScannerOpen(true)}
+        scannedModel={scannedModelName}
+      />
+
+      <SuitcaseScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onDimensionsReady={handleScannedDimensions}
       />
 
       <ItineraryCalendar 

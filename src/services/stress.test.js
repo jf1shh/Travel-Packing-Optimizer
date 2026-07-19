@@ -153,7 +153,7 @@ describe('Stress tests', () => {
       pack({ weatherDataArray, tripDuration: 3, formDestinations: ['Anywhere'] })
     );
 
-    results.forEach((r, i) => {
+    results.forEach((r) => {
       expect(r.outfitCombinations).toHaveLength(3);
       expect(r.currentVolume).toBeGreaterThan(0);
       expect(r.currentWeight).toBeGreaterThan(0);

@@ -5,7 +5,9 @@ const SuitcaseSelector = ({
   length, setLength, 
   width, setWidth, 
   height, setHeight, 
-  lengthUnit, toggleLengthUnit 
+  lengthUnit, toggleLengthUnit,
+  onOpenScanner,
+  scannedModel
 }) => {
 
   const handlePresetChange = (e) => {
@@ -34,6 +36,40 @@ const SuitcaseSelector = ({
           {lengthUnit}
         </button>
       </div>
+
+      {onOpenScanner && (
+        <button
+          type="button"
+          onClick={onOpenScanner}
+          style={{
+            width: '100%',
+            marginBottom: '0.75rem',
+            padding: '0.75rem 1rem',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            borderRadius: '10px',
+            border: scannedModel ? '2px solid #22c55e' : '2px dashed var(--accent-color)',
+            backgroundColor: scannedModel ? 'rgba(34,197,94,0.08)' : 'transparent',
+            color: scannedModel ? '#22c55e' : 'var(--accent-color)',
+            cursor: 'pointer',
+            boxShadow: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = scannedModel ? 'rgba(34,197,94,0.12)' : 'rgba(59, 130, 246, 0.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = scannedModel ? 'rgba(34,197,94,0.08)' : 'transparent';
+          }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>{scannedModel ? '✅' : '📸'}</span>
+          {scannedModel ? `Identified: ${scannedModel}` : 'Scan Suitcase with Camera'}
+        </button>
+      )}
 
       <select value={preset} onChange={handlePresetChange} style={{ marginBottom: '1rem' }}>
         <option value="away-carry">Away: The Carry-On {lengthUnit === 'in' ? '(21.7 x 13.7 x 9.0)' : '(55 x 34.8 x 22.8)'}</option>
