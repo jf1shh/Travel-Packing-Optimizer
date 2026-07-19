@@ -100,6 +100,8 @@
 | Android APK missing the `CAMERA` permission — the suitcase scanner's `getUserMedia()` calls worked fine in the browser/PWA build but silently failed in the packaged app only | Declared `android.permission.CAMERA` (confirmed against Capacitor's own `BridgeWebChromeClient.java` that it already handles the runtime-permission prompt, it just needs the manifest entry) |
 | Share-load confirm dialog could show the raw untranslated i18n key instead of real text — the message was built with `t()` inside a mount-only effect, before the async translation JSON necessarily finished loading | Moved the message computation to render time so it recomputes once translations are ready |
 | Unused `puppeteer` devDependency (leftover from recording the demo GIF) | Removed |
+| `--primary-color`, `--bg-secondary`, `--text-color` referenced in 10 places across 7 files but never defined anywhere (only `--accent-color`/`--surface-color`/`--text-primary` exist) — an invalid `var()` falls back silently, no console error. Worst case: the "Import Calendar" label rendered white text on a fully transparent background (white-on-near-white in light mode); several buttons lost their entire border because an invalid `var()` inside a `border` shorthand invalidates the whole declaration, not just the color | Pointed every reference at the variable that actually exists; cross-referenced every `var(--x)` used in `src/` against what's defined in `index.css` to confirm zero remaining mismatches |
+| `VolumeChart`'s "Free Space" donut segment was a near-white gray (`#e5e7eb`), washed out on dark backgrounds | Swapped to a mid-tone slate (`#94a3b8`) that reads clearly in both themes |
 
 ---
 
@@ -135,3 +137,26 @@ npm run test:e2e   # 4 end-to-end tests (playwright; builds + previews automatic
 npm run lint       # Oxlint
 npm run build      # production build with PWA + CSP
 ```
+
+---
+
+## Release Process
+
+Releases are cut **manually, on demand** — not on every commit, and not on a fixed schedule. A release is a deliberate checkpoint, not routine development.
+
+GitHub Pages already auto-deploys `main` on every push (`.github/workflows/deploy-pages.yml`), so the **web app never needs a release** — it's continuously live. Releases exist purely to give the **Android APK** a permanent download link instead of an expiring CI artifact (workflow artifacts have a retention limit and require a GitHub login to fetch).
+
+Cut a release when:
+- A meaningful batch of work is done and verified (not after every small commit).
+- You want a fresh APK reflecting recent changes.
+- You're about to share the project somewhere (portfolio, interview) and want what's tagged to be a known-good snapshot.
+
+Steps:
+1. Bump `version` in `package.json` (semver — patch for fixes, minor for features, e.g. `0.1.0` → `0.2.0`).
+2. Commit and push to `main`. This triggers CI and Android Build on that exact commit.
+3. Wait for **both** to go green (`gh run watch <run-id> --exit-status`) before proceeding — a release should only ever point at a commit that's actually been verified, not just pushed.
+4. Download the APK artifact from that verified Android Build run: `gh run download <run-id> --dir <dir>`.
+5. Tag the commit: `git tag -a vX.Y.Z -m "..."`, then `git push origin vX.Y.Z`.
+6. Create the release with the APK attached: `gh release create vX.Y.Z <path-to-apk>#"Android APK (debug build)" --title vX.Y.Z --notes "..."`.
+
+The attached APK is always a **debug build** (`assembleDebug`, unsigned) — good for trying the app out, not a Play Store release. First release: `v0.1.0`.
