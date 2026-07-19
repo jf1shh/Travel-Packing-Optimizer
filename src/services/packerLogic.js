@@ -11,7 +11,10 @@ export const COLOR_MATCHES = {
   'brown': ['white', 'khaki', 'beige', 'olive', 'brown'],
   'blue': ['white', 'grey', 'khaki', 'beige', 'black', 'navy', 'blue'],
   'red': ['white', 'grey', 'black', 'navy', 'beige', 'red'],
-  'green': ['white', 'grey', 'black', 'khaki', 'beige', 'green']
+  'green': ['white', 'grey', 'black', 'khaki', 'beige', 'yellow', 'green'],
+  'yellow': ['white', 'black', 'grey', 'navy', 'brown', 'olive', 'beige', 'khaki', 'green', 'yellow'],
+  'pink': ['white', 'black', 'grey', 'navy', 'beige', 'brown', 'khaki', 'red', 'purple', 'pink'],
+  'purple': ['white', 'black', 'grey', 'navy', 'beige', 'olive', 'pink', 'red', 'blue', 'purple']
 };
 
 export const doColorsMatch = (c1, c2) => {

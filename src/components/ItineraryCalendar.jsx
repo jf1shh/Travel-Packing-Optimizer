@@ -104,7 +104,13 @@ const ItineraryCalendar = ({
                         type="button"
                         onClick={() => {
                           const newArr = [...dailyActivities];
-                          newArr[i] = opt.value;
+                          if (isSelected) {
+                            // Toggle off: revert Casual (empty) pill to auto-guess,
+                            // all other pills to explicit-none.
+                            newArr[i] = opt.value === '' ? null : '';
+                          } else {
+                            newArr[i] = opt.value;
+                          }
                           setDailyActivities(newArr);
                         }}
                         style={{

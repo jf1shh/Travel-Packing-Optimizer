@@ -21,19 +21,29 @@ const DraggableItem = ({ item }) => {
   } : undefined;
 
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className="draggable-item" style={{ 
-      ...style,
-      padding: '0.5rem', 
-      margin: '0.5rem', 
-      background: 'var(--bg-color)', 
-      border: '1px solid var(--border-color)', 
-      borderRadius: '8px', 
-      cursor: 'grab',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      ...style 
-    }}>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      role="listitem"
+      aria-roledescription="draggable wardrobe item"
+      aria-label={item.name}
+      aria-grabbed={transform ? 'true' : 'false'}
+      tabIndex={0}
+      className="draggable-item"
+      style={{ 
+        ...style,
+        padding: '0.5rem', 
+        margin: '0.5rem', 
+        background: 'var(--bg-color)', 
+        border: '1px solid var(--border-color)', 
+        borderRadius: '8px', 
+        cursor: 'grab',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+      }}
+    >
       {image ? (
         <img src={image} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
       ) : (
@@ -58,6 +68,7 @@ const DroppableSlot = ({ id, label, currentItem }) => {
     }
   }, [currentItem]);
 
+  const slotName = currentItem ? currentItem.name || currentItem : null;
   const style = {
     padding: '1rem',
     border: '2px dashed ' + (isOver ? 'var(--primary-color)' : 'var(--border-color)'),
@@ -72,7 +83,13 @@ const DroppableSlot = ({ id, label, currentItem }) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      ref={setNodeRef}
+      role="region"
+      aria-label={`${label} slot${slotName ? `: ${slotName}` : ' — empty'}`}
+      aria-dropeffect="move"
+      style={style}
+    >
       <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-secondary)' }}>{label}</h4>
       {currentItem ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -108,11 +125,16 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
   };
 
   return (
-    <div style={{ 
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Edit outfit: ${dayOutfit.name}`}
+      style={{ 
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
       background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', 
       alignItems: 'center', zIndex: 1000 
-    }}>
+    }}
+    >
       <div style={{ 
         background: 'var(--bg-color)', width: '90%', maxWidth: '800px', 
         height: '80vh', borderRadius: '12px', padding: '1.5rem', display: 'flex', 
@@ -128,14 +150,22 @@ const OutfitEditor = ({ dayOutfit, wardrobe, onSave, onCancel }) => {
 
         <DndContext onDragEnd={handleDragEnd}>
           <div style={{ display: 'flex', flex: 1, gap: '2rem', minHeight: 0 }}>
-            <div style={{ flex: 1, overflowY: 'auto', borderRight: '1px solid var(--border-color)', paddingRight: '1rem' }}>
+            <div
+              role="list"
+              aria-label="Your closet items"
+              style={{ flex: 1, overflowY: 'auto', borderRight: '1px solid var(--border-color)', paddingRight: '1rem' }}
+            >
               <h3 style={{ marginTop: 0 }}>Your Closet</h3>
               {wardrobe.filter(i => ['top', 'bottom', 'outer', 'shoe'].includes(i.category)).map(item => (
                 <DraggableItem key={item.id} item={item} />
               ))}
             </div>
             
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
+            <div
+              role="group"
+              aria-label="Outfit slots"
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}
+            >
               <h3 style={{ marginTop: 0 }}>Outfit Slots</h3>
               <DroppableSlot id="top" label="Top" currentItem={editedOutfit.top} />
               <DroppableSlot id="bottom" label="Bottom" currentItem={editedOutfit.bottom} />
