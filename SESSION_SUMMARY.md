@@ -27,8 +27,6 @@
 - **Activity-aware gear injection** — Beach/Hike/Ski/Formal/Night Out/Business/Sightseeing/Transit
 
 ### Data & Integrations
-- **Zip/postal code geocoding** — Open-Meteo first, Nominatim fallback for codes like 90210 and SW1A 1AA
-- **Destination autocomplete** — debounced Open-Meteo suggestions dropdown with keyboard navigation while typing
 - **Currency converter** — Frankfurter API (free, no key), live exchange rates + estimated local costs
 - **Travel advisories** — GOV.UK safety summaries per destination country, with packing relevance extraction
 - **Airline baggage compliance** — 77-airline static dataset, live validation against user's suitcase dimensions
@@ -92,7 +90,7 @@
 |---|---|
 | `packerLogic.js` | Core engine — outfit generation, knapsack, weather injection, color matching |
 | `App.jsx` | Root orchestrator — state, persistence, theme, share links, hero section |
-| `api.js` | Open-Meteo weather/geocoding + Nominatim zip code fallback |
+| `api.js` | Open-Meteo weather/geocoding with offline fallback |
 | `airlineBaggage.js` | 77-airline dataset with carry-on compliance validation |
 | `suitcaseDatabase.js` | 44-model barcode/name lookup |
 | `measurement.js` | Credit-card calibrated pixel-to-cm math |

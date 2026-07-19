@@ -15,8 +15,6 @@ A mathematical packing assistant that builds weather-aware capsule wardrobes. En
 - **Photo outfit previews** — your actual wardrobe photos appear next to daily outfit combos
 - **Group trip sync** — live collaborative check-off across browser tabs via BroadcastChannel
 - **Visual suitcase layout** — draggable proportional packing cubes showing exactly how full your bag is
-- **Zip/postal code support** — type "90210" or "SW1A 1AA" and get accurate weather via Nominatim fallback
-- **Destination autocomplete** — real-time suggestions dropdown as you type, keyboard-navigable
 - **Currency converter** — live exchange rates + estimated local costs (laundry, coffee, meals)
 - **Travel advisories** — GOV.UK safety summaries per destination country
 - **11 languages** — auto-detected from your OS, RTL support for Arabic
