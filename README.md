@@ -15,6 +15,8 @@ A mathematical packing assistant that builds weather-aware capsule wardrobes. En
 - **Photo outfit previews** — your actual wardrobe photos appear next to daily outfit combos
 - **Group trip sync** — live collaborative check-off across browser tabs via BroadcastChannel
 - **Visual suitcase layout** — draggable proportional packing cubes showing exactly how full your bag is
+- **Zip/postal code support** — type "90210" or "SW1A 1AA" and get accurate weather via a Nominatim fallback when Open-Meteo's geocoder doesn't recognize the code
+- **Destination autocomplete** — real-time suggestions dropdown as you type, keyboard-navigable
 - **Currency converter** — live exchange rates + estimated local costs (laundry, coffee, meals)
 - **Travel advisories** — GOV.UK safety summaries per destination country
 - **11 languages** — auto-detected from your OS, RTL support for Arabic
@@ -46,7 +48,7 @@ npm run build    # production build with PWA + CSP
 |---|---|
 | `packerLogic.js` | Core engine — outfit generation, knapsack, weather injection, color matching |
 | `App.jsx` | Root orchestrator — state, persistence, theme, share links |
-| `api.js` | Open-Meteo weather/geocoding with offline fallback |
+| `api.js` | Open-Meteo weather/geocoding + autocomplete, with Nominatim zip/postal fallback and offline cache |
 | `airlineBaggage.js` | 77-airline dataset with carry-on compliance validation |
 | `suitcaseDatabase.js` | 44-model barcode/name lookup |
 | `currency.js` / `advisory.js` | Frankfurter exchange rates + GOV.UK travel advisories (free, no key) |
@@ -58,4 +60,4 @@ npm run build    # production build with PWA + CSP
 
 ## Privacy
 
-Everything runs on your device. No accounts, no databases, no telemetry. The only network calls are to Open-Meteo (weather) and img.ly's CDN (one-time AI model download). The production build enforces this with a Content-Security-Policy.
+Everything runs on your device. No accounts, no databases, no telemetry. The only network calls are to Open-Meteo (weather, geocoding, autocomplete), Nominatim (postal/zip code fallback), Frankfurter (currency), GOV.UK (travel advisories), and img.ly's CDN (one-time AI model download). The production build enforces this with a Content-Security-Policy allowlisting exactly those hosts.
