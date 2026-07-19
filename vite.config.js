@@ -2,10 +2,41 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Injected at build time only (the dev server needs inline scripts for HMR).
+// 'wasm-unsafe-eval' is required by onnxruntime (background removal);
+// staticimgly.com hosts the background-removal model assets.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' data: blob: https://geocoding-api.open-meteo.com https://api.open-meteo.com https://archive-api.open-meteo.com https://staticimgly.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'"
+].join('; ')
+
+const cspPlugin = () => ({
+  name: 'inject-csp',
+  apply: 'build',
+  transformIndexHtml(html) {
+    return html.replace(
+      '<head>',
+      `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`
+    )
+  }
+})
+
 export default defineConfig({
-  base: '/Travel-Packing-Optimizer/',
+  // GitHub Pages serves from a subpath; the Capacitor WebView serves the
+  // same dist/ from its root, so the Android build needs a relative base
+  // (an absolute /Travel-Packing-Optimizer/ base 404s every asset in the APK).
+  base: process.env.CAPACITOR ? './' : '/Travel-Packing-Optimizer/',
   plugins: [
     react(),
+    cspPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',

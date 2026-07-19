@@ -26,6 +26,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
   // Daily Destinations & Weather
   const [dailyDestinations, setDailyDestinations] = useState(Array(30).fill(''));
   const [formWeatherData, setFormWeatherData] = useState({});
+  const [formCountries, setFormCountries] = useState({});
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
 
   useEffect(() => {
@@ -35,16 +36,21 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
     const fetchAll = async () => {
       setIsFetchingWeather(true);
       const newWeatherData = {};
-      try {
-        for (let dest of validDests) {
+      const newCountries = {};
+      // Per-destination error isolation: one failed lookup shouldn't
+      // discard the results of the destinations that did resolve.
+      for (let dest of validDests) {
+        try {
           const loc = await geocodeLocation(dest);
           const w = await fetchWeather(loc.latitude, loc.longitude, startDate, endDate);
           newWeatherData[dest] = w;
+          newCountries[dest] = loc.country_code;
+        } catch (e) {
+          console.error(`Form weather fetch failed for "${dest}"`, e);
         }
-        setFormWeatherData(newWeatherData);
-      } catch (e) {
-        console.error("Form weather fetch failed", e);
       }
+      setFormWeatherData(newWeatherData);
+      setFormCountries(newCountries);
       setIsFetchingWeather(false);
     };
 
@@ -87,7 +93,9 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target.result;
+      // Normalize line endings and unfold RFC 5545 folded lines
+      // (continuation lines start with a space or tab)
+      const text = String(event.target.result).replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '');
       const lines = text.split('\n');
       
       let events = [];
@@ -171,6 +179,7 @@ const TripForm = ({ onSubmit, isLoading, lengthUnit, toggleLengthUnit, tempUnit 
         }),
         dailyDestinations: dailyDestinations.slice(0, duration),
         formWeatherData,
+        destinationCountries: formCountries,
         packingStrategy,
         techPorts,
         laundryCycle,

@@ -1,3 +1,5 @@
+import { getAdapterSuggestion } from '../utils/plugs';
+
 export const COLOR_MATCHES = {
   'black': ['white', 'grey', 'beige', 'khaki', 'olive', 'black'],
   'navy': ['white', 'grey', 'khaki', 'beige', 'olive', 'red', 'navy'],
@@ -74,7 +76,7 @@ export const PALETTES = {
     shoes: [{ name: 'Black Chunky Boots', color: 'black' }, { name: 'White Retro Sneakers', color: 'white' }],
     colors: ['#e8e8e8', '#4b5320', '#36454f']
   },
-  'y2k': {
+  'streetwear': {
     name: 'Y2K Streetwear',
     tops: [
       { name: 'White Baby Tee', color: 'white', time: 'day' },
@@ -237,30 +239,45 @@ const BASE_ITEMS = {
   }
 };
 
-export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = [], laundryCycle = 7) => {
+// Maps an item to its packing-cube group key. Exported so UI code that
+// injects items post-generation (e.g. activity swaps) files them under
+// the same grouped-list keys the engine produces.
+export const deriveCube = (item) => {
+  if (item.cube) return item.cube;
+  if (item.category === 'clothes') {
+    const n = String(item.name || '').toLowerCase();
+    if (n.includes('underwear') || n.includes('sock') || n.includes('base') || n.includes('pajama')) return 'base';
+    if (n.includes('jacket') || n.includes('shoe') || n.includes('boot') || n.includes('coat')) return 'loose';
+    return 'main';
+  }
+  if (item.category === 'tech') return 'tech';
+  if (item.category === 'toiletries') return item.isLiquid ? 'liquid' : 'dry';
+  if (item.category === 'documents') return 'dry';
+  return 'main';
+};
+
+export const generatePackingList = (weatherDataArray, tripDuration, gender, suitcaseVolume, paletteKey = 'quiet-luxury', travelMode = 'flying', dailyActivities = [], userWardrobe = [], packingStrategy = 'standard', techPorts = 'mixed', dailyDestinations = [], formDestinations = [], laundryCycle = 7, options = {}) => {
+  const { countryCodes = [], itemPreferences = {} } = options;
   let allItems = [];
 
   const p = PALETTES[paletteKey] || PALETTES['quiet-luxury'];
-  
+
+  // Style preference: menswear filters out explicitly gendered pieces from the
+  // palette fallbacks; womenswear/neutral keep the full palette (these palettes
+  // already mix unisex and menswear-style items).
+  const GENDERED_ITEM = /(skirt|dress|blouse|heels)/i;
+  const filterForStyle = (items) => {
+    if (gender !== 'male') return items;
+    const kept = items.filter(i => !GENDERED_ITEM.test(String(i.name || '')));
+    return kept.length > 0 ? kept : items;
+  };
+  const pTops = filterForStyle(p.tops);
+  const pBottoms = filterForStyle(p.bottoms);
+  const pOuterwear = filterForStyle(p.outerwear);
+  const pShoes = filterForStyle(p.shoes);
+
   const addItem = (item) => {
-    let cube = item.cube;
-    if (!cube) {
-      if (item.category === 'clothes') {
-        const n = String(item.name || '').toLowerCase();
-        if (n.includes('underwear') || n.includes('sock') || n.includes('base') || n.includes('pajama')) cube = 'base';
-        else if (n.includes('jacket') || n.includes('shoe') || n.includes('boot') || n.includes('coat')) cube = 'loose';
-        else cube = 'main';
-      } else if (item.category === 'tech') {
-        cube = 'tech';
-      } else if (item.category === 'toiletries') {
-        cube = item.isLiquid ? 'liquid' : 'dry';
-      } else if (item.category === 'documents') {
-        cube = 'dry';
-      } else {
-        cube = 'main';
-      }
-    }
-    allItems.push({ ...item, checked: false, cube });
+    allItems.push({ ...item, checked: false, cube: deriveCube(item) });
   };
 
   // 2. Versatility & Thermal Scoring
@@ -324,11 +341,12 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
 
   addItem({ category: 'clothes', id: 'w3', name: 'Pajamas / Sleepwear', vol: 400, weight: 200, priority: 9, isEssential: true, fold: 'konmari' });
 
-  // Outfits
+  // Outfit candidates (the day scheduler below decides what is actually
+  // worn, and only worn candidates get packed)
   let selectedTops = [];
   let selectedBottoms = [];
-  let selectedOuter = p.outerwear[0];
-  let selectedShoes = [p.shoes[0]]; 
+  let selectedOuter = pOuterwear[0];
+  let selectedShoes = [pShoes[0]];
 
   let topsNeeded = tripDuration;
   let bottomsNeeded = Math.ceil(tripDuration / 2);
@@ -340,19 +358,19 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     topsNeeded = Math.ceil(tripDuration / 2);
     bottomsNeeded = Math.ceil(tripDuration / 3);
   }
-  
-  topsNeeded = Math.max(1, Math.min(topsNeeded, p.tops.length));
-  bottomsNeeded = Math.max(1, Math.min(bottomsNeeded, p.bottoms.length));
+
+  topsNeeded = Math.max(1, Math.min(topsNeeded, pTops.length));
+  bottomsNeeded = Math.max(1, Math.min(bottomsNeeded, pBottoms.length));
 
   for (let i = 0; i < topsNeeded; i++) {
     if (userTops[i]) selectedTops.push({ name: userTops[i].name, color: userTops[i].color || 'black', time: 'day' });
-    else selectedTops.push(p.tops[i % p.tops.length]);
+    else selectedTops.push(pTops[i % pTops.length]);
   }
   for (let i = 0; i < bottomsNeeded; i++) {
     if (userBottoms[i]) selectedBottoms.push({ name: userBottoms[i].name, color: userBottoms[i].color || 'black', time: 'day' });
-    else selectedBottoms.push(p.bottoms[i % p.bottoms.length]);
+    else selectedBottoms.push(pBottoms[i % pBottoms.length]);
   }
-  
+
   if (userOuter.length > 0) {
     selectedOuter = { name: userOuter[0].name, color: userOuter[0].color || 'black' };
   }
@@ -364,7 +382,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     if (userShoes.length > 1) {
       selectedShoes.push({ name: userShoes[1].name, color: userShoes[1].color || 'black' });
     } else {
-      selectedShoes.push(p.shoes[1 % p.shoes.length]);
+      selectedShoes.push(pShoes[1 % pShoes.length]);
     }
   }
 
@@ -393,6 +411,13 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
   }
   
   const combos = [];
+  // Wear scheduling: rotate garments instead of repeating the single
+  // thermally-best outfit every day, and track what actually gets worn so
+  // the packing list can be derived from the schedule.
+  let wearCounts = {};
+  const usedTops = new Set();
+  const usedBottoms = new Set();
+  const usedShoes = new Set();
   for (let d = 0; d < tripDuration; d++) {
     const destName = dailyDestinations[d] || formDestinations[0] || 'Unknown';
     const destWeatherObj = weatherDataArray.find(w => w.locationName === destName) || weatherDataArray[d % weatherDataArray.length];
@@ -417,19 +442,36 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     let dayOutfits = allOutfits.filter(o => isEvening ? (o.top.time === 'evening' || o.bottom.time === 'evening') : (o.top.time === 'day' && o.bottom.time === 'day'));
     if (dayOutfits.length === 0) dayOutfits = allOutfits;
 
-    // Pick the outfit that is closest to the required thermal value
+    const isLaundryDay = laundryCycle !== 999 && d > 0 && d % laundryCycle === 0;
+    if (isLaundryDay) wearCounts = {}; // laundry frees everything for rewear
+
+    // Pick the outfit closest to the required thermal value, penalizing
+    // garments already worn since the last laundry day so outfits rotate.
     let chosenOutfit = dayOutfits[0];
-    let minThermalDiff = Infinity;
-    
+    let bestScore = Infinity;
+
     for (let o of dayOutfits) {
-       const diff = Math.abs(o.thermalValue - requiredThermal);
-       if (diff < minThermalDiff) {
-          minThermalDiff = diff;
+       const thermalDiff = Math.abs(o.thermalValue - requiredThermal);
+       const wearPenalty = (wearCounts[o.top.name] || 0) + (wearCounts[o.bottom.name] || 0);
+       const score = thermalDiff * 3 + wearPenalty * 2;
+       if (score < bestScore) {
+          bestScore = score;
           chosenOutfit = o;
        }
     }
-    
-    let outfit = { 
+
+    // Activity gear fully replaces the outfit for that day, so the chosen
+    // candidates only count as worn on days without a gear override.
+    const hasGearOverride = !!(act && ACTIVITY_GEAR[act]);
+    if (!hasGearOverride) {
+      wearCounts[chosenOutfit.top.name] = (wearCounts[chosenOutfit.top.name] || 0) + 1;
+      wearCounts[chosenOutfit.bottom.name] = (wearCounts[chosenOutfit.bottom.name] || 0) + 1;
+      usedTops.add(chosenOutfit.top.name);
+      usedBottoms.add(chosenOutfit.bottom.name);
+      usedShoes.add(chosenOutfit.shoe.name);
+    }
+
+    let outfit = {
       top: chosenOutfit.top.name, 
       bottom: chosenOutfit.bottom.name, 
       shoe: chosenOutfit.shoe.name,
@@ -473,7 +515,7 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
       temp: dailyWeather ? dailyWeather.temperature_2m_max[dateIndex] : 20,
       weather: displayWeather,
       activity: act || '',
-      isLaundryDay: laundryCycle !== 999 && d > 0 && d % laundryCycle === 0,
+      isLaundryDay,
       ...outfit
     });
   }
@@ -498,10 +540,24 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     });
   };
 
-  const finalTops = getSelectedItems(selectedTops, 'top', 300, 150);
-  const finalBottoms = getSelectedItems(selectedBottoms, 'bottom', 800, 400);
+  // Pack from the schedule: only candidates the day scheduler actually
+  // assigned get packed (candidates that were never worn are dead weight).
+  const dedupeByName = (arr) => {
+    const seen = new Set();
+    return arr.filter(x => {
+      if (seen.has(x.name)) return false;
+      seen.add(x.name);
+      return true;
+    });
+  };
+  const packedTops = dedupeByName(selectedTops.filter(t => usedTops.has(t.name)));
+  const packedBottoms = dedupeByName(selectedBottoms.filter(b => usedBottoms.has(b.name)));
+  const packedShoes = dedupeByName(selectedShoes.filter(s => usedShoes.has(s.name)));
+
+  const finalTops = getSelectedItems(packedTops.length > 0 ? packedTops : [selectedTops[0]], 'top', 300, 150);
+  const finalBottoms = getSelectedItems(packedBottoms.length > 0 ? packedBottoms : [selectedBottoms[0]], 'bottom', 800, 400);
   const finalOuter = getSelectedItems([selectedOuter], 'outer', 1500, 800)[0];
-  const finalShoes = getSelectedItems(selectedShoes, 'shoe', 2500, 1000);
+  const finalShoes = getSelectedItems(packedShoes.length > 0 ? packedShoes : [selectedShoes[0]], 'shoe', 2500, 1000);
 
   finalTops.forEach((t, i) => addItem({ category: 'clothes', id: `top${i}`, name: t.name, vol: t.vol, weight: t.weight, priority: 9, isEssential: true, fold: 'konmari' }));
   finalBottoms.forEach((b, i) => addItem({ category: 'clothes', id: `bot${i}`, name: b.name, vol: b.vol, weight: b.weight, priority: 9, isEssential: true, fold: 'bundle' }));
@@ -516,10 +572,33 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     }
   });
 
-  // Base Items
+  // Weather-driven extras: rain and sun protection
+  const rainyDays = combos.filter(c => c.weather === 'Rainy').length;
+  if (rainyDays >= 1) {
+    addItem({ category: 'loose', id: 'wx-umbrella', name: 'Compact Travel Umbrella', vol: 600, weight: 350, priority: 8, isEssential: false, cube: 'loose' });
+  }
+  let maxUV = 0;
+  weatherDataArray.forEach(w => {
+    const uvArr = w?.weather?.uv_index_max;
+    if (Array.isArray(uvArr)) uvArr.forEach(u => { if (typeof u === 'number' && u > maxUV) maxUV = u; });
+  });
+  const hasSunnyDay = combos.some(c => c.weather === 'Sunny');
+  if (maxUV >= 6 || hasSunnyDay) {
+    addItem({ category: 'loose', id: 'wx-sunglasses', name: 'Sunglasses', vol: 150, weight: 50, priority: 8, isEssential: false, cube: 'loose' });
+    const alreadyHasSunscreen = allItems.some(i => String(i.name || '').toLowerCase().includes('sunscreen'));
+    if (!alreadyHasSunscreen) {
+      addItem({ category: 'toiletries', id: 'wx-sunscreen', name: 'Sunscreen (SPF 30+, TSA Size)', vol: 120, weight: 120, priority: 9, isEssential: false, isLiquid: true, cube: 'liquid' });
+    }
+  }
+
+  // Base Items (with destination-aware adapter naming when every
+  // destination shares one plug type)
+  const adapterName = getAdapterSuggestion(countryCodes);
   ['toiletries', 'tech', 'documents'].forEach(category => {
     Object.entries(BASE_ITEMS[category]).forEach(([k, data]) => {
-      addItem({ category, id: k, ...data });
+      const item = { category, id: k, ...data };
+      if (k === 'e2' && adapterName) item.name = adapterName;
+      addItem(item);
     });
   });
 
@@ -551,6 +630,14 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     });
   }
 
+  // Learned preferences: de-prioritize items the user has repeatedly
+  // removed from past lists, so the knapsack drops them first.
+  allItems.forEach(item => {
+    if (item.isEssential) return;
+    const removals = itemPreferences[item.name];
+    if (removals > 0) item.priority = Math.max(0, item.priority - Math.min(3, removals));
+  });
+
   // Worn on Travel Day Subtractor
   const clothesAndShoes = allItems.filter(i => i.category === 'clothes');
   const topsInList = clothesAndShoes.filter(i => i.id.startsWith('top') || String(i.name || '').toLowerCase().includes('shirt') || String(i.name || '').toLowerCase().includes('fleece') || String(i.name || '').toLowerCase().includes('base')).sort((a,b) => b.vol - a.vol);
@@ -568,48 +655,74 @@ export const generatePackingList = (weatherDataArray, tripDuration, gender, suit
     }
   });
 
-  // VOLUME OPTIMIZATION (0/1 Knapsack Algorithm)
+  // VOLUME + WEIGHT OPTIMIZATION (2-constraint 0/1 Knapsack)
+  // Volume is constrained by the suitcase; weight is constrained by the
+  // 7 kg budget-airline carry-on allowance when flying (previously the
+  // weight limit was only an advisory warning in the UI).
   let currentVolume = allItems.filter(i => !i.isWorn).reduce((sum, item) => sum + item.vol, 0);
+  const packedWeightPrePrune = allItems.filter(i => !i.isWorn).reduce((sum, item) => sum + item.weight, 0);
 
-  if (suitcaseVolume > 0 && currentVolume > suitcaseVolume) {
+  const WEIGHT_LIMIT = 7000;
+  const volumeConstrained = suitcaseVolume > 0;
+  const weightConstrained = travelMode === 'flying';
+  const volOver = volumeConstrained && currentVolume > suitcaseVolume;
+  const weightOver = weightConstrained && packedWeightPrePrune > WEIGHT_LIMIT;
+
+  if (volOver || weightOver) {
     const essentialItems = allItems.filter(i => i.isWorn || i.isEssential || i.priority >= 10);
     const optionalItems = allItems.filter(i => !i.isWorn && !i.isEssential && i.priority < 10);
-    
+
     const essentialVol = essentialItems.reduce((sum, item) => sum + (item.isWorn ? 0 : item.vol), 0);
-    const remainingVol = suitcaseVolume - essentialVol;
-    
-    if (remainingVol <= 0) {
-      // Essentials alone exceed or exactly meet capacity. Drop all optionals.
+    const essentialWeight = essentialItems.reduce((sum, item) => sum + (item.isWorn ? 0 : item.weight), 0);
+    const totalOptVol = optionalItems.reduce((s, i) => s + i.vol, 0);
+    const totalOptWeight = optionalItems.reduce((s, i) => s + i.weight, 0);
+
+    // An unconstrained dimension gets a capacity that fits everything,
+    // reducing the DP to the single-constraint case.
+    const remainingVol = volumeConstrained ? suitcaseVolume - essentialVol : totalOptVol;
+    const remainingWeight = weightConstrained ? WEIGHT_LIMIT - essentialWeight : totalOptWeight;
+
+    if (remainingVol <= 0 || remainingWeight <= 0) {
+      // Essentials alone exceed a limit. Drop all optionals.
       optionalItems.forEach(i => i.removed = true);
     } else {
-      // 0/1 Knapsack on optionals
-      const SCALE = 50; 
-      const capacity = Math.floor(remainingVol / SCALE);
+      const SCALE_V = 100;
+      const SCALE_W = 250;
+      const capV = Math.floor(remainingVol / SCALE_V);
+      const capW = Math.floor(remainingWeight / SCALE_W);
       const n = optionalItems.length;
-      const dp = Array.from({length: n + 1}, () => Array(capacity + 1).fill(0));
+      // dp[i][c][k]: best priority sum using the first i items within
+      // volume budget c and weight budget k
+      const dp = Array.from({ length: n + 1 }, () =>
+        Array.from({ length: capV + 1 }, () => Array(capW + 1).fill(0))
+      );
 
       for (let i = 1; i <= n; i++) {
-        const item = optionalItems[i-1];
-        const w = Math.ceil(item.vol / SCALE);
+        const item = optionalItems[i - 1];
+        const wv = Math.ceil(item.vol / SCALE_V);
+        const ww = Math.ceil(item.weight / SCALE_W);
         const v = item.priority; // value is priority
-        
-        for (let c = 0; c <= capacity; c++) {
-          if (w <= c) {
-            dp[i][c] = Math.max(dp[i-1][c], dp[i-1][c-w] + v);
-          } else {
-            dp[i][c] = dp[i-1][c];
+
+        for (let c = 0; c <= capV; c++) {
+          for (let k = 0; k <= capW; k++) {
+            dp[i][c][k] = dp[i - 1][c][k];
+            if (wv <= c && ww <= k && dp[i - 1][c - wv][k - ww] + v > dp[i][c][k]) {
+              dp[i][c][k] = dp[i - 1][c - wv][k - ww] + v;
+            }
           }
         }
       }
 
       // Backtrack
-      let c = capacity;
+      let c = capV;
+      let k = capW;
       const keptItems = new Set();
       for (let i = n; i > 0; i--) {
-        if (dp[i][c] !== dp[i-1][c]) {
-          const item = optionalItems[i-1];
+        if (dp[i][c][k] !== dp[i - 1][c][k]) {
+          const item = optionalItems[i - 1];
           keptItems.add(item.id);
-          c -= Math.ceil(item.vol / SCALE);
+          c -= Math.ceil(item.vol / SCALE_V);
+          k -= Math.ceil(item.weight / SCALE_W);
         }
       }
 

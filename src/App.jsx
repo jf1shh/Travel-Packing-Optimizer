@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { geocodeLocation, fetchWeather } from './services/api';
-import { generatePackingList, ACTIVITY_GEAR } from './services/packerLogic';
+import { generatePackingList, ACTIVITY_GEAR, deriveCube } from './services/packerLogic';
 import Header from './components/Header';
 import CapacityBar from './components/CapacityBar';
 import TripForm from './components/TripForm';
@@ -12,6 +12,29 @@ import { Logger } from './services/logger';
 import { encodeTripData, decodeTripData } from './services/share';
 import { clearAllLocalData } from './services/db';
 import './index.css';
+
+const PREFS_KEY = 'travelPackerItemPrefs';
+
+// How many times the user has removed each generated item from past lists;
+// generation uses this to de-prioritize items they never actually pack.
+const readItemPrefs = () => {
+  try {
+    const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+    return prefs && typeof prefs === 'object' && !Array.isArray(prefs) ? prefs : {};
+  } catch {
+    return {};
+  }
+};
+
+const recordItemRemoval = (name) => {
+  try {
+    const prefs = readItemPrefs();
+    prefs[name] = (prefs[name] || 0) + 1;
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // preference tracking is best-effort
+  }
+};
 
 function App() {
   const [theme, setTheme] = useState('dark'); 
@@ -30,8 +53,15 @@ function App() {
   const [tripStartDate, setTripStartDate] = useState(null);
   const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
   const [wardrobe, setWardrobe] = useState(() => {
-    const saved = localStorage.getItem('travelPackerWardrobe');
-    return saved ? JSON.parse(saved) : [];
+    // Guarded: corrupted storage here previously crashed the app on every
+    // load, with no way to reach "Delete All My Data" to recover.
+    try {
+      const saved = localStorage.getItem('travelPackerWardrobe');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
 
   // Derived State (Dynamic Recalculation)
@@ -79,11 +109,21 @@ function App() {
   }, [wardrobe]);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shareCode = urlParams.get('share');
-    if (shareCode) {
-      const data = decodeTripData(shareCode);
-      if (data) {
+    // Share payloads travel in the URL fragment (never sent to the server);
+    // the query-param form is still read for old links.
+    const hash = window.location.hash;
+    const shareCode = hash.startsWith('#share=')
+      ? hash.slice('#share='.length)
+      : new URLSearchParams(window.location.search).get('share');
+    if (!shareCode) return;
+
+    const data = decodeTripData(shareCode);
+    if (data) {
+      const sharedCount = data.w ? data.w.length : 0;
+      const message = sharedCount > 0
+        ? `Load shared trip data? This will replace your closet (currently ${wardrobe.length} items) with ${sharedCount} shared items and overwrite your saved trip settings.`
+        : 'Load shared trip data? This will overwrite your saved trip settings.';
+      if (window.confirm(message)) {
         if (data.w) {
           setWardrobe(data.w);
           localStorage.setItem('travelPackerWardrobe', JSON.stringify(data.w));
@@ -92,10 +132,11 @@ function App() {
           localStorage.setItem('travelPackerState', JSON.stringify(data.s));
           alert("Shared trip loaded successfully! Click Generate to view the packing list.");
         }
-        // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
+    // Clean URL either way
+    window.history.replaceState({}, document.title, window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -115,7 +156,7 @@ function App() {
     setLengthUnit(prev => prev === 'cm' ? 'in' : 'cm');
   };
 
-  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, dailyDestinations, formWeatherData, packingStrategy, techPorts, suitcaseVolume, laundryCycle = 7 }) => {
+  const handleGenerateList = async ({ destinations, startDate, endDate, gender, palette, travelMode, dailyActivities, dailyDestinations, formWeatherData, destinationCountries = {}, packingStrategy, techPorts, suitcaseVolume, laundryCycle = 7 }) => {
     setIsLoading(true);
     setError(null);
     setWeatherDataArray(null);
@@ -132,14 +173,18 @@ function App() {
       const duration = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
 
       let allWeatherData = [];
+      const countryCodes = [];
 
       for (let i = 0; i < destinations.length; i++) {
         const dest = destinations[i];
         let weather = formWeatherData[dest];
+        let countryCode = destinationCountries[dest];
         if (!weather) {
           const location = await geocodeLocation(dest);
+          countryCode = location.country_code;
           weather = await fetchWeather(location.latitude, location.longitude, startDate, endDate);
         }
+        countryCodes.push(countryCode);
 
         // Always key by the raw typed destination string, not the geocoded
         // canonical name — dailyDestinations/formDestinations only ever
@@ -156,7 +201,7 @@ function App() {
       // Unblock main thread to allow loading spinner to render
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts, dailyDestinations, destinations, laundryCycle);
+      const result = generatePackingList(allWeatherData, duration, gender, suitcaseVolume, palette, travelMode, dailyActivities, wardrobe, packingStrategy, techPorts, dailyDestinations, destinations, laundryCycle, { countryCodes, itemPreferences: readItemPrefs() });
       
       setPackingList(result.list);
       setOutfits(result.outfitCombinations);
@@ -199,6 +244,8 @@ function App() {
   };
 
   const handleRemoveItem = (category, itemId) => {
+    const removedItem = packingList?.[category]?.find(i => i.id === itemId);
+    if (removedItem) recordItemRemoval(removedItem.name);
     setPackingList(prev => {
       const updatedCategory = prev[category].filter(i => i.id !== itemId);
       return { ...prev, [category]: updatedCategory };
@@ -265,16 +312,20 @@ function App() {
       return newOutfits;
     });
 
-    // 2. Inject Gear into Packing List if needed
+    // 2. Inject Gear into Packing List if needed. The list is keyed by cube
+    // group (plane/main/base/loose/liquid/dry/tech), not by item category --
+    // indexing by category here previously crashed the whole app.
     if (activityKey && ACTIVITY_GEAR[activityKey]) {
       const itemsToAdd = ACTIVITY_GEAR[activityKey].items;
       setPackingList(prev => {
         const newList = { ...prev };
         itemsToAdd.forEach(item => {
+          const groupKey = deriveCube(item);
+          const group = newList[groupKey] || [];
           // Check if item already exists to avoid duplicates
-          const exists = newList[item.category].find(i => i.name === item.name);
+          const exists = group.find(i => i.name === item.name);
           if (!exists) {
-            newList[item.category] = [...newList[item.category], { ...item, id: `swap-${Date.now()}-${Math.random()}`, checked: false }];
+            newList[groupKey] = [...group, { ...item, id: `swap-${Date.now()}-${Math.random()}`, checked: false, cube: groupKey }];
           }
         });
         return newList;
@@ -284,13 +335,21 @@ function App() {
 
 
   const handleCopyShareLink = () => {
-    const tripState = localStorage.getItem('travelPackerState') ? JSON.parse(localStorage.getItem('travelPackerState')) : null;
+    let tripState = null;
+    try {
+      tripState = JSON.parse(localStorage.getItem('travelPackerState') || 'null');
+    } catch {
+      tripState = null;
+    }
     const shareCode = encodeTripData(wardrobe, tripState);
     if (shareCode) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('share', shareCode);
-      navigator.clipboard.writeText(url.toString());
-      alert("Share link copied to clipboard! Send this to your travel partner.");
+      // Fragment, not query param: fragments are never sent to the server,
+      // so the payload can't land in request logs.
+      const url = `${window.location.origin}${window.location.pathname}#share=${shareCode}`;
+      navigator.clipboard.writeText(url).then(
+        () => alert("Share link copied to clipboard! Send this to your travel partner."),
+        () => window.prompt("Clipboard unavailable -- copy this share link manually:", url)
+      );
     } else {
       alert("Failed to generate share link.");
     }
