@@ -42,7 +42,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        // zxing_reader.wasm (~1 MB): the barcode-decoder fallback must work
+        // offline. Deliberately NOT a blanket **/*.wasm — that would sweep in
+        // onnxruntime's 23.9 MB binary and break the service-worker build.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}', '**/zxing_reader*.wasm']
       },
       manifest: {
         name: 'Travel Packing Optimizer',

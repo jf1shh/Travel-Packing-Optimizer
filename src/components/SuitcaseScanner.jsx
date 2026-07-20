@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { measureFromTaps, formatDimensions, REFERENCE_CARD_MM } from '../utils/measurement';
+import { measureFromTaps, formatDimensions, REFERENCE_CARD_MM, pixelDistance, calibrateScale, pixelsToCm } from '../utils/measurement';
 import { lookupByBarcode, searchByBrand } from '../utils/suitcaseDatabase';
+import { getBarcodeDetector } from '../utils/barcodeDetector';
 import { useT } from '../i18n/context.jsx';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -31,7 +32,9 @@ const BARCODE_DETECT_INTERVAL = 200; // ms between barcode detection attempts
 const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
   const { t } = useT();
   // ── Shared state ───────────────────────────────────────────────────────────
-  const [scannerMode, setScannerMode] = useState(MODE.MEASURE);
+  // Barcode/brand lookup is the default: exact factory dimensions beat any
+  // photo measurement, so the measure tab is the fallback for unknown bags.
+  const [scannerMode, setScannerMode] = useState(MODE.BARCODE);
   const [phase, setPhase] = useState(PHASE.SETUP);
   const [errorMsg, setErrorMsg] = useState('');
   const [facingMode, setFacingMode] = useState('environment');
@@ -42,6 +45,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
   // Measure-mode state
   const [capturedImage, setCapturedImage] = useState(null);
   const [tapPoints, setTapPoints] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Barcode-mode state
   const [detectedBarcodes, setDetectedBarcodes] = useState([]);
@@ -59,6 +63,8 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
   const barcodeDetectorRef = useRef(null);
   const lastDetectionRef = useRef(0);
   const allPointsRef = useRef({ calibrate: null, measureL: null, measureW: null });
+  const stillImageRef = useRef(null); // decoded still photo, cached for cheap redraws
+  const dragRef = useRef({ active: false, index: -1 });
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const isLiveCamera = (scannerMode === MODE.MEASURE && phase === PHASE.CAPTURING) ||
@@ -66,22 +72,19 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
   const isMeasuring = phase === PHASE.CALIBRATE || phase === PHASE.MEASURE_L || phase === PHASE.MEASURE_W;
 
   // ── BarcodeDetector setup ──────────────────────────────────────────────────
+  // Native where available, zxing-wasm ponyfill everywhere else (Android
+  // WebView / iOS Safari have no BarcodeDetector). Loaded when the scanner
+  // opens so the wasm download never blocks app startup.
   useEffect(() => {
-    if (!('BarcodeDetector' in window)) {
-      setBarcodeSupported(false);
-      return;
-    }
-    window.BarcodeDetector.getSupportedFormats()
-      .then(formats => {
-        if (formats && formats.length > 0) {
-          barcodeDetectorRef.current = new window.BarcodeDetector({ formats });
-          setBarcodeSupported(true);
-        } else {
-          setBarcodeSupported(false);
-        }
-      })
-      .catch(() => setBarcodeSupported(false));
-  }, []);
+    if (!isOpen || barcodeDetectorRef.current) return;
+    let cancelled = false;
+    getBarcodeDetector().then(detector => {
+      if (cancelled) return;
+      barcodeDetectorRef.current = detector;
+      setBarcodeSupported(!!detector);
+    });
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
   // ── Camera lifecycle ───────────────────────────────────────────────────────
   const stopCamera = useCallback(() => {
@@ -399,42 +402,118 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     };
   }, []);
 
-  const handleCanvasTap = useCallback((e) => {
+  // Press places a point (or grabs an existing one); dragging fine-tunes it
+  // under a magnifier loupe; release drops it. Nothing auto-advances — each
+  // step is confirmed explicitly, so mistapped points can always be fixed.
+  const HIT_RADIUS = 28;
+
+  const handleCanvasDown = useCallback((e) => {
     e.preventDefault();
     if (!isMeasuring) return;
     const coords = getCanvasCoords(e);
     if (!coords) return;
-    setTapPoints(prev => prev.length >= 2 ? prev : [...prev, coords]);
+    setTapPoints(prev => {
+      const hit = prev.findIndex(p => pixelDistance(p, coords) <= HIT_RADIUS);
+      if (hit >= 0) {
+        dragRef.current = { active: true, index: hit };
+        setIsDragging(true);
+        return prev;
+      }
+      if (prev.length >= 2) return prev;
+      dragRef.current = { active: true, index: prev.length };
+      setIsDragging(true);
+      return [...prev, coords];
+    });
   }, [isMeasuring, getCanvasCoords]);
 
+  const handleCanvasMove = useCallback((e) => {
+    if (!dragRef.current.active) return;
+    e.preventDefault();
+    const coords = getCanvasCoords(e);
+    if (!coords) return;
+    const idx = dragRef.current.index;
+    setTapPoints(prev => prev.map((p, i) => (i === idx ? coords : p)));
+  }, [getCanvasCoords]);
+
+  const handleCanvasUp = useCallback(() => {
+    if (!dragRef.current.active) return;
+    dragRef.current = { active: false, index: -1 };
+    setIsDragging(false);
+  }, []);
+
   // ── Render still image on canvas (measure mode) ────────────────────────────
+  // Decode the photo once per capture; redraws during a drag reuse the cached
+  // Image (re-decoding the data URL on every pointer move causes visible jank).
+  useEffect(() => {
+    if (!capturedImage) { stillImageRef.current = null; return; }
+    const img = new Image();
+    img.onload = () => { stillImageRef.current = img; setTapPoints(p => [...p]); };
+    img.src = capturedImage;
+  }, [capturedImage]);
+
   useEffect(() => {
     if (!capturedImage || scannerMode !== MODE.MEASURE || phase === PHASE.CAPTURING || phase === PHASE.SETUP || phase === PHASE.ERROR) return;
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const img = stillImageRef.current;
+    if (!canvas || !img) return;
 
-    const img = new Image();
-    img.onload = () => {
-      const cw = canvas.parentElement?.clientWidth || canvas.width;
-      const ch = canvas.parentElement?.clientHeight || canvas.height;
-      const scale = Math.min(cw / img.width, ch / img.height);
+    const cw = canvas.parentElement?.clientWidth || canvas.width;
+    const ch = canvas.parentElement?.clientHeight || canvas.height;
+    if (canvas.width !== cw || canvas.height !== ch) {
       canvas.width = cw;
       canvas.height = ch;
+    }
+    const scale = Math.min(cw / img.width, ch / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    const dx = (cw - dw) / 2;
+    const dy = (ch - dh) / 2;
 
-      const dw = img.width * scale;
-      const dh = img.height * scale;
-      const dx = (cw - dw) / 2;
-      const dy = (ch - dh) / 2;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(img, dx, dy, dw, dh);
+    drawTapPoints(ctx, tapPoints);
 
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.drawImage(img, dx, dy, dw, dh);
-      drawTapPoints(ctx, tapPoints);
-    };
-    img.src = capturedImage;
+    // Magnifier loupe above the point being dragged
+    if (isDragging && dragRef.current.index >= 0 && tapPoints[dragRef.current.index]) {
+      drawLoupe(ctx, img, tapPoints[dragRef.current.index], { dx, dy, scale, cw, ch });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage, phase, tapPoints, scannerMode]);
+  }, [capturedImage, phase, tapPoints, scannerMode, isDragging]);
+
+  const drawLoupe = (ctx, img, p, { dx, dy, scale, cw }) => {
+    const R = 56;          // loupe radius on screen
+    const ZOOM = 2.5;      // magnification relative to displayed size
+    // Loupe floats above the finger; clamp inside the canvas
+    const lx = Math.min(Math.max(p.x, R + 8), cw - R - 8);
+    const ly = p.y - R - 46 > 8 ? p.y - R - 46 : p.y + R + 46;
+
+    const srcHalf = R / (scale * ZOOM);          // half-size in image pixels
+    const ix = (p.x - dx) / scale;               // point in image coords
+    const iy = (p.y - dy) / scale;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(lx, ly, R, 0, Math.PI * 2);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.clip();
+    ctx.drawImage(img, ix - srcHalf, iy - srcHalf, srcHalf * 2, srcHalf * 2, lx - R, ly - R, R * 2, R * 2);
+    // crosshair
+    ctx.strokeStyle = 'rgba(59,130,246,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(lx - 12, ly); ctx.lineTo(lx + 12, ly);
+    ctx.moveTo(lx, ly - 12); ctx.lineTo(lx, ly + 12);
+    ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(lx, ly, R, 0, Math.PI * 2);
+    ctx.stroke();
+  };
 
   const drawTapPoints = (ctx, points) => {
     if (!points || points.length === 0) return;
@@ -457,45 +536,44 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     });
   };
 
-  // ── Compute result (measure mode) ──────────────────────────────────────────
-  useEffect(() => {
-    if (scannerMode !== MODE.MEASURE) return;
-
-    if (phase === PHASE.CALIBRATE && tapPoints.length === 2) {
+  // ── Confirm current measuring step (measure mode) ──────────────────────────
+  // Explicit confirmation replaces the old tap-twice-and-instantly-advance
+  // flow: both points stay adjustable until the user is happy with them.
+  const confirmStep = useCallback(() => {
+    if (tapPoints.length !== 2) return;
+    if (phase === PHASE.CALIBRATE) {
       allPointsRef.current.calibrate = tapPoints;
       setTapPoints([]);
       setPhase(PHASE.MEASURE_L);
-    }
-  }, [phase, tapPoints, scannerMode]);
-
-  useEffect(() => {
-    if (scannerMode !== MODE.MEASURE) return;
-
-    if (phase === PHASE.MEASURE_L && tapPoints.length === 2) {
+    } else if (phase === PHASE.MEASURE_L) {
       allPointsRef.current.measureL = tapPoints;
       setTapPoints([]);
       setPhase(PHASE.MEASURE_W);
-    }
-  }, [phase, tapPoints, scannerMode]);
-
-  useEffect(() => {
-    if (scannerMode !== MODE.MEASURE) return;
-
-    if (phase === PHASE.MEASURE_W && tapPoints.length === 2) {
-      allPointsRef.current.measureW = tapPoints;
-      const { calibrate, measureL, measureW } = allPointsRef.current;
-      if (calibrate && measureL && measureW) {
+    } else if (phase === PHASE.MEASURE_W) {
+      const { calibrate, measureL } = allPointsRef.current;
+      if (calibrate && measureL) {
         const result = measureFromTaps(
           calibrate[0], calibrate[1],
           measureL[0], measureL[1],
-          measureW[0], measureW[1],
+          tapPoints[0], tapPoints[1],
           REFERENCE_CARD_MM.width
         );
+        allPointsRef.current.measureW = tapPoints;
         setMeasurements(result);
         setPhase(PHASE.RESULT);
       }
     }
-  }, [phase, tapPoints, scannerMode]);
+  }, [phase, tapPoints]);
+
+  // Live readout of the segment being placed, once calibration exists
+  const liveSegmentCm = (() => {
+    if (tapPoints.length !== 2) return null;
+    if (phase !== PHASE.MEASURE_L && phase !== PHASE.MEASURE_W) return null;
+    const cal = allPointsRef.current.calibrate;
+    if (!cal) return null;
+    const scale = calibrateScale(pixelDistance(cal[0], cal[1]), REFERENCE_CARD_MM.width);
+    return pixelsToCm(pixelDistance(tapPoints[0], tapPoints[1]), scale);
+  })();
 
   // ── Brand search (barcode mode) ────────────────────────────────────────────
   const handleBrandSearch = useCallback((query) => {
@@ -522,6 +600,8 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
   // ── Actions ────────────────────────────────────────────────────────────────
   const handleRetake = () => {
     allPointsRef.current = { calibrate: null, measureL: null, measureW: null };
+    dragRef.current = { active: false, index: -1 };
+    setIsDragging(false);
     setTapPoints([]);
     setCapturedImage(null);
     setMeasurements(null);
@@ -547,6 +627,8 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
 
   const handleClose = () => {
     stopCamera();
+    dragRef.current = { active: false, index: -1 };
+    setIsDragging(false);
     setTapPoints([]);
     setCapturedImage(null);
     setMeasurements(null);
@@ -593,18 +675,6 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
         {/* Mode tabs */}
         <div style={{ display: 'flex', gap: 4, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 3 }}>
           <button
-            onClick={() => switchMode(MODE.MEASURE)}
-            style={{
-              padding: '6px 14px', borderRadius: 8, fontSize: '13px', fontWeight: 600,
-              border: 'none', cursor: 'pointer', boxShadow: 'none',
-              backgroundColor: scannerMode === MODE.MEASURE ? '#3b82f6' : 'transparent',
-              color: 'white',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            📏 {scannerMode === MODE.MEASURE ? t('scanner.creditCardGuide').split(',')[0] : 'Measure'}
-          </button>
-          <button
             onClick={() => switchMode(MODE.BARCODE)}
             style={{
               padding: '6px 14px', borderRadius: 8, fontSize: '13px', fontWeight: 600,
@@ -615,6 +685,18 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
             }}
           >
             📷 Scan
+          </button>
+          <button
+            onClick={() => switchMode(MODE.MEASURE)}
+            style={{
+              padding: '6px 14px', borderRadius: 8, fontSize: '13px', fontWeight: 600,
+              border: 'none', cursor: 'pointer', boxShadow: 'none',
+              backgroundColor: scannerMode === MODE.MEASURE ? '#3b82f6' : 'transparent',
+              color: 'white',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            📏 Measure
           </button>
         </div>
 
@@ -640,8 +722,14 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
 
         <canvas
           ref={canvasRef}
-          onMouseDown={isMeasuring ? handleCanvasTap : undefined}
-          onTouchStart={isMeasuring ? handleCanvasTap : undefined}
+          onMouseDown={isMeasuring ? handleCanvasDown : undefined}
+          onMouseMove={isMeasuring ? handleCanvasMove : undefined}
+          onMouseUp={isMeasuring ? handleCanvasUp : undefined}
+          onMouseLeave={isMeasuring ? handleCanvasUp : undefined}
+          onTouchStart={isMeasuring ? handleCanvasDown : undefined}
+          onTouchMove={isMeasuring ? handleCanvasMove : undefined}
+          onTouchEnd={isMeasuring ? handleCanvasUp : undefined}
+          onTouchCancel={isMeasuring ? handleCanvasUp : undefined}
           style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block',
             cursor: isMeasuring ? 'crosshair' : 'default',
@@ -661,9 +749,17 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
              phase === PHASE.CALIBRATE ? t('scanner.tapCardEnds') :
              phase === PHASE.MEASURE_L ? t('scanner.tapLongSide') :
              phase === PHASE.MEASURE_W ? t('scanner.tapShortSide') : ''}
+            {phase === PHASE.CAPTURING && (
+              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.65 }}>
+                Hold the card flat against the face you're measuring, camera square-on
+              </div>
+            )}
             {isMeasuring && (
               <div style={{ marginTop: 6, fontSize: 13, opacity: 0.7 }}>
-                {tapPoints.length}/2
+                {liveSegmentCm != null
+                  ? `≈ ${liveSegmentCm} cm`
+                  : `${tapPoints.length}/2`}
+                {tapPoints.length > 0 && ' — drag a dot to fine-tune'}
               </div>
             )}
           </div>
@@ -680,7 +776,7 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
           }}>
             Barcode detected: {barcodeValue}
             <div style={{ fontSize: 12, fontWeight: 400, opacity: 0.7, marginTop: 4 }}>
-              {scannedModel ? '✓' : 'Try brand search below'}
+              Not in our model database — search your brand below to pick the model
             </div>
           </div>
         )}
@@ -813,10 +909,15 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
               )}
             </div>
 
-            {/* Barcode not supported message */}
+            {/* Barcode detector status */}
+            {barcodeSupported === null && !errorMsg && (
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 12, padding: '4px 0' }}>
+                Preparing barcode scanner…
+              </div>
+            )}
             {barcodeSupported === false && !barcodeValue && (
               <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 12, padding: '4px 0' }}>
-                Barcode scanning not supported — use brand search above
+                Barcode scanning unavailable on this device — use brand search above
               </div>
             )}
           </div>
@@ -824,13 +925,28 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
 
         {/* Measure mode: measuring controls */}
         {isMeasuring && (
-          <button onClick={handleRetake} style={{
-            padding: '10px 24px', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white',
-            border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10,
-            fontSize: 14, fontWeight: 500, cursor: 'pointer', boxShadow: 'none',
-          }}>
-            Retake
-          </button>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button onClick={handleRetake} style={{
+              padding: '10px 24px', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white',
+              border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10,
+              fontSize: 14, fontWeight: 500, cursor: 'pointer', boxShadow: 'none',
+            }}>
+              Retake
+            </button>
+            <button
+              onClick={confirmStep}
+              disabled={tapPoints.length !== 2}
+              style={{
+                padding: '10px 32px',
+                backgroundColor: tapPoints.length === 2 ? '#3b82f6' : 'rgba(59,130,246,0.25)',
+                color: tapPoints.length === 2 ? 'white' : 'rgba(255,255,255,0.4)',
+                border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600,
+                cursor: tapPoints.length === 2 ? 'pointer' : 'default', boxShadow: 'none',
+              }}
+            >
+              {phase === PHASE.MEASURE_W ? '✓ Done' : 'Confirm →'}
+            </button>
+          </div>
         )}
 
         {/* Result display (both modes) */}
@@ -851,8 +967,20 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', color: 'white', fontSize: 14 }}>
               <DimDisplay label={t('suitcase.length')} value={measurements.lengthCm} color="#3b82f6" />
               <DimDisplay label={t('suitcase.width')} value={measurements.widthCm} color="#3b82f6" />
-              <DimDisplay label={t('suitcase.height')} value={measurements.heightCm} color={scannedModel ? '#22c55e' : '#8b5cf6'} />
+              <DimDisplay
+                label={scannedModel ? t('suitcase.height') : `${t('suitcase.height')} (est.)`}
+                value={scannedModel ? measurements.heightCm : `~${measurements.heightCm}`}
+                color={scannedModel ? '#22c55e' : '#8b5cf6'}
+              />
             </div>
+            {/* A photo only shows two dimensions — depth is a proportion-based
+                estimate, and the user should know that */}
+            {!scannedModel && (
+              <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, textAlign: 'center', maxWidth: 320 }}>
+                Depth can't be measured from a straight-on photo — it's estimated from
+                typical suitcase proportions. Adjust it in the form if you know it.
+              </div>
+            )}
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 12 }}>
