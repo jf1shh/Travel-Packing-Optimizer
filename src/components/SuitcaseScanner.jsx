@@ -62,6 +62,8 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
   const animationRef = useRef(null);
   const barcodeDetectorRef = useRef(null);
   const lastDetectionRef = useRef(0);
+  const detectAttemptRef = useRef(0);
+  const cropCanvasRef = useRef(null); // reused frame-crop buffer for barcode decode
   const allPointsRef = useRef({ calibrate: null, measureL: null, measureW: null });
   const stillImageRef = useRef(null); // decoded still photo, cached for cheap redraws
   const dragRef = useRef({ active: false, index: -1 });
@@ -118,6 +120,11 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
         audio: false,
       });
       streamRef.current = stream;
+      // Continuous autofocus where the hardware supports it — barcodes a few
+      // centimetres from the lens stay blurry (undecodable) without it.
+      try {
+        await stream.getVideoTracks()[0]?.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+      } catch { /* focusMode not supported — camera default applies */ }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
@@ -159,7 +166,40 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
     lastDetectionRef.current = now;
 
     try {
-      const barcodes = await detector.detect(video);
+      // Decode from the on-screen guide region first: a barcode that fills
+      // the cropped buffer decodes far more reliably than one occupying a
+      // small slice of the full frame. Every 3rd attempt scans the whole
+      // frame so codes held outside the guide still get caught.
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      let barcodes;
+      if (detectAttemptRef.current++ % 3 !== 2) {
+        const scanW = Math.min(vw, vh) * 0.8;
+        const scanH = scanW * 0.35;
+        const sx = (vw - scanW) / 2;
+        const sy = (vh - scanH) / 2;
+        let crop = cropCanvasRef.current;
+        if (!crop) {
+          crop = document.createElement('canvas');
+          cropCanvasRef.current = crop;
+        }
+        if (crop.width !== Math.round(scanW) || crop.height !== Math.round(scanH)) {
+          crop.width = Math.round(scanW);
+          crop.height = Math.round(scanH);
+        }
+        crop.getContext('2d').drawImage(video, sx, sy, scanW, scanH, 0, 0, crop.width, crop.height);
+        barcodes = (await detector.detect(crop)).map(b => ({
+          rawValue: b.rawValue,
+          format: b.format,
+          // map back to full-frame coords so the overlay boxes line up
+          boundingBox: {
+            x: b.boundingBox.x + sx, y: b.boundingBox.y + sy,
+            width: b.boundingBox.width, height: b.boundingBox.height,
+          },
+        }));
+      } else {
+        barcodes = await detector.detect(video);
+      }
       if (barcodes.length > 0) {
         setDetectedBarcodes(barcodes);
         const first = barcodes[0];
@@ -877,6 +917,21 @@ const SuitcaseScanner = ({ isOpen, onClose, onDimensionsReady }) => {
                   onFocus={() => brandQuery.trim().length >= 2 && setShowBrandPicker(true)}
                 />
               </div>
+
+              {/* Brand search: no matches — dead-end guidance instead of silence */}
+              {showBrandPicker && brandResults.length === 0 && brandQuery.trim().length >= 2 && (
+                <div style={{
+                  position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: 4,
+                  backgroundColor: 'rgba(15,23,42,0.97)', borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.12)', padding: '12px 14px',
+                  color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', zIndex: 20,
+                }}>
+                  No matches for "{brandQuery}" — this bag isn't in our database yet.
+                  <div style={{ marginTop: 4, fontSize: 12, opacity: 0.7 }}>
+                    Use the 📏 Measure tab, or close and enter dimensions manually.
+                  </div>
+                </div>
+              )}
 
               {/* Brand search dropdown */}
               {showBrandPicker && brandResults.length > 0 && (
