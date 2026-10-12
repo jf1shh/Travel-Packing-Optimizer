@@ -1,5 +1,10 @@
 # Travel Packing Optimizer
 
+> **Archived standalone project.** This repository is retained as a historical app. For the active travel showcase, visit [Travel Packing App in Agentic App Harness](https://jf1shh.github.io/agentic-app-harness/travel-packing-app/). The features and test counts below describe this archived version.
+
+Built by [Jared Fisher](https://www.linkedin.com/in/jaredfisher-ai/) with AI coding agents.
+[GitHub profile](https://github.com/jf1shh) · [LinkedIn](https://www.linkedin.com/in/jaredfisher-ai/) · [Live portfolio](https://jf1shh.github.io/agentic-app-harness/)
+
 A mathematical packing assistant that builds weather-aware capsule wardrobes. Enter your destinations, dates, travel mode, and style preference — the engine generates a day-by-day outfit schedule and an optimized packing list that fits your suitcase.
 
 **Web**: live at [jf1shh.github.io/Travel-Packing-Optimizer](https://jf1shh.github.io/Travel-Packing-Optimizer/), no install needed. **Android**: an APK is attached to each [GitHub Release](../../releases/latest) (unsigned debug build via Capacitor — for trying it out, not a Play Store install).
